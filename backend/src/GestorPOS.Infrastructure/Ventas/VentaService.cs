@@ -13,6 +13,9 @@ namespace GestorPOS.Infrastructure.Ventas;
 
 public class VentaService : IVentaService
 {
+    private static readonly TimeZoneInfo ZonaHorariaArgentina =
+        TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
+
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
 
@@ -106,9 +109,10 @@ public class VentaService : IVentaService
     private static string ConstruirTicket(Venta venta, IReadOnlyList<VentaItemDto> items, string nombreNegocio)
     {
         var ci = CultureInfo.InvariantCulture;
+        var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(venta.FechaCreacion, ZonaHorariaArgentina);
         var sb = new StringBuilder();
         sb.AppendLine(nombreNegocio);
-        sb.AppendLine($"Fecha: {venta.FechaCreacion.ToString("dd/MM/yyyy HH:mm", ci)}");
+        sb.AppendLine($"Fecha: {fechaLocal.ToString("dd/MM/yyyy HH:mm", ci)}");
         sb.AppendLine("--------------------------------");
         foreach (var item in items)
             sb.AppendLine($"{item.Cantidad}x {item.ProductoNombre} - ${item.Subtotal.ToString("0.00", ci)}");
