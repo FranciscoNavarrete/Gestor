@@ -53,7 +53,12 @@ export class Venta implements OnInit {
     const disponibles = this.productos().filter((p) => p.stockActual > 0);
     if (!termino) return disponibles.slice(0, 8);
     return disponibles
-      .filter((p) => p.nombre.toLowerCase().includes(termino) || p.sku.toLowerCase().includes(termino))
+      .filter(
+        (p) =>
+          p.nombre.toLowerCase().includes(termino) ||
+          p.sku.toLowerCase().includes(termino) ||
+          (p.categoriaNombre?.toLowerCase().includes(termino) ?? false),
+      )
       .slice(0, 8);
   });
 
