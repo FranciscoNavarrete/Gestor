@@ -1,9 +1,11 @@
+using GestorPOS.Application.Admin;
 using GestorPOS.Application.Auth;
 using GestorPOS.Application.Caja;
 using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Reportes;
 using GestorPOS.Application.Ventas;
+using GestorPOS.Infrastructure.Admin;
 using GestorPOS.Infrastructure.Auth;
 using GestorPOS.Infrastructure.Caja;
 using GestorPOS.Infrastructure.Catalog;
@@ -34,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IVentaService, VentaService>();
         services.AddScoped<ICajaService, CajaService>();
         services.AddScoped<IReporteService, ReporteService>();
+        services.AddScoped<IAdminService, AdminService>();
 
         return services;
     }

@@ -1,6 +1,7 @@
 using System.Text;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Infrastructure;
+using GestorPOS.WebAPI.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -74,6 +75,7 @@ app.UseExceptionHandler(errorApp =>
 
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
+app.UseMiddleware<AdminApiKeyMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

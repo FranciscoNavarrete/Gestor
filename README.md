@@ -78,7 +78,27 @@ Swagger en `http://localhost:5080/swagger` (solo en Development).
 - `GET /api/ventas?fecha=2026-09-15` — lista resumida de ventas (todas, o filtradas por día)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
 - `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar
+- `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
+- `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
+- `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, y la diferencia
+- `GET /api/reportes/ranking-productos?desde=&hasta=&top=10` — productos más vendidos por cantidad, en un rango de fechas opcional
+- `GET /api/reportes/ganancias?desde=&hasta=` — ventas, costo y ganancia neta en un rango de fechas
+- `GET /api/reportes/dashboard` — resumen: ventas/ganancia de hoy, ventas del mes, productos en alerta de stock, producto más vendido del día
 - `GET /health` — health check (usado por Railway)
+
+### Panel interno (no es para los negocios, es para vos)
+
+Protegido por header `X-Admin-Api-Key` (configurable en `Admin:ApiKey`), no por JWT — es un canal de auth
+separado porque este panel cruza todos los tenants a propósito.
+
+- `GET /api/admin/tenants` — lista todos los negocios registrados
+- `GET /api/admin/tenants/{tenantId}/features` — features activados/desactivados de un negocio
+- `PUT /api/admin/tenants/{tenantId}/features/{clave}` — activa un feature para ese negocio (lo crea si no existía)
+- `DELETE /api/admin/tenants/{tenantId}/features/{clave}` — lo desactiva
+
+El feature aparece/desaparece del claim `feature` del JWT en el próximo login de ese negocio — así el
+código (backend o frontend) puede chequear `TieneFeature("clave")` para mostrar/habilitar algo puntual
+que le pediste a un cliente, sin que el resto de los negocios lo vean.
 
 ## Roadmap
 
@@ -87,6 +107,6 @@ Ver plan de fases completo en la memoria del proyecto. Resumen:
 0. ✅ Setup + núcleo multi-tenant + Auth
 1. ✅ Gestión de Stock (productos, categorías, alertas de stock mínimo, precios masivos)
 2. ✅ Ventas/POS (venta rápida, cobro, ticket digital vía link de WhatsApp, descuento de stock)
-3. Reportes (caja diaria, ranking de productos, ganancias netas, dashboard)
-4. Panel interno de feature flags por tenant
-5. Deploy productivo (Railway + Netlify) + pulido
+3. ✅ Reportes (caja diaria, ranking de productos, ganancias netas, dashboard)
+4. ✅ Panel interno de feature flags por tenant
+5. Deploy productivo (Railway + Netlify) + pulido — o arrancar el frontend Angular
