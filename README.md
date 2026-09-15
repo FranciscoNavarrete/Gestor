@@ -84,7 +84,8 @@ el puerto).
   URL se cree su propia cuenta gratis.
 - `GET /api/usuarios` — lista usuarios del negocio del token (requiere `Authorization: Bearer <token>`)
 - `GET/POST/PUT/DELETE /api/categorias` — CRUD de categorías (delete = baja lógica)
-- `GET /api/productos?bajoStock=true` — lista productos activos; el filtro trae solo los que están en o bajo su stock mínimo
+- `GET /api/productos?bajoStock=true` — lista **sin paginar** todos los productos activos (usado por Venta, que necesita todo el catálogo en memoria para buscar al instante mientras se cobra)
+- `GET /api/productos/buscar?busqueda=&bajoStock=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/SKU/categoría, filtrado y paginado en la base de datos (usado por la pantalla de gestión de Productos, pensado para catálogos grandes)
 - `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
 - `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente (reposición, merma, corrección)
 - `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
