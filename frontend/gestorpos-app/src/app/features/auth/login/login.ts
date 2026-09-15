@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,7 +14,6 @@ import { extraerMensajeError } from '../../../core/utils/error.util';
   selector: 'app-login',
   imports: [
     ReactiveFormsModule,
-    RouterLink,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,

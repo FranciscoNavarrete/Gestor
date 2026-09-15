@@ -1,0 +1,102 @@
+<div class="pagina">
+  @if (!adminAuth.tieneClave()) {
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title>Panel interno</mat-card-title>
+        <mat-card-subtitle>Ingresá la clave de administrador</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="claveForm" (ngSubmit)="guardarClave()" class="form">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>API key</mat-label>
+            <input matInput type="password" formControlName="clave" cdkFocusInitial />
+          </mat-form-field>
+
+          @if (claveError()) {
+            <p class="error">{{ claveError() }}</p>
+          }
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="claveForm.invalid">
+            Entrar
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title>Nuevo negocio</mat-card-title>
+        <mat-card-subtitle>Las credenciales que cargues acá son las que le das al cliente</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="crear()" class="form">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Nombre del negocio</mat-label>
+            <input matInput formControlName="nombreNegocio" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Nombre del dueño/admin</mat-label>
+            <input matInput formControlName="nombreAdmin" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Email (usuario de acceso)</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Contraseña</mat-label>
+            <input matInput type="text" formControlName="password" />
+            <mat-hint>La definís vos y se la pasás al cliente</mat-hint>
+          </mat-form-field>
+
+          @if (error()) {
+            <p class="error">{{ error() }}</p>
+          }
+
+          @if (ultimoCreado(); as creado) {
+            <p class="exito">
+              <mat-icon>check_circle</mat-icon>
+              Negocio "{{ creado.nombre }}" creado. Pasale el email y la contraseña al cliente.
+            </p>
+          }
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+            @if (guardando()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Crear negocio
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title>Negocios existentes</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (cargandoNegocios()) {
+          <mat-spinner diameter="24"></mat-spinner>
+        } @else if (negocios().length === 0) {
+          <p class="vacio">Todavía no hay negocios cargados.</p>
+        } @else {
+          <mat-list>
+            @for (negocio of negocios(); track negocio.id) {
+              <mat-list-item>
+                <span matListItemTitle>{{ negocio.nombre }}</span>
+                <span matListItemLine>{{ negocio.activo ? 'Activo' : 'Inactivo' }}</span>
+              </mat-list-item>
+            }
+          </mat-list>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <button mat-button (click)="cambiarClave()" class="cambiar-clave">Usar otra clave</button>
+  }
+</div>

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, RegistrarNegocioRequest } from '../models/auth.models';
+import { AuthResponse, LoginRequest } from '../models/auth.models';
 
 const STORAGE_KEY = 'gestorpos_auth';
 
@@ -21,12 +21,6 @@ export class AuthService {
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, request)
-      .pipe(tap((auth) => this.guardarSesion(auth)));
-  }
-
-  registrarNegocio(request: RegistrarNegocioRequest): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/registro-negocio`, request)
       .pipe(tap((auth) => this.guardarSesion(auth)));
   }
 

@@ -7,8 +7,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
   {
-    path: 'registro',
-    loadComponent: () => import('./features/auth/registro/registro').then((m) => m.Registro),
+    // Ruta interna, no vinculada desde ningún lado de la UI pública: el operador de GestorPOS
+    // la usa para dar de alta negocios de clientes. Gate propio por API key (no JWT de tenant).
+    path: 'admin/crear-negocio',
+    loadComponent: () =>
+      import('./features/admin/crear-negocio/crear-negocio').then((m) => m.CrearNegocio),
   },
   {
     path: '',

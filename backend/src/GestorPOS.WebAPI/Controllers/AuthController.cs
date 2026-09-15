@@ -15,13 +15,6 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    [HttpPost("registro-negocio")]
-    public async Task<ActionResult<AuthResponse>> RegistrarNegocio(RegistrarNegocioRequest request, CancellationToken ct)
-    {
-        var response = await _authService.RegistrarNegocioAsync(request, ct);
-        return Ok(response);
-    }
-
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
     {

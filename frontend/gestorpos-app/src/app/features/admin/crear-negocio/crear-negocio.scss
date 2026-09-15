@@ -1,0 +1,51 @@
+.pagina {
+  max-width: 480px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  padding: 8px;
+}
+
+.full {
+  width: 100%;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}
+
+.exito {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2e7d32;
+  font-size: 0.875rem;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.vacio {
+  opacity: 0.6;
+  margin: 0;
+}
+
+.cambiar-clave {
+  align-self: center;
+  opacity: 0.7;
+}

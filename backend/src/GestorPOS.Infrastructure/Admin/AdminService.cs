@@ -1,7 +1,9 @@
 using GestorPOS.Application.Admin;
 using GestorPOS.Application.Admin.Dtos;
 using GestorPOS.Application.Common.Exceptions;
+using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Domain.Entities;
+using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +12,38 @@ namespace GestorPOS.Infrastructure.Admin;
 public class AdminService : IAdminService
 {
     private readonly AppDbContext _db;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public AdminService(AppDbContext db)
+    public AdminService(AppDbContext db, IPasswordHasher passwordHasher)
     {
         _db = db;
+        _passwordHasher = passwordHasher;
+    }
+
+    public async Task<TenantResumenDto> CrearNegocioAsync(CrearNegocioRequest request, CancellationToken ct = default)
+    {
+        var emailNormalizado = request.Email.Trim().ToLowerInvariant();
+
+        var emailEnUso = await _db.Usuarios.IgnoreQueryFilters()
+            .AnyAsync(u => u.Email == emailNormalizado, ct);
+        if (emailEnUso)
+            throw new AppException("Ya existe una cuenta registrada con ese email.");
+
+        var slug = GenerarSlug(request.NombreNegocio);
+        var slugEnUso = await _db.Tenants.IgnoreQueryFilters().AnyAsync(t => t.Slug == slug, ct);
+        if (slugEnUso)
+            slug = $"{slug}-{Guid.NewGuid().ToString()[..6]}";
+
+        var tenant = Tenant.Crear(request.NombreNegocio, slug);
+        _db.Tenants.Add(tenant);
+
+        var passwordHash = _passwordHasher.Hash(request.Password);
+        var admin = Usuario.Crear(tenant.Id, request.NombreAdmin, emailNormalizado, passwordHash, RolUsuario.Admin);
+        _db.Usuarios.Add(admin);
+
+        await _db.SaveChangesAsync(ct);
+
+        return new TenantResumenDto(tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion);
     }
 
     public async Task<IReadOnlyList<TenantResumenDto>> ListarTenantsAsync(CancellationToken ct = default)
@@ -74,5 +104,14 @@ public class AdminService : IAdminService
         var existe = await _db.Tenants.IgnoreQueryFilters().AnyAsync(t => t.Id == tenantId, ct);
         if (!existe)
             throw new AppException("El negocio no existe.");
+    }
+
+    private static string GenerarSlug(string nombre)
+    {
+        var normalizado = nombre.Trim().ToLowerInvariant();
+        var caracteres = normalizado.Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray();
+        var slug = new string(caracteres);
+        while (slug.Contains("--")) slug = slug.Replace("--", "-");
+        return slug.Trim('-');
     }
 }
