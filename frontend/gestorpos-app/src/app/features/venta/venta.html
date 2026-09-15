@@ -47,17 +47,19 @@
       </div>
     }
 
-    <div class="resultados">
-      @for (producto of productosFiltrados(); track producto.id) {
-        <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
-          <span class="nombre">{{ producto.nombre }}</span>
-          <span class="precio">${{ producto.precio }}</span>
-        </button>
-      }
-      @if (productosFiltrados().length === 0) {
-        <p class="vacio">No se encontraron productos.</p>
-      }
-    </div>
+    @if (busqueda()) {
+      <div class="resultados">
+        @for (producto of productosFiltrados(); track producto.id) {
+          <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
+            <span class="nombre">{{ producto.nombre }}</span>
+            <span class="precio">${{ producto.precio }}</span>
+          </button>
+        }
+        @if (productosFiltrados().length === 0) {
+          <p class="vacio">No se encontraron productos.</p>
+        }
+      </div>
+    }
   }
 
   @if (carrito().length > 0) {
