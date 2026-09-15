@@ -9,10 +9,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
+import { RankingProductoDto } from '../../core/models/reportes.models';
 import { MedioPago, VentaDto } from '../../core/models/venta.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
+
+const TOP_MAS_VENDIDOS = 6;
 
 interface ItemCarrito {
   producto: Producto;
@@ -37,16 +41,26 @@ interface ItemCarrito {
 export class Venta implements OnInit {
   private readonly catalogoService = inject(CatalogoService);
   private readonly ventasService = inject(VentasService);
+  private readonly reportesService = inject(ReportesService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly cargando = signal(true);
   readonly productos = signal<Producto[]>([]);
+  readonly rankingTop = signal<RankingProductoDto[]>([]);
   readonly busqueda = signal('');
   readonly carrito = signal<ItemCarrito[]>([]);
+  readonly carritoExpandido = signal(false);
   readonly medioPago = signal<MedioPago>('Efectivo');
   readonly telefonoCliente = signal('');
   readonly procesando = signal(false);
   readonly ventaResultado = signal<VentaDto | null>(null);
+
+  readonly masVendidos = computed(() => {
+    const porId = new Map(this.productos().map((p) => [p.id, p]));
+    return this.rankingTop()
+      .map((r) => porId.get(r.productoId))
+      .filter((p): p is Producto => !!p && p.stockActual > 0);
+  });
 
   readonly productosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
@@ -66,7 +80,15 @@ export class Venta implements OnInit {
     this.carrito().reduce((acc, item) => acc + item.producto.precio * item.cantidad, 0),
   );
 
+  readonly cantidadItems = computed(() => this.carrito().reduce((acc, item) => acc + item.cantidad, 0));
+
   ngOnInit(): void {
+    this.cargarProductos();
+    this.reportesService.rankingProductos(TOP_MAS_VENDIDOS).subscribe((ranking) => this.rankingTop.set(ranking));
+  }
+
+  private cargarProductos(mostrarSpinner = true): void {
+    if (mostrarSpinner) this.cargando.set(true);
     this.catalogoService.listarProductos().subscribe({
       next: (productos) => {
         this.productos.set(productos);
@@ -93,7 +115,7 @@ export class Venta implements OnInit {
   cambiarCantidad(item: ItemCarrito, delta: number): void {
     const nuevaCantidad = item.cantidad + delta;
     if (nuevaCantidad <= 0) {
-      this.quitarDelCarrito(item);
+      this.quitarDelCarrito(item, item.cantidad);
       return;
     }
     if (nuevaCantidad > item.producto.stockActual) return;
@@ -103,8 +125,19 @@ export class Venta implements OnInit {
     );
   }
 
-  quitarDelCarrito(item: ItemCarrito): void {
+  private quitarDelCarrito(item: ItemCarrito, cantidadPrevia: number): void {
     this.carrito.set(this.carrito().filter((i) => i.producto.id !== item.producto.id));
+
+    this.snackBar
+      .open(`Quitaste ${item.producto.nombre} del carrito`, 'Deshacer', { duration: 4000 })
+      .onAction()
+      .subscribe(() => {
+        this.carrito.set([...this.carrito(), { producto: item.producto, cantidad: cantidadPrevia }]);
+      });
+  }
+
+  toggleCarrito(): void {
+    this.carritoExpandido.set(!this.carritoExpandido());
   }
 
   cobrar(): void {
@@ -120,6 +153,7 @@ export class Venta implements OnInit {
       .subscribe({
         next: (venta) => {
           this.procesando.set(false);
+          this.carritoExpandido.set(false);
           this.ventaResultado.set(venta);
         },
         error: (err) => {
@@ -131,11 +165,12 @@ export class Venta implements OnInit {
 
   nuevaVenta(): void {
     this.carrito.set([]);
+    this.carritoExpandido.set(false);
     this.telefonoCliente.set('');
     this.ventaResultado.set(null);
     this.busqueda.set('');
     // Refresca stock local para que la siguiente venta valide contra los números actuales.
-    this.catalogoService.listarProductos().subscribe((productos) => this.productos.set(productos));
+    this.cargarProductos(false);
   }
 
   enviarPorWhatsApp(): void {
