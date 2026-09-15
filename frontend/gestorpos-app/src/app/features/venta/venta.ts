@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,8 +10,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
-import { RankingProductoDto } from '../../core/models/reportes.models';
+import { CajaDto, RankingProductoDto } from '../../core/models/reportes.models';
 import { MedioPago, VentaDto } from '../../core/models/venta.models';
+import { CajaService } from '../../core/services/caja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
@@ -27,6 +29,7 @@ interface ItemCarrito {
   selector: 'app-venta',
   imports: [
     FormsModule,
+    RouterLink,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -42,9 +45,12 @@ export class Venta implements OnInit {
   private readonly catalogoService = inject(CatalogoService);
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
+  private readonly cajaService = inject(CajaService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly cargando = signal(true);
+  readonly cargandoCaja = signal(true);
+  readonly cajaAbierta = signal(false);
   readonly productos = signal<Producto[]>([]);
   readonly rankingTop = signal<RankingProductoDto[]>([]);
   readonly busqueda = signal('');
@@ -85,6 +91,13 @@ export class Venta implements OnInit {
   ngOnInit(): void {
     this.cargarProductos();
     this.reportesService.rankingProductos(TOP_MAS_VENDIDOS).subscribe((ranking) => this.rankingTop.set(ranking));
+    this.cajaService.actual().subscribe({
+      next: (caja: CajaDto | null) => {
+        this.cajaAbierta.set(caja !== null);
+        this.cargandoCaja.set(false);
+      },
+      error: () => this.cargandoCaja.set(false),
+    });
   }
 
   private cargarProductos(mostrarSpinner = true): void {

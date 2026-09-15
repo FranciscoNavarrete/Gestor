@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using GestorPOS.Application.Caja;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Ventas;
@@ -18,15 +19,20 @@ public class VentaService : IVentaService
 
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
+    private readonly ICajaService _cajaService;
 
-    public VentaService(AppDbContext db, ITenantContext tenantContext)
+    public VentaService(AppDbContext db, ITenantContext tenantContext, ICajaService cajaService)
     {
         _db = db;
         _tenantContext = tenantContext;
+        _cajaService = cajaService;
     }
 
     public async Task<VentaDto> CrearAsync(CrearVentaRequest request, CancellationToken ct = default)
     {
+        if (await _cajaService.ObtenerActualAsync(ct) is null)
+            throw new AppException("No hay una caja abierta. Abrí la caja antes de registrar una venta.");
+
         if (request.Items.Count == 0)
             throw new AppException("La venta debe tener al menos un producto.");
 

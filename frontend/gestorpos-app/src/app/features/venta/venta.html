@@ -18,6 +18,17 @@
       <button mat-stroked-button (click)="nuevaVenta()">Nueva venta</button>
     </div>
   </mat-card>
+} @else if (cargandoCaja()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (!cajaAbierta()) {
+  <mat-card class="aviso-caja">
+    <mat-icon>point_of_sale</mat-icon>
+    <h2>No hay una caja abierta</h2>
+    <p>Tenés que abrir la caja antes de poder registrar una venta.</p>
+    <button mat-flat-button color="primary" routerLink="/caja">Ir a Caja</button>
+  </mat-card>
 } @else {
   <div class="buscador">
     <mat-form-field appearance="outline" class="full">
