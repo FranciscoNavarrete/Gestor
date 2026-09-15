@@ -100,6 +100,8 @@ el puerto).
 - `GET /api/reportes/ranking-productos?desde=&hasta=&top=10` — productos más vendidos por cantidad, en un rango de fechas opcional
 - `GET /api/reportes/ganancias?desde=&hasta=` — ventas, costo y ganancia neta en un rango de fechas
 - `GET /api/reportes/dashboard` — resumen: ventas/ganancia de hoy, ventas del mes, productos en alerta de stock, producto más vendido del día
+- `GET /api/reportes/ventas/pdf?desde=&hasta=` — descarga un PDF con el resumen (total vendido, ganancia neta) y el listado de ventas del rango de fechas
+- `GET /api/reportes/stock/pdf?busqueda=&bajoStock=` — descarga un PDF con el stock actual (filtrable por búsqueda y/o solo bajo stock) y su valorizado
 - `GET /health` — health check (usado por Railway)
 
 ### Panel interno (no es para los negocios, es para vos)

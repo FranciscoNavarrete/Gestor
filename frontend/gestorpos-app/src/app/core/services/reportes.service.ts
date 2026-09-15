@@ -23,4 +23,18 @@ export class ReportesService {
       params: { ...(desde && { desde }), ...(hasta && { hasta }) },
     });
   }
+
+  exportarVentasPdf(desde?: string, hasta?: string): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/reportes/ventas/pdf`, {
+      params: { ...(desde && { desde }), ...(hasta && { hasta }) },
+      responseType: 'blob',
+    });
+  }
+
+  exportarStockPdf(busqueda: string, soloBajoStock: boolean): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/reportes/stock/pdf`, {
+      params: { busqueda, bajoStock: soloBajoStock },
+      responseType: 'blob',
+    });
+  }
 }

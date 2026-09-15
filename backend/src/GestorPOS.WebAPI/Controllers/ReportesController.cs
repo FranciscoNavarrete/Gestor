@@ -11,10 +11,12 @@ namespace GestorPOS.WebAPI.Controllers;
 public class ReportesController : ControllerBase
 {
     private readonly IReporteService _reporteService;
+    private readonly IReportePdfService _reportePdfService;
 
-    public ReportesController(IReporteService reporteService)
+    public ReportesController(IReporteService reporteService, IReportePdfService reportePdfService)
     {
         _reporteService = reporteService;
+        _reportePdfService = reportePdfService;
     }
 
     [HttpGet("ranking-productos")]
@@ -30,4 +32,18 @@ public class ReportesController : ControllerBase
     [HttpGet("dashboard")]
     public async Task<ActionResult<DashboardDto>> Dashboard(CancellationToken ct)
         => Ok(await _reporteService.DashboardAsync(ct));
+
+    [HttpGet("ventas/pdf")]
+    public async Task<IActionResult> VentasPdf([FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, CancellationToken ct)
+    {
+        var bytes = await _reportePdfService.GenerarVentasPdfAsync(desde, hasta, ct);
+        return File(bytes, "application/pdf", "reporte-ventas.pdf");
+    }
+
+    [HttpGet("stock/pdf")]
+    public async Task<IActionResult> StockPdf([FromQuery] string? busqueda, [FromQuery] bool bajoStock, CancellationToken ct)
+    {
+        var bytes = await _reportePdfService.GenerarStockPdfAsync(busqueda, bajoStock, ct);
+        return File(bytes, "application/pdf", "reporte-stock.pdf");
+    }
 }

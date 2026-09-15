@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
@@ -9,12 +10,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
 import { GananciasDto } from '../../core/models/reportes.models';
 import { VentaResumenDto } from '../../core/models/venta.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
+import { extraerMensajeError } from '../../core/utils/error.util';
 
 const TAMANO_PAGINA_STOCK = 20;
 
@@ -42,8 +45,10 @@ export class Reportes implements OnInit {
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
   private readonly catalogoService = inject(CatalogoService);
+  private readonly snackBar = inject(MatSnackBar);
 
   readonly vista = signal<Vista>('ventas');
+  readonly exportando = signal(false);
 
   // --- Reporte de ventas ---
   readonly desde = signal('');
@@ -140,5 +145,38 @@ export class Reportes implements OnInit {
 
   valorizado(producto: Producto): number {
     return producto.stockActual * producto.costo;
+  }
+
+  exportarVentasPdf(): void {
+    const desde = this.desde() || undefined;
+    const hasta = this.hasta() || undefined;
+    this.descargarPdf(this.reportesService.exportarVentasPdf(desde, hasta), 'reporte-ventas.pdf');
+  }
+
+  exportarStockPdf(): void {
+    this.descargarPdf(
+      this.reportesService.exportarStockPdf(this.busquedaStock(), this.soloBajoStock()),
+      'reporte-stock.pdf',
+    );
+  }
+
+  private descargarPdf(descarga: Observable<Blob>, nombreArchivo: string): void {
+    if (this.exportando()) return;
+    this.exportando.set(true);
+    descarga.subscribe({
+      next: (blob) => {
+        this.exportando.set(false);
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = nombreArchivo;
+        enlace.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.exportando.set(false);
+        this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 });
+      },
+    });
   }
 }

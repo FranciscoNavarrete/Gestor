@@ -24,6 +24,13 @@
         <mat-icon>close</mat-icon>
       </button>
     }
+    <button mat-icon-button (click)="exportarVentasPdf()" [disabled]="exportando()" aria-label="Exportar a PDF">
+      @if (exportando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <mat-icon>picture_as_pdf</mat-icon>
+      }
+    </button>
   </div>
 
   @if (ganancias(); as g) {
@@ -70,6 +77,14 @@
     <mat-slide-toggle [checked]="soloBajoStock()" (change)="toggleBajoStock()">
       Solo stock bajo
     </mat-slide-toggle>
+
+    <button mat-icon-button (click)="exportarStockPdf()" [disabled]="exportando()" aria-label="Exportar a PDF">
+      @if (exportando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <mat-icon>picture_as_pdf</mat-icon>
+      }
+    </button>
   </div>
 
   @if (cargandoStock()) {
