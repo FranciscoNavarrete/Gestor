@@ -1,3 +1,8 @@
+.buscador {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
 .encabezado {
   display: flex;
   justify-content: space-between;
@@ -33,12 +38,30 @@
 
 .producto-card {
   display: flex;
+  // mat-card trae flex-direction: column por defecto — sin esto la tarjeta se apila y centra.
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 8px 14px 18px;
+  gap: 12px;
+  padding: 10px 12px;
 
   &.alerta {
     border-color: color-mix(in srgb, var(--mat-sys-error) 35%, var(--border-subtle));
+  }
+
+  .avatar {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    color: var(--color-accent);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
   }
 
   .info {
@@ -55,6 +78,7 @@
 
   .nombre {
     font-weight: 600;
+    font-size: 0.925rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -62,9 +86,9 @@
 
   .stock-pill {
     flex-shrink: 0;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    padding: 2px 9px;
+    padding: 1px 8px;
     border-radius: 999px;
     background: var(--mat-sys-surface-variant, #eee);
     color: var(--mat-sys-on-surface-variant, #555);
@@ -76,19 +100,23 @@
   }
 
   .detalle {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     opacity: 0.65;
-    margin-top: 2px;
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .precio {
     font-weight: 600;
-    opacity: 0.9;
+    opacity: 1;
     color: var(--color-accent);
   }
 
   .acciones {
     display: flex;
     flex-shrink: 0;
+    margin-left: auto;
   }
 }

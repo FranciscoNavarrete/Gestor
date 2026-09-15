@@ -1,3 +1,9 @@
+<mat-form-field appearance="outline" class="buscador">
+  <mat-label>Buscar producto</mat-label>
+  <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
+  <mat-icon matSuffix>search</mat-icon>
+</mat-form-field>
+
 <div class="encabezado">
   <mat-slide-toggle [checked]="soloBajoStock()" (change)="toggleBajoStock()">
     Solo stock bajo
@@ -41,12 +47,20 @@
   <div class="centrado">
     <mat-spinner></mat-spinner>
   </div>
-} @else if (productos().length === 0) {
-  <p class="vacio">No hay productos para mostrar.</p>
+} @else if (productosFiltrados().length === 0) {
+  <p class="vacio">
+    @if (productos().length === 0) {
+      No hay productos para mostrar.
+    } @else {
+      Ningún producto coincide con "{{ busqueda() }}".
+    }
+  </p>
 } @else {
   <div class="lista">
-    @for (producto of productos(); track producto.id) {
+    @for (producto of productosFiltrados(); track producto.id) {
       <mat-card class="producto-card" [class.alerta]="producto.enStockMinimo">
+        <div class="avatar">{{ producto.nombre.charAt(0) }}</div>
+
         <div class="info" (click)="abrirEditar(producto)">
           <div class="nombre-fila">
             <span class="nombre">{{ producto.nombre }}</span>
@@ -55,9 +69,8 @@
             </span>
           </div>
           <div class="detalle">
-            {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} }
+            {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} } · <span class="precio">${{ producto.precio }}</span>
           </div>
-          <div class="detalle precio">${{ producto.precio }}</div>
         </div>
 
         <div class="acciones">

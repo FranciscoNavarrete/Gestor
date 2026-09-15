@@ -1,9 +1,11 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -22,7 +24,9 @@ import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-d
     FormsModule,
     MatButtonModule,
     MatCardModule,
+    MatFormFieldModule,
     MatIconModule,
+    MatInputModule,
     MatMenuModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
@@ -42,6 +46,19 @@ export class Productos implements OnInit {
   readonly productos = signal<Producto[]>([]);
   readonly categorias = signal<Categoria[]>([]);
   readonly soloBajoStock = signal(false);
+  readonly busqueda = signal('');
+
+  readonly productosFiltrados = computed(() => {
+    const termino = this.busqueda().trim().toLowerCase();
+    if (!termino) return this.productos();
+
+    return this.productos().filter(
+      (p) =>
+        p.nombre.toLowerCase().includes(termino) ||
+        p.sku.toLowerCase().includes(termino) ||
+        (p.categoriaNombre?.toLowerCase().includes(termino) ?? false),
+    );
+  });
 
   ngOnInit(): void {
     this.cargar();
