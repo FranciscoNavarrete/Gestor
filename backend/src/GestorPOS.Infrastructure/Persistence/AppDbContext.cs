@@ -19,6 +19,8 @@ public class AppDbContext : DbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Producto> Productos => Set<Producto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

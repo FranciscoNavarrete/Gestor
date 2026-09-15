@@ -1,0 +1,117 @@
+using GestorPOS.Application.Catalog;
+using GestorPOS.Application.Catalog.Dtos;
+using GestorPOS.Application.Common.Exceptions;
+using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Domain.Entities;
+using GestorPOS.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace GestorPOS.Infrastructure.Catalog;
+
+public class ProductoService : IProductoService
+{
+    private readonly AppDbContext _db;
+    private readonly ITenantContext _tenantContext;
+
+    public ProductoService(AppDbContext db, ITenantContext tenantContext)
+    {
+        _db = db;
+        _tenantContext = tenantContext;
+    }
+
+    public async Task<IReadOnlyList<ProductoDto>> ListarAsync(bool soloBajoStock, CancellationToken ct = default)
+    {
+        var query = _db.Productos.Where(p => p.Activo);
+        if (soloBajoStock)
+            query = query.Where(p => p.StockActual <= p.StockMinimo);
+
+        return await query
+            .OrderBy(p => p.Nombre)
+            .Select(p => ToDto(p, p.CategoriaId != null
+                ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
+                : null))
+            .ToListAsync(ct);
+    }
+
+    public async Task<ProductoDto> ObtenerAsync(Guid id, CancellationToken ct = default)
+    {
+        var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new AppException("El producto no existe.");
+
+        var categoriaNombre = producto.CategoriaId is null
+            ? null
+            : await _db.Categorias.Where(c => c.Id == producto.CategoriaId).Select(c => c.Nombre).FirstOrDefaultAsync(ct);
+
+        return ToDto(producto, categoriaNombre);
+    }
+
+    public async Task<ProductoDto> CrearAsync(CrearProductoRequest request, CancellationToken ct = default)
+    {
+        var skuEnUso = await _db.Productos.AnyAsync(p => p.Sku == request.Sku, ct);
+        if (skuEnUso)
+            throw new AppException($"Ya existe un producto con el SKU '{request.Sku}'.");
+
+        if (request.CategoriaId is not null)
+        {
+            var categoriaExiste = await _db.Categorias.AnyAsync(c => c.Id == request.CategoriaId, ct);
+            if (!categoriaExiste)
+                throw new AppException("La categoría indicada no existe.");
+        }
+
+        var producto = Producto.Crear(
+            _tenantContext.TenantId, request.Sku, request.Nombre, request.CategoriaId,
+            request.Precio, request.Costo, request.StockActual, request.StockMinimo);
+
+        _db.Productos.Add(producto);
+        await _db.SaveChangesAsync(ct);
+
+        return await ObtenerAsync(producto.Id, ct);
+    }
+
+    public async Task<ProductoDto> EditarAsync(Guid id, EditarProductoRequest request, CancellationToken ct = default)
+    {
+        var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new AppException("El producto no existe.");
+
+        if (request.CategoriaId is not null)
+        {
+            var categoriaExiste = await _db.Categorias.AnyAsync(c => c.Id == request.CategoriaId, ct);
+            if (!categoriaExiste)
+                throw new AppException("La categoría indicada no existe.");
+        }
+
+        producto.Editar(request.Nombre, request.CategoriaId, request.Precio, request.Costo, request.StockMinimo);
+        await _db.SaveChangesAsync(ct);
+
+        return await ObtenerAsync(producto.Id, ct);
+    }
+
+    public async Task DesactivarAsync(Guid id, CancellationToken ct = default)
+    {
+        var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new AppException("El producto no existe.");
+
+        producto.Desactivar();
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<int> ActualizarPreciosMasivoAsync(ActualizarPreciosMasivoRequest request, CancellationToken ct = default)
+    {
+        var query = _db.Productos.Where(p => p.Activo);
+        if (request.CategoriaId is not null)
+            query = query.Where(p => p.CategoriaId == request.CategoriaId);
+
+        var productos = await query.ToListAsync(ct);
+        var factor = 1 + (request.Porcentaje / 100m);
+
+        foreach (var producto in productos)
+            producto.ActualizarPrecio(Math.Round(producto.Precio * factor, 2));
+
+        await _db.SaveChangesAsync(ct);
+        return productos.Count;
+    }
+
+    private static ProductoDto ToDto(Producto p, string? categoriaNombre) => new(
+        p.Id, p.Sku, p.Nombre, p.CategoriaId, categoriaNombre,
+        p.Precio, p.Costo, p.StockActual, p.StockMinimo, p.EnStockMinimo, p.Activo);
+}

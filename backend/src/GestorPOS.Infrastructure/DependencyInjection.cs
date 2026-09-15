@@ -1,6 +1,8 @@
 using GestorPOS.Application.Auth;
+using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Infrastructure.Auth;
+using GestorPOS.Infrastructure.Catalog;
 using GestorPOS.Infrastructure.Persistence;
 using GestorPOS.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICategoriaService, CategoriaService>();
+        services.AddScoped<IProductoService, ProductoService>();
 
         return services;
     }
