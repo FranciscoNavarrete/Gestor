@@ -128,8 +128,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 - **Dashboard**: métricas del `/api/reportes/dashboard`
 - **Productos**: alta/edición (con creación de categoría anidada desde el mismo diálogo), ajuste de
   stock, baja lógica, filtro de stock bajo
-- **Venta (POS)**: búsqueda de producto, carrito, cobro, y pantalla de resultado con el ticket + botón
-  para enviarlo por WhatsApp
+- **Venta (POS)**: sección "Más vendidos" (hasta 6, según ranking real) + búsqueda, carrito flotante
+  colapsable (nunca empuja el contenido — barra fija con total, se expande a una hoja con +/− por
+  ítem, medio de pago y cobro), aviso con "Deshacer" al sacar un producto, y pantalla de resultado con
+  el ticket + botón para enviarlo por WhatsApp
 - **Caja**: abrir/cerrar con el resumen de diferencia
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
