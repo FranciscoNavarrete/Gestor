@@ -56,3 +56,11 @@ export interface ImportarProductosResultado {
   actualizados: number;
   errores: ImportarProductoError[];
 }
+
+export interface PaginaProductos {
+  items: Producto[];
+  pagina: number;
+  tamanoPagina: number;
+  totalItems: number;
+  totalPaginas: number;
+}

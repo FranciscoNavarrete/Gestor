@@ -9,6 +9,7 @@ import {
   CrearProductoRequest,
   EditarProductoRequest,
   ImportarProductosResultado,
+  PaginaProductos,
   Producto,
 } from '../models/catalog.models';
 
@@ -27,6 +28,17 @@ export class CatalogoService {
   listarProductos(soloBajoStock = false): Observable<Producto[]> {
     return this.http.get<Producto[]>(`${environment.apiUrl}/productos`, {
       params: soloBajoStock ? { bajoStock: true } : {},
+    });
+  }
+
+  buscarProductos(
+    busqueda: string,
+    soloBajoStock: boolean,
+    pagina: number,
+    tamanoPagina: number,
+  ): Observable<PaginaProductos> {
+    return this.http.get<PaginaProductos>(`${environment.apiUrl}/productos/buscar`, {
+      params: { busqueda, bajoStock: soloBajoStock, pagina, tamanoPagina },
     });
   }
 

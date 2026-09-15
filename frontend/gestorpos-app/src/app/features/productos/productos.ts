@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,13 +10,15 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { forkJoin } from 'rxjs';
 import { Categoria, Producto } from '../../core/models/catalog.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { AjustarStockDialog } from './ajustar-stock-dialog/ajustar-stock-dialog';
 import { ImportarResultadoDialog } from './importar-resultado-dialog/importar-resultado-dialog';
 import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-dialog';
+
+const TAMANO_PAGINA = 20;
+const DEBOUNCE_BUSQUEDA_MS = 350;
 
 @Component({
   selector: 'app-productos',
@@ -34,12 +36,13 @@ import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-d
   templateUrl: './productos.html',
   styleUrl: './productos.scss',
 })
-export class Productos implements OnInit {
+export class Productos implements OnInit, OnDestroy {
   private readonly catalogoService = inject(CatalogoService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
   @ViewChild('inputArchivo') private inputArchivo?: ElementRef<HTMLInputElement>;
+  private debounceTimer?: ReturnType<typeof setTimeout>;
 
   readonly cargando = signal(true);
   readonly importando = signal(false);
@@ -48,39 +51,58 @@ export class Productos implements OnInit {
   readonly soloBajoStock = signal(false);
   readonly busqueda = signal('');
 
-  readonly productosFiltrados = computed(() => {
-    const termino = this.busqueda().trim().toLowerCase();
-    if (!termino) return this.productos();
-
-    return this.productos().filter(
-      (p) =>
-        p.nombre.toLowerCase().includes(termino) ||
-        p.sku.toLowerCase().includes(termino) ||
-        (p.categoriaNombre?.toLowerCase().includes(termino) ?? false),
-    );
-  });
+  readonly pagina = signal(1);
+  readonly totalPaginas = signal(1);
+  readonly totalItems = signal(0);
 
   ngOnInit(): void {
+    this.catalogoService.listarCategorias().subscribe((categorias) => this.categorias.set(categorias));
     this.cargar();
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.debounceTimer);
   }
 
   cargar(): void {
     this.cargando.set(true);
-    forkJoin({
-      productos: this.catalogoService.listarProductos(this.soloBajoStock()),
-      categorias: this.catalogoService.listarCategorias(),
-    }).subscribe({
-      next: ({ productos, categorias }) => {
-        this.productos.set(productos);
-        this.categorias.set(categorias);
-        this.cargando.set(false);
-      },
-      error: () => this.cargando.set(false),
-    });
+    this.catalogoService
+      .buscarProductos(this.busqueda(), this.soloBajoStock(), this.pagina(), TAMANO_PAGINA)
+      .subscribe({
+        next: (resultado) => {
+          this.productos.set(resultado.items);
+          this.totalPaginas.set(resultado.totalPaginas);
+          this.totalItems.set(resultado.totalItems);
+          this.cargando.set(false);
+        },
+        error: () => this.cargando.set(false),
+      });
+  }
+
+  onBusquedaChange(valor: string): void {
+    this.busqueda.set(valor);
+    clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      this.pagina.set(1);
+      this.cargar();
+    }, DEBOUNCE_BUSQUEDA_MS);
   }
 
   toggleBajoStock(): void {
     this.soloBajoStock.set(!this.soloBajoStock());
+    this.pagina.set(1);
+    this.cargar();
+  }
+
+  paginaAnterior(): void {
+    if (this.pagina() <= 1) return;
+    this.pagina.set(this.pagina() - 1);
+    this.cargar();
+  }
+
+  paginaSiguiente(): void {
+    if (this.pagina() >= this.totalPaginas()) return;
+    this.pagina.set(this.pagina() + 1);
     this.cargar();
   }
 
@@ -149,6 +171,7 @@ export class Productos implements OnInit {
       next: (resultado) => {
         this.importando.set(false);
         this.dialog.open(ImportarResultadoDialog, { data: resultado, width: '460px', maxWidth: '95vw' });
+        this.pagina.set(1);
         this.cargar();
       },
       error: (err) => {

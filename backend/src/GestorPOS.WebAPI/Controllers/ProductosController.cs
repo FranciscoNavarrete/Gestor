@@ -1,5 +1,6 @@
 using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Catalog.Dtos;
+using GestorPOS.Application.Common.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,15 @@ public class ProductosController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ProductoDto>>> Listar([FromQuery] bool bajoStock, CancellationToken ct)
         => Ok(await _productoService.ListarAsync(bajoStock, ct));
+
+    [HttpGet("buscar")]
+    public async Task<ActionResult<PaginaDto<ProductoDto>>> Buscar(
+        [FromQuery] string? busqueda,
+        [FromQuery] bool bajoStock,
+        [FromQuery] int pagina = 1,
+        [FromQuery] int tamanoPagina = 20,
+        CancellationToken ct = default)
+        => Ok(await _productoService.BuscarAsync(busqueda, bajoStock, pagina, tamanoPagina, ct));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ProductoDto>> Obtener(Guid id, CancellationToken ct)

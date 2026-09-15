@@ -1,5 +1,6 @@
 using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Catalog.Dtos;
+using GestorPOS.Application.Common.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Domain.Entities;
@@ -31,6 +32,40 @@ public class ProductoService : IProductoService
                 ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
                 : null))
             .ToListAsync(ct);
+    }
+
+    public async Task<PaginaDto<ProductoDto>> BuscarAsync(
+        string? busqueda, bool soloBajoStock, int pagina, int tamanoPagina, CancellationToken ct = default)
+    {
+        pagina = Math.Max(1, pagina);
+        tamanoPagina = Math.Clamp(tamanoPagina, 1, 100);
+
+        var query = _db.Productos.Where(p => p.Activo);
+        if (soloBajoStock)
+            query = query.Where(p => p.StockActual <= p.StockMinimo);
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            var termino = busqueda.Trim().ToLower();
+            query = query.Where(p =>
+                p.Nombre.ToLower().Contains(termino) ||
+                p.Sku.ToLower().Contains(termino) ||
+                (p.CategoriaId != null && _db.Categorias.Any(c => c.Id == p.CategoriaId && c.Nombre.ToLower().Contains(termino))));
+        }
+
+        var totalItems = await query.CountAsync(ct);
+        var totalPaginas = totalItems == 0 ? 0 : (int)Math.Ceiling(totalItems / (double)tamanoPagina);
+
+        var items = await query
+            .OrderBy(p => p.Nombre)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .Select(p => ToDto(p, p.CategoriaId != null
+                ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
+                : null))
+            .ToListAsync(ct);
+
+        return new PaginaDto<ProductoDto>(items, pagina, tamanoPagina, totalItems, totalPaginas);
     }
 
     public async Task<ProductoDto> ObtenerAsync(Guid id, CancellationToken ct = default)

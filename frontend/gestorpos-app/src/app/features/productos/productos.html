@@ -1,6 +1,6 @@
 <mat-form-field appearance="outline" class="buscador">
   <mat-label>Buscar producto</mat-label>
-  <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
+  <input matInput [ngModel]="busqueda()" (ngModelChange)="onBusquedaChange($event)" />
   <mat-icon matSuffix>search</mat-icon>
 </mat-form-field>
 
@@ -47,17 +47,17 @@
   <div class="centrado">
     <mat-spinner></mat-spinner>
   </div>
-} @else if (productosFiltrados().length === 0) {
+} @else if (productos().length === 0) {
   <p class="vacio">
-    @if (productos().length === 0) {
-      No hay productos para mostrar.
-    } @else {
+    @if (busqueda()) {
       Ningún producto coincide con "{{ busqueda() }}".
+    } @else {
+      No hay productos para mostrar.
     }
   </p>
 } @else {
   <div class="lista">
-    @for (producto of productosFiltrados(); track producto.id) {
+    @for (producto of productos(); track producto.id) {
       <mat-card class="producto-card" [class.alerta]="producto.enStockMinimo">
         <div class="avatar">{{ producto.nombre.charAt(0) }}</div>
 
@@ -84,4 +84,25 @@
       </mat-card>
     }
   </div>
+
+  @if (totalPaginas() > 1) {
+    <div class="paginado">
+      <button mat-icon-button (click)="paginaAnterior()" [disabled]="pagina() <= 1" aria-label="Página anterior">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="paginado-info">
+        Página {{ pagina() }} de {{ totalPaginas() }} · {{ totalItems() }} productos
+      </span>
+      <button
+        mat-icon-button
+        (click)="paginaSiguiente()"
+        [disabled]="pagina() >= totalPaginas()"
+        aria-label="Página siguiente"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  } @else if (totalItems() > 0) {
+    <p class="paginado-info centrado-texto">{{ totalItems() }} producto{{ totalItems() === 1 ? '' : 's' }}</p>
+  }
 }

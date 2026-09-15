@@ -24,6 +24,25 @@
   padding: 48px 0;
 }
 
+.paginado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.paginado-info {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  white-space: nowrap;
+
+  &.centrado-texto {
+    text-align: center;
+    margin-top: 16px;
+  }
+}
+
 .vacio {
   text-align: center;
   opacity: 0.6;
