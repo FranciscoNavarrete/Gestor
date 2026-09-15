@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GestorPOS.Application/GestorPOS.Application.csproj" />
+    <Project Path="src/GestorPOS.Domain/GestorPOS.Domain.csproj" />
+    <Project Path="src/GestorPOS.Infrastructure/GestorPOS.Infrastructure.csproj" />
+    <Project Path="src/GestorPOS.WebAPI/GestorPOS.WebAPI.csproj" />
+  </Folder>
+</Solution>

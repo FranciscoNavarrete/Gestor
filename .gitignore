@@ -1,0 +1,18 @@
+# .NET
+backend/**/bin/
+backend/**/obj/
+*.user
+
+# Frontend (Angular, cuando se agregue)
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/.angular/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Entornos
+.env
+.env.local
