@@ -7,7 +7,7 @@ Sistema de Gestión y Punto de Venta (POS) 100% digital — multi-tenant, mobile
 - **Backend**: .NET 10, Clean Architecture (`Domain` / `Application` / `Infrastructure` / `WebAPI`)
 - **DB**: PostgreSQL, EF Core con *global query filters* por `TenantId`
 - **Auth**: JWT (tenant + rol + feature flags embebidos en el token)
-- **Frontend**: Angular standalone + Angular Material (pendiente de scaffold)
+- **Frontend**: Angular 22 standalone + Angular Material 3, mobile-first (bottom nav)
 - **Deploy**: Railway (API + Postgres) + Netlify (Angular)
 
 ## Arquitectura multi-tenant
@@ -65,6 +65,18 @@ dotnet run --urls http://localhost:5080
 
 Swagger en `http://localhost:5080/swagger` (solo en Development).
 
+4. Correr el frontend (en otra terminal, sin necesidad del PATH de .NET):
+
+```bash
+cd frontend/gestorpos-app
+npm install
+npx ng serve --port 4300
+```
+
+`http://localhost:4300` (el puerto 4200 puede estar ocupado por otro proyecto en esta máquina — si está
+libre para vos, usalo tranquilo, pero actualizá `Cors:AllowedOrigins` en `appsettings.json` si cambiás
+el puerto).
+
 ## Endpoints actuales
 
 - `POST /api/auth/registro-negocio` — crea un negocio (tenant) + su usuario admin, devuelve JWT
@@ -100,13 +112,30 @@ El feature aparece/desaparece del claim `feature` del JWT en el próximo login d
 código (backend o frontend) puede chequear `TieneFeature("clave")` para mostrar/habilitar algo puntual
 que le pediste a un cliente, sin que el resto de los negocios lo vean.
 
+## Frontend
+
+`frontend/gestorpos-app/` — Angular 22 standalone, Material 3, signals, mobile-first con bottom nav
+(Resumen / Vender / Productos / Caja). Cubre las 4 pantallas core:
+
+- **Login / Registro** de negocio
+- **Dashboard**: métricas del `/api/reportes/dashboard`
+- **Productos**: alta/edición (con creación de categoría anidada desde el mismo diálogo), ajuste de
+  stock, baja lógica, filtro de stock bajo
+- **Venta (POS)**: búsqueda de producto, carrito, cobro, y pantalla de resultado con el ticket + botón
+  para enviarlo por WhatsApp
+- **Caja**: abrir/cerrar con el resumen de diferencia
+
+No incluye todavía: reportes de ranking/ganancias en pantalla propia (solo el resumen del dashboard),
+ni el panel de admin de feature flags (es para vos, se puede operar por API/Swagger directamente).
+
 ## Roadmap
 
-Ver plan de fases completo en la memoria del proyecto. Resumen:
+Ver plan de fases completo en la memoria del proyecto. Backend (fases 0-4) y frontend core completos:
 
 0. ✅ Setup + núcleo multi-tenant + Auth
 1. ✅ Gestión de Stock (productos, categorías, alertas de stock mínimo, precios masivos)
 2. ✅ Ventas/POS (venta rápida, cobro, ticket digital vía link de WhatsApp, descuento de stock)
 3. ✅ Reportes (caja diaria, ranking de productos, ganancias netas, dashboard)
 4. ✅ Panel interno de feature flags por tenant
-5. Deploy productivo (Railway + Netlify) + pulido — o arrancar el frontend Angular
+5. ✅ Frontend Angular (pantallas core)
+6. Deploy productivo (Railway + Netlify)
