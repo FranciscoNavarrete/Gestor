@@ -17,17 +17,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   margin-bottom: 4px;
 
   mat-icon {
-    color: var(--mat-sys-primary);
+    color: var(--color-accent);
   }
 
-  &.acento-cian {
-    background: color-mix(in srgb, var(--mat-sys-tertiary) 16%, transparent);
+  &.acento-ganancia {
+    background: color-mix(in srgb, #1ea672 16%, transparent);
     mat-icon {
-      color: var(--mat-sys-tertiary);
+      color: #1ea672;
     }
   }
 

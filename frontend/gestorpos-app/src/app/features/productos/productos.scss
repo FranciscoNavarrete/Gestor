@@ -66,8 +66,8 @@
     font-weight: 600;
     padding: 2px 9px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--mat-sys-tertiary) 16%, transparent);
-    color: var(--mat-sys-tertiary);
+    background: var(--mat-sys-surface-variant, #eee);
+    color: var(--mat-sys-on-surface-variant, #555);
 
     &.pill-alerta {
       background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
@@ -84,7 +84,7 @@
   .precio {
     font-weight: 600;
     opacity: 0.9;
-    color: var(--mat-sys-primary);
+    color: var(--color-accent);
   }
 
   .acciones {

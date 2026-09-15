@@ -20,7 +20,7 @@
   justify-content: center;
 
   mat-icon {
-    color: var(--mat-sys-on-primary, #fff);
+    color: var(--color-accent-on);
     font-size: 30px;
     height: 30px;
     width: 30px;
@@ -30,9 +30,6 @@
 .auth-card {
   width: 100%;
   max-width: 400px;
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 
   mat-card-title {
     font-size: 1.4rem;
@@ -55,15 +52,4 @@
   color: var(--mat-sys-error, #b3261e);
   font-size: 0.875rem;
   margin: 0 0 8px;
-}
-
-.footer {
-  padding: 16px;
-  text-align: center;
-  font-size: 0.875rem;
-
-  a {
-    color: var(--mat-sys-primary, #6750a4);
-    text-decoration: none;
-  }
 }

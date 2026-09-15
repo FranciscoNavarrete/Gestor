@@ -1,5 +1,7 @@
-// Tema Material 3: violeta + cian, con un toque futurista (glow, degradés, glass)
-// aplicado como capa de tokens propios encima de las variables --mat-sys-* generadas.
+// Tema Material 3 con soporte automático de modo oscuro según el sistema.
+// El azul de marca es un valor propio (--color-accent), no el "primary" que genera
+// Material: en M3 el rol "primary" se vuelve pastel en modo oscuro (para contraste
+// interno de Material), lo cual no matcheaba con el azul sólido y vívido que se pidió.
 @use '@angular/material' as mat;
 
 * {
@@ -8,11 +10,14 @@
 
 html {
   height: 100%;
+  color-scheme: light dark;
+
   @include mat.theme(
     (
       color: (
-        primary: mat.$violet-palette,
-        tertiary: mat.$cyan-palette,
+        theme-type: light,
+        primary: mat.$blue-palette,
+        tertiary: mat.$blue-palette,
       ),
       typography: Roboto,
       density: 0,
@@ -22,26 +27,47 @@ html {
   --font-display: 'Space Grotesk', 'Roboto', sans-serif;
   --radius-sm: 12px;
   --radius-md: 18px;
-  --radius-lg: 26px;
-  --glow-primary: color-mix(in srgb, var(--mat-sys-primary) 28%, transparent);
-  --glow-tertiary: color-mix(in srgb, var(--mat-sys-tertiary) 28%, transparent);
-  --gradient-brand: linear-gradient(135deg, var(--mat-sys-primary), var(--mat-sys-tertiary));
-  --border-subtle: color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
-  --surface-glass: color-mix(in srgb, var(--mat-sys-surface) 82%, transparent);
+  --radius-lg: 24px;
 
-  // Los campos de texto (outline) se sienten más "producto nuevo" con esquinas más suaves.
+  --color-accent: #2f6fed;
+  --color-accent-on: #ffffff;
+  // "Degradé" plano (mismo color en ambas puntas): mantiene la sintaxis de gradiente
+  // que ya usan los componentes, pero se ve como un azul sólido, como pidió el usuario.
+  --gradient-brand: linear-gradient(135deg, var(--color-accent), var(--color-accent));
+  --glow-primary: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  --glow-tertiary: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  --border-subtle: color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
+  --surface-glass: color-mix(in srgb, var(--mat-sys-surface) 85%, transparent);
+  // Mezcla un poco del color de texto en la superficie: separa la tarjeta del fondo
+  // de forma consistente en claro y oscuro, sin depender de tokens M3 que a veces
+  // quedan casi idénticos al fondo.
+  --surface-card: color-mix(in srgb, var(--mat-sys-on-surface) 4%, var(--mat-sys-surface));
+
   --mdc-outlined-text-field-container-shape: var(--radius-sm);
   --mat-form-field-container-height: 56px;
 }
 
-body {
-  color-scheme: light;
+@media (prefers-color-scheme: dark) {
+  html {
+    @include mat.theme(
+      (
+        color: (
+          theme-type: dark,
+          primary: mat.$blue-palette,
+          tertiary: mat.$blue-palette,
+        ),
+        typography: Roboto,
+        density: 0,
+      )
+    );
 
-  background:
-    radial-gradient(circle at 12% -10%, var(--glow-primary), transparent 42%),
-    radial-gradient(circle at 100% 0%, var(--glow-tertiary), transparent 38%),
-    var(--mat-sys-surface);
-  background-attachment: fixed;
+    --color-accent: #5b8def;
+    --surface-card: color-mix(in srgb, var(--mat-sys-on-surface) 6%, var(--mat-sys-surface));
+  }
+}
+
+body {
+  background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
 
@@ -49,33 +75,46 @@ body {
   height: 100%;
 }
 
+// Wash muy sutil de marca para no quedar totalmente plano.
+body {
+  background:
+    radial-gradient(circle at 10% -10%, var(--glow-primary), transparent 40%),
+    var(--mat-sys-surface);
+  background-attachment: fixed;
+}
+
 h1, h2, h3, .font-display, .mat-mdc-card-title {
   font-family: var(--font-display) !important;
   letter-spacing: -0.01em;
 }
 
-// --- Tarjetas: esquinas suaves + sombra "glow" tenue en vez de la elevación Material default ---
+// --- Tarjetas: look "fintech" prolijo — esquinas suaves, sombra tenue, separadas del fondo ---
 .mat-mdc-card {
   border-radius: var(--radius-lg) !important;
   border: 1px solid var(--border-subtle);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.03),
-    0 16px 32px -20px var(--glow-primary) !important;
-  background: var(--mat-sys-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 20px -16px rgba(0, 0, 0, 0.3) !important;
+  background: var(--surface-card) !important;
 }
 
 .mat-mdc-dialog-surface {
   border-radius: var(--radius-lg) !important;
   border: 1px solid var(--border-subtle);
+  background: var(--surface-card) !important;
 }
 
-// --- Botones primarios: degradé violeta -> cian con glow al toque ---
+// --- Botones primarios: azul sólido de marca, con texto siempre blanco para contraste ---
 .mat-mdc-unelevated-button.mat-primary,
 .mat-mdc-raised-button.mat-primary,
 .mat-mdc-fab.mat-primary,
 .mat-mdc-mini-fab.mat-primary {
   background-image: var(--gradient-brand);
-  box-shadow: 0 10px 24px -10px var(--glow-primary);
+  box-shadow: 0 8px 18px -10px var(--glow-primary);
+  color: var(--color-accent-on) !important;
+
+  .mat-icon,
+  .mdc-button__label {
+    color: var(--color-accent-on);
+  }
 }
 
 .mat-mdc-unelevated-button:not(:disabled),

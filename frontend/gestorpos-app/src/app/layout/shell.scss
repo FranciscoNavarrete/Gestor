@@ -93,7 +93,7 @@
     }
 
     &.active {
-      color: var(--mat-sys-on-primary, #fff);
+      color: var(--color-accent-on);
       background-image: var(--gradient-brand);
       box-shadow: 0 8px 18px -8px var(--glow-primary);
     }
