@@ -1,0 +1,9 @@
+[build]
+  base = "frontend/gestorpos-app"
+  command = "npm run build"
+  publish = "dist/gestorpos-app/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -21,7 +21,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
+# El puerto real lo define Program.cs leyendo la variable PORT en runtime (Railway la
+# asigna dinámicamente) — este ENV era una interpolación de shell que Docker no resuelve
+# en tiempo de build, así que quedaba siempre fijo en 8080 sin importar el PORT real.
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "GestorPOS.WebAPI.dll"]

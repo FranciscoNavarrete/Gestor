@@ -1,11 +1,20 @@
 using System.Text;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Infrastructure;
+using GestorPOS.Infrastructure.Persistence;
 using GestorPOS.WebAPI.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Railway asigna el puerto en runtime vía la variable PORT — en local no está seteada,
+// así que esto no toca el --urls que ya se usa para desarrollo.
+var puertoRailway = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(puertoRailway))
+    builder.WebHost.UseUrls($"http://+:{puertoRailway}");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -46,6 +55,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Aplica migraciones pendientes en cada arranque — evita el paso manual de
+// "dotnet-ef database update" en cada deploy. Es idempotente (no hace nada si ya está al día).
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -73,6 +90,12 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
+// Railway termina TLS en su proxy y reenvía como HTTP interno — sin esto,
+// UseHttpsRedirection entraría en loop de redirects creyendo que cada request es HTTP.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
 app.UseMiddleware<AdminApiKeyMiddleware>();
