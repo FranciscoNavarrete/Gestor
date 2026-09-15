@@ -12,6 +12,8 @@ public class VentaItemConfiguration : IEntityTypeConfiguration<VentaItem>
         builder.HasKey(i => i.Id);
         builder.Property(i => i.ProductoNombre).IsRequired().HasMaxLength(200);
         builder.Property(i => i.PrecioUnitario).HasColumnType("numeric(12,2)");
+        builder.Property(i => i.CostoUnitario).HasColumnType("numeric(12,2)");
         builder.Property(i => i.Subtotal).HasColumnType("numeric(12,2)");
+        builder.Ignore(i => i.GananciaNeta);
     }
 }

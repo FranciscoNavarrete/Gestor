@@ -2,8 +2,8 @@ using GestorPOS.Domain.Common;
 
 namespace GestorPOS.Domain.Entities;
 
-/// <summary>Línea de una venta. Guarda nombre y precio "congelados" al momento de vender,
-/// para que la venta no cambie si después se edita o se borra el producto.</summary>
+/// <summary>Línea de una venta. Guarda nombre, precio y costo "congelados" al momento de vender,
+/// para que la venta (y el reporte de ganancias) no cambien si después se edita el producto.</summary>
 public class VentaItem : BaseEntity
 {
     public Guid VentaId { get; private set; }
@@ -11,7 +11,9 @@ public class VentaItem : BaseEntity
     public string ProductoNombre { get; private set; } = string.Empty;
     public int Cantidad { get; private set; }
     public decimal PrecioUnitario { get; private set; }
+    public decimal CostoUnitario { get; private set; }
     public decimal Subtotal { get; private set; }
+    public decimal GananciaNeta => (PrecioUnitario - CostoUnitario) * Cantidad;
 
     private VentaItem() { }
 
@@ -26,6 +28,7 @@ public class VentaItem : BaseEntity
             ProductoNombre = producto.Nombre,
             Cantidad = cantidad,
             PrecioUnitario = producto.Precio,
+            CostoUnitario = producto.Costo,
             Subtotal = producto.Precio * cantidad
         };
     }

@@ -1,10 +1,14 @@
 using GestorPOS.Application.Auth;
+using GestorPOS.Application.Caja;
 using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Application.Reportes;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Infrastructure.Auth;
+using GestorPOS.Infrastructure.Caja;
 using GestorPOS.Infrastructure.Catalog;
 using GestorPOS.Infrastructure.Persistence;
+using GestorPOS.Infrastructure.Reportes;
 using GestorPOS.Infrastructure.Services;
 using GestorPOS.Infrastructure.Ventas;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<ICategoriaService, CategoriaService>();
         services.AddScoped<IProductoService, ProductoService>();
         services.AddScoped<IVentaService, VentaService>();
+        services.AddScoped<ICajaService, CajaService>();
+        services.AddScoped<IReporteService, ReporteService>();
 
         return services;
     }
