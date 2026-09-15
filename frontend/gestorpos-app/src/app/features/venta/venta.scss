@@ -182,12 +182,16 @@
   .boton-cantidad {
     width: 30px;
     height: 30px;
-    line-height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
     mat-icon {
       font-size: 18px;
       height: 18px;
       width: 18px;
+      line-height: 18px;
     }
 
     &.boton-quitar mat-icon {
@@ -225,10 +229,7 @@
   .total-valor {
     font-family: var(--font-display);
     font-size: 1.4rem;
-    background-image: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--color-accent);
   }
 }
 
@@ -282,10 +283,7 @@
     font-size: 2rem;
     font-weight: 700;
     margin: 4px 0 16px;
-    background-image: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--color-accent);
   }
 
   .ticket-texto {
