@@ -35,3 +35,11 @@ public record ActualizarPreciosMasivoRequest(decimal Porcentaje, Guid? Categoria
 
 /// <summary>Cantidad positiva para reponer stock, negativa para descontarlo (merma, corrección).</summary>
 public record AjustarStockRequest(int Cantidad);
+
+public record ImportarProductoErrorDto(int Fila, string Mensaje);
+
+public record ImportarProductosResultado(
+    int TotalFilas,
+    int Creados,
+    int Actualizados,
+    IReadOnlyList<ImportarProductoErrorDto> Errores);

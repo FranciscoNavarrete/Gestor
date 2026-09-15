@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -12,6 +13,7 @@ import { Categoria, Producto } from '../../core/models/catalog.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { AjustarStockDialog } from './ajustar-stock-dialog/ajustar-stock-dialog';
+import { ImportarResultadoDialog } from './importar-resultado-dialog/importar-resultado-dialog';
 import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-dialog';
 
 @Component({
@@ -21,6 +23,7 @@ import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-d
     MatButtonModule,
     MatCardModule,
     MatIconModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
   ],
@@ -32,7 +35,10 @@ export class Productos implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
+  @ViewChild('inputArchivo') private inputArchivo?: ElementRef<HTMLInputElement>;
+
   readonly cargando = signal(true);
+  readonly importando = signal(false);
   readonly productos = signal<Producto[]>([]);
   readonly categorias = signal<Categoria[]>([]);
   readonly soloBajoStock = signal(false);
@@ -94,6 +100,44 @@ export class Productos implements OnInit {
     this.catalogoService.desactivarProducto(producto.id).subscribe({
       next: () => this.cargar(),
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  descargarPlantilla(): void {
+    this.catalogoService.descargarPlantillaExcel().subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = 'plantilla-productos.xlsx';
+        enlace.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  abrirSelectorImportar(): void {
+    this.inputArchivo?.nativeElement.click();
+  }
+
+  importarArchivoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = ''; // permite volver a elegir el mismo archivo si hace falta reintentar
+    if (!archivo) return;
+
+    this.importando.set(true);
+    this.catalogoService.importarExcel(archivo).subscribe({
+      next: (resultado) => {
+        this.importando.set(false);
+        this.dialog.open(ImportarResultadoDialog, { data: resultado, width: '460px', maxWidth: '95vw' });
+        this.cargar();
+      },
+      error: (err) => {
+        this.importando.set(false);
+        this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 5000 });
+      },
     });
   }
 }

@@ -1,5 +1,6 @@
 using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Catalog.Dtos;
+using GestorPOS.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +12,12 @@ namespace GestorPOS.WebAPI.Controllers;
 public class ProductosController : ControllerBase
 {
     private readonly IProductoService _productoService;
+    private readonly IProductoImportService _productoImportService;
 
-    public ProductosController(IProductoService productoService)
+    public ProductosController(IProductoService productoService, IProductoImportService productoImportService)
     {
         _productoService = productoService;
+        _productoImportService = productoImportService;
     }
 
     [HttpGet]
@@ -49,5 +52,23 @@ public class ProductosController : ControllerBase
     {
         var afectados = await _productoService.ActualizarPreciosMasivoAsync(request, ct);
         return Ok(new { productosActualizados = afectados });
+    }
+
+    [HttpGet("plantilla-excel")]
+    public IActionResult DescargarPlantilla()
+    {
+        var bytes = _productoImportService.GenerarPlantilla();
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "plantilla-productos.xlsx");
+    }
+
+    [HttpPost("importar-excel")]
+    public async Task<ActionResult<ImportarProductosResultado>> ImportarExcel(IFormFile archivo, CancellationToken ct)
+    {
+        if (archivo is null || archivo.Length == 0)
+            throw new AppException("Subí un archivo Excel (.xlsx).");
+
+        await using var stream = archivo.OpenReadStream();
+        var resultado = await _productoImportService.ImportarAsync(stream, ct);
+        return Ok(resultado);
     }
 }

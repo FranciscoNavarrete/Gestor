@@ -8,6 +8,7 @@ import {
   CrearCategoriaRequest,
   CrearProductoRequest,
   EditarProductoRequest,
+  ImportarProductosResultado,
   Producto,
 } from '../models/catalog.models';
 
@@ -50,5 +51,15 @@ export class CatalogoService {
       `${environment.apiUrl}/productos/actualizar-precios-masivo`,
       request,
     );
+  }
+
+  descargarPlantillaExcel(): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/productos/plantilla-excel`, { responseType: 'blob' });
+  }
+
+  importarExcel(archivo: File): Observable<ImportarProductosResultado> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<ImportarProductosResultado>(`${environment.apiUrl}/productos/importar-excel`, formData);
   }
 }

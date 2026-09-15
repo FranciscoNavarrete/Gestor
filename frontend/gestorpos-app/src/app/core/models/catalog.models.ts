@@ -44,3 +44,15 @@ export interface ActualizarPreciosMasivoRequest {
   porcentaje: number;
   categoriaId: string | null;
 }
+
+export interface ImportarProductoError {
+  fila: number;
+  mensaje: string;
+}
+
+export interface ImportarProductosResultado {
+  totalFilas: number;
+  creados: number;
+  actualizados: number;
+  errores: ImportarProductoError[];
+}

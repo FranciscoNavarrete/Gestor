@@ -1,0 +1,38 @@
+<h2 mat-dialog-title>Resultado de la importación</h2>
+
+<mat-dialog-content>
+  <div class="resumen">
+    <div class="stat">
+      <span class="valor">{{ resultado.totalFilas }}</span>
+      <span class="etiqueta">Filas leídas</span>
+    </div>
+    <div class="stat ok">
+      <span class="valor">{{ resultado.creados }}</span>
+      <span class="etiqueta">Creados</span>
+    </div>
+    <div class="stat ok">
+      <span class="valor">{{ resultado.actualizados }}</span>
+      <span class="etiqueta">Actualizados</span>
+    </div>
+    <div class="stat" [class.error]="resultado.errores.length > 0">
+      <span class="valor">{{ resultado.errores.length }}</span>
+      <span class="etiqueta">Con error</span>
+    </div>
+  </div>
+
+  @if (resultado.errores.length > 0) {
+    <p class="subtitulo">Filas que no se pudieron importar:</p>
+    <div class="lista-errores">
+      @for (error of resultado.errores; track error.fila) {
+        <div class="error-item">
+          <mat-icon>error_outline</mat-icon>
+          <span><strong>Fila {{ error.fila }}:</strong> {{ error.mensaje }}</span>
+        </div>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button color="primary" mat-dialog-close>Entendido</button>
+</mat-dialog-actions>

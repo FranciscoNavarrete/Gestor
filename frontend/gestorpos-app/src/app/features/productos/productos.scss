@@ -7,6 +7,12 @@
   flex-wrap: wrap;
 }
 
+.acciones-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .centrado {
   display: flex;
   justify-content: center;
