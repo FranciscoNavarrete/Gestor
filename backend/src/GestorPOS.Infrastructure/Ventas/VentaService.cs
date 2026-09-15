@@ -82,14 +82,20 @@ public class VentaService : IVentaService
         return ToDto(venta, nombreNegocio);
     }
 
-    public async Task<IReadOnlyList<VentaResumenDto>> ListarAsync(DateOnly? fecha, CancellationToken ct = default)
+    public async Task<IReadOnlyList<VentaResumenDto>> ListarAsync(DateOnly? desde, DateOnly? hasta, CancellationToken ct = default)
     {
         var query = _db.Ventas.AsQueryable();
-        if (fecha is not null)
+
+        if (desde is not null)
         {
-            var desde = fecha.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            var hasta = desde.AddDays(1);
-            query = query.Where(v => v.FechaCreacion >= desde && v.FechaCreacion < hasta);
+            var desdeUtc = desde.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(v => v.FechaCreacion >= desdeUtc);
+        }
+
+        if (hasta is not null)
+        {
+            var hastaUtc = hasta.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(v => v.FechaCreacion < hastaUtc);
         }
 
         return await query

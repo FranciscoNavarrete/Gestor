@@ -18,8 +18,9 @@ public class VentasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<VentaResumenDto>>> Listar([FromQuery] DateOnly? fecha, CancellationToken ct)
-        => Ok(await _ventaService.ListarAsync(fecha, ct));
+    public async Task<ActionResult<IReadOnlyList<VentaResumenDto>>> Listar(
+        [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, CancellationToken ct)
+        => Ok(await _ventaService.ListarAsync(desde, hasta, ct));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<VentaDto>> Obtener(Guid id, CancellationToken ct)

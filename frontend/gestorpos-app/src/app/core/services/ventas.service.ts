@@ -16,9 +16,9 @@ export class VentasService {
     return this.http.get<VentaDto>(`${environment.apiUrl}/ventas/${id}`);
   }
 
-  listar(fecha?: string): Observable<VentaResumenDto[]> {
+  listar(desde?: string, hasta?: string): Observable<VentaResumenDto[]> {
     return this.http.get<VentaResumenDto[]>(`${environment.apiUrl}/ventas`, {
-      params: fecha ? { fecha } : {},
+      params: { ...(desde && { desde }), ...(hasta && { hasta }) },
     });
   }
 }

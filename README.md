@@ -91,7 +91,7 @@ el puerto).
 - `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
 - `GET /api/productos/plantilla-excel` — descarga la plantilla .xlsx (SKU, Nombre, Categoría, Precio, Costo, Stock inicial, Stock mínimo)
 - `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
-- `GET /api/ventas?fecha=2026-09-15` — lista resumida de ventas (todas, o filtradas por día)
+- `GET /api/ventas?desde=2026-09-01&hasta=2026-09-15` — lista resumida de ventas (todas, o filtradas por rango de fechas; ambos parámetros son opcionales e independientes)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
 - `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar
 - `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
@@ -133,12 +133,16 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   ítem, medio de pago y cobro), aviso con "Deshacer" al sacar un producto, y pantalla de resultado con
   el ticket + botón para enviarlo por WhatsApp
 - **Caja**: abrir/cerrar con el resumen de diferencia
+- **Reportes**: dos vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
+  ganancia neta y listado de ventas del período) y Stock (búsqueda + filtro "solo stock bajo" +
+  valorizado por producto, paginado)
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.
 
-No incluye todavía: reportes de ranking/ganancias en pantalla propia (solo el resumen del dashboard),
-ni gestión de features por tenant en UI (se opera por API/Swagger directamente).
+No incluye todavía: reporte de movimientos de stock (auditoría de cada cambio con motivo — hoy el stock
+es solo un contador, sin historial), ni gestión de features por tenant en UI (se opera por API/Swagger
+directamente).
 
 ## Roadmap
 

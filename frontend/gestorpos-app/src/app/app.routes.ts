@@ -35,6 +35,10 @@ export const routes: Routes = [
         path: 'caja',
         loadComponent: () => import('./features/caja/caja').then((m) => m.Caja),
       },
+      {
+        path: 'reportes',
+        loadComponent: () => import('./features/reportes/reportes').then((m) => m.Reportes),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -1,0 +1,131 @@
+<mat-button-toggle-group class="vista-toggle" [value]="vista()" (change)="cambiarVista($event.value)">
+  <mat-button-toggle value="ventas">
+    <mat-icon>receipt_long</mat-icon>
+    Ventas
+  </mat-button-toggle>
+  <mat-button-toggle value="stock">
+    <mat-icon>inventory_2</mat-icon>
+    Stock
+  </mat-button-toggle>
+</mat-button-toggle-group>
+
+@if (vista() === 'ventas') {
+  <div class="filtro-fechas">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input matInput type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event); cargarVentas()" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input matInput type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event); cargarVentas()" />
+    </mat-form-field>
+    @if (desde() || hasta()) {
+      <button mat-icon-button (click)="limpiarFiltroFechas()" aria-label="Limpiar filtro de fechas">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+
+  @if (ganancias(); as g) {
+    <div class="grid-resumen">
+      <mat-card class="stat">
+        <div class="icono-chip"><mat-icon>payments</mat-icon></div>
+        <div class="valor font-display">${{ g.totalVentas | number: '1.0-2' }}</div>
+        <div class="etiqueta">Total vendido · {{ g.cantidadVentas }} venta{{ g.cantidadVentas === 1 ? '' : 's' }}</div>
+      </mat-card>
+
+      <mat-card class="stat">
+        <div class="icono-chip acento-ganancia"><mat-icon>trending_up</mat-icon></div>
+        <div class="valor font-display">${{ g.gananciaNeta | number: '1.0-2' }}</div>
+        <div class="etiqueta">Ganancia neta</div>
+      </mat-card>
+    </div>
+  }
+
+  @if (cargandoVentas()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (ventas().length === 0) {
+    <p class="vacio">No hay ventas en el período seleccionado.</p>
+  } @else {
+    <div class="lista-ventas">
+      @for (v of ventas(); track v.id) {
+        <mat-card class="venta-item">
+          <div class="venta-fecha">{{ v.fecha | date: 'dd/MM/yyyy HH:mm' }}</div>
+          <div class="venta-medio">{{ v.medioPago }}</div>
+          <div class="venta-total">${{ v.total | number: '1.0-2' }}</div>
+        </mat-card>
+      }
+    </div>
+  }
+} @else {
+  <mat-form-field appearance="outline" class="buscador">
+    <mat-label>Buscar producto</mat-label>
+    <input matInput [ngModel]="busquedaStock()" (ngModelChange)="onBusquedaStockChange($event)" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <div class="encabezado">
+    <mat-slide-toggle [checked]="soloBajoStock()" (change)="toggleBajoStock()">
+      Solo stock bajo
+    </mat-slide-toggle>
+  </div>
+
+  @if (cargandoStock()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (productosStock().length === 0) {
+    <p class="vacio">
+      @if (busquedaStock()) {
+        Ningún producto coincide con "{{ busquedaStock() }}".
+      } @else {
+        No hay productos para mostrar.
+      }
+    </p>
+  } @else {
+    <div class="lista-stock">
+      @for (p of productosStock(); track p.id) {
+        <mat-card class="stock-item" [class.alerta]="p.enStockMinimo">
+          <div class="info">
+            <div class="nombre-fila">
+              <span class="nombre">{{ p.nombre }}</span>
+              <span class="stock-pill" [class.pill-alerta]="p.enStockMinimo">{{ p.stockActual }} u.</span>
+            </div>
+            <div class="detalle">
+              {{ p.sku }} @if (p.categoriaNombre) { · {{ p.categoriaNombre }} }
+            </div>
+          </div>
+          <div class="valorizado">${{ valorizado(p) | number: '1.0-2' }}</div>
+        </mat-card>
+      }
+    </div>
+
+    @if (totalPaginasStock() > 1) {
+      <div class="paginado">
+        <button
+          mat-icon-button
+          (click)="paginaStockAnterior()"
+          [disabled]="paginaStock() <= 1"
+          aria-label="Página anterior"
+        >
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="paginado-info">
+          Página {{ paginaStock() }} de {{ totalPaginasStock() }} · {{ totalItemsStock() }} productos
+        </span>
+        <button
+          mat-icon-button
+          (click)="paginaStockSiguiente()"
+          [disabled]="paginaStock() >= totalPaginasStock()"
+          aria-label="Página siguiente"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    } @else if (totalItemsStock() > 0) {
+      <p class="paginado-info centrado-texto">{{ totalItemsStock() }} producto{{ totalItemsStock() === 1 ? '' : 's' }}</p>
+    }
+  }
+}

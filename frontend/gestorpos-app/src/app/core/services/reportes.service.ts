@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DashboardDto, RankingProductoDto } from '../models/reportes.models';
+import { DashboardDto, GananciasDto, RankingProductoDto } from '../models/reportes.models';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
@@ -15,6 +15,12 @@ export class ReportesService {
   rankingProductos(top: number): Observable<RankingProductoDto[]> {
     return this.http.get<RankingProductoDto[]>(`${environment.apiUrl}/reportes/ranking-productos`, {
       params: { top },
+    });
+  }
+
+  ganancias(desde?: string, hasta?: string): Observable<GananciasDto> {
+    return this.http.get<GananciasDto>(`${environment.apiUrl}/reportes/ganancias`, {
+      params: { ...(desde && { desde }), ...(hasta && { hasta }) },
     });
   }
 }

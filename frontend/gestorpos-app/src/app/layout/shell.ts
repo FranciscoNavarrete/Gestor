@@ -23,6 +23,7 @@ export class Shell {
     { path: '/venta', icon: 'point_of_sale', label: 'Vender' },
     { path: '/productos', icon: 'inventory_2', label: 'Productos' },
     { path: '/caja', icon: 'payments', label: 'Caja' },
+    { path: '/reportes', icon: 'bar_chart', label: 'Reportes' },
   ];
 
   cerrarSesion(): void {
