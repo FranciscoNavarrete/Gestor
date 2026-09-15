@@ -6,6 +6,7 @@ Sistema de Gestión y Punto de Venta (POS) 100% digital — multi-tenant, mobile
 
 - **Backend**: .NET 10, Clean Architecture (`Domain` / `Application` / `Infrastructure` / `WebAPI`)
 - **DB**: PostgreSQL, EF Core con *global query filters* por `TenantId`
+- **Documentos**: ClosedXML (Excel) y QuestPDF (PDF, licencia Community) para plantillas/reportes
 - **Auth**: JWT (tenant + rol + feature flags embebidos en el token)
 - **Frontend**: Angular 22 standalone + Angular Material 3, mobile-first (bottom nav)
 - **Deploy**: Railway (API + Postgres) + Netlify (Angular)
@@ -96,7 +97,7 @@ el puerto).
 - `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar
 - `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
 - `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
-- `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, y la diferencia
+- `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período
 - `GET /api/reportes/ranking-productos?desde=&hasta=&top=10` — productos más vendidos por cantidad, en un rango de fechas opcional
 - `GET /api/reportes/ganancias?desde=&hasta=` — ventas, costo y ganancia neta en un rango de fechas
 - `GET /api/reportes/dashboard` — resumen: ventas/ganancia de hoy, ventas del mes, productos en alerta de stock, producto más vendido del día
@@ -137,7 +138,7 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 - **Caja**: abrir/cerrar con el resumen de diferencia
 - **Reportes**: dos vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período) y Stock (búsqueda + filtro "solo stock bajo" +
-  valorizado por producto, paginado)
+  valorizado por producto, paginado) — ambas exportables a PDF con un botón
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.

@@ -8,7 +8,10 @@ public record CajaDto(
     decimal? MontoCierreEsperado,
     decimal? MontoCierreReal,
     decimal? Diferencia,
-    DateTime? FechaCierre);
+    DateTime? FechaCierre,
+    IReadOnlyList<VentaPorMedioPagoDto> VentasPorMedioPago);
+
+public record VentaPorMedioPagoDto(string MedioPago, decimal Total);
 
 public record AbrirCajaRequest(decimal MontoApertura);
 

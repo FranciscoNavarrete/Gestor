@@ -21,6 +21,11 @@ export interface DashboardDto {
   productoMasVendidoHoy: RankingProductoDto | null;
 }
 
+export interface VentaPorMedioPagoDto {
+  medioPago: string;
+  total: number;
+}
+
 export interface CajaDto {
   id: string;
   fechaApertura: string;
@@ -30,6 +35,7 @@ export interface CajaDto {
   montoCierreReal: number | null;
   diferencia: number | null;
   fechaCierre: string | null;
+  ventasPorMedioPago: VentaPorMedioPagoDto[];
 }
 
 export interface AbrirCajaRequest {

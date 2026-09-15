@@ -11,6 +11,14 @@
     <div class="fila diferencia" [class.negativa]="(cerrada.diferencia ?? 0) < 0">
       <span>Diferencia</span><span>${{ cerrada.diferencia }}</span>
     </div>
+
+    @if (cerrada.ventasPorMedioPago.length > 0) {
+      <h3>Ventas por medio de pago</h3>
+      @for (item of cerrada.ventasPorMedioPago; track item.medioPago) {
+        <div class="fila"><span>{{ item.medioPago }}</span><span>${{ item.total }}</span></div>
+      }
+    }
+
     <button mat-flat-button color="primary" (click)="volverAAbrir()">Abrir nueva caja</button>
   </mat-card>
 } @else if (cajaActual(); as caja) {

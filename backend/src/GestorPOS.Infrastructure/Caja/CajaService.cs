@@ -22,7 +22,7 @@ public class CajaService : ICajaService
     public async Task<CajaDto?> ObtenerActualAsync(CancellationToken ct = default)
     {
         var caja = await _db.CajasDiarias.FirstOrDefaultAsync(c => c.Abierta, ct);
-        return caja is null ? null : ToDto(caja);
+        return caja is null ? null : ToDto(caja, []);
     }
 
     public async Task<CajaDto> AbrirAsync(AbrirCajaRequest request, CancellationToken ct = default)
@@ -35,7 +35,7 @@ public class CajaService : ICajaService
         _db.CajasDiarias.Add(caja);
         await _db.SaveChangesAsync(ct);
 
-        return ToDto(caja);
+        return ToDto(caja, []);
     }
 
     public async Task<CajaDto> CerrarAsync(CerrarCajaRequest request, CancellationToken ct = default)
@@ -43,17 +43,23 @@ public class CajaService : ICajaService
         var caja = await _db.CajasDiarias.FirstOrDefaultAsync(c => c.Abierta, ct)
             ?? throw new AppException("No hay ninguna caja abierta para cerrar.");
 
-        var ventasEfectivo = await _db.Ventas
-            .Where(v => v.FechaCreacion >= caja.FechaCreacion && v.MedioPago == MedioPago.Efectivo)
-            .SumAsync(v => (decimal?)v.Total, ct) ?? 0m;
+        var ventasPorMedioPago = await _db.Ventas
+            .Where(v => v.FechaCreacion >= caja.FechaCreacion)
+            .GroupBy(v => v.MedioPago)
+            .Select(g => new VentaPorMedioPagoDto(g.Key.ToString(), g.Sum(v => v.Total)))
+            .ToListAsync(ct);
+
+        var ventasEfectivo = ventasPorMedioPago
+            .FirstOrDefault(v => v.MedioPago == nameof(MedioPago.Efectivo))?.Total ?? 0m;
 
         caja.Cerrar(ventasEfectivo, request.MontoCierreReal);
         await _db.SaveChangesAsync(ct);
 
-        return ToDto(caja);
+        return ToDto(caja, ventasPorMedioPago);
     }
 
-    private static CajaDto ToDto(Domain.Entities.CajaDiaria caja) => new(
+    private static CajaDto ToDto(Domain.Entities.CajaDiaria caja, IReadOnlyList<VentaPorMedioPagoDto> ventasPorMedioPago) => new(
         caja.Id, caja.FechaCreacion, caja.MontoApertura, caja.Abierta,
-        caja.MontoCierreEsperado, caja.MontoCierreReal, caja.Diferencia, caja.FechaCierre);
+        caja.MontoCierreEsperado, caja.MontoCierreReal, caja.Diferencia, caja.FechaCierre,
+        ventasPorMedioPago);
 }

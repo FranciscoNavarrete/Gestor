@@ -49,3 +49,12 @@ mat-card {
     color: var(--mat-sys-error, #b3261e);
   }
 }
+
+.resumen-cierre h3 {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
