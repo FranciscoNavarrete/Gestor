@@ -4,5 +4,6 @@ namespace GestorPOS.Application.Common.Interfaces;
 public interface ITenantContext
 {
     Guid TenantId { get; }
+    Guid UsuarioId { get; }
     bool TieneFeature(string clave);
 }

@@ -40,6 +40,10 @@ public class ProductosController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:guid}/ajustar-stock")]
+    public async Task<ActionResult<ProductoDto>> AjustarStock(Guid id, AjustarStockRequest request, CancellationToken ct)
+        => Ok(await _productoService.AjustarStockAsync(id, request.Cantidad, ct));
+
     [HttpPost("actualizar-precios-masivo")]
     public async Task<IActionResult> ActualizarPreciosMasivo(ActualizarPreciosMasivoRequest request, CancellationToken ct)
     {

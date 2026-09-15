@@ -21,6 +21,15 @@ public class TenantContext : ITenantContext
         }
     }
 
+    public Guid UsuarioId
+    {
+        get
+        {
+            var claim = _httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value;
+            return Guid.TryParse(claim, out var usuarioId) ? usuarioId : Guid.Empty;
+        }
+    }
+
     public bool TieneFeature(string clave)
     {
         var features = _httpContextAccessor.HttpContext?.User.FindAll("feature").Select(c => c.Value) ?? [];

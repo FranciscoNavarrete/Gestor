@@ -32,3 +32,6 @@ public record EditarProductoRequest(
 /// <summary>Sube o baja el precio de todos los productos activos (opcionalmente filtrados por categoría)
 /// un porcentaje dado. Ej: 10 = +10%, -5 = -5%.</summary>
 public record ActualizarPreciosMasivoRequest(decimal Porcentaje, Guid? CategoriaId);
+
+/// <summary>Cantidad positiva para reponer stock, negativa para descontarlo (merma, corrección).</summary>
+public record AjustarStockRequest(int Cantidad);

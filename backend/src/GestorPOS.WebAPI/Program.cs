@@ -18,6 +18,9 @@ var jwtKey = builder.Configuration["Jwt:Key"]
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Sin esto, ASP.NET renombra claims estándar del JWT (p.ej. "sub" -> nameidentifier),
+        // lo que rompería la lectura de UsuarioId en TenantContext.
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -55,12 +58,16 @@ app.UseExceptionHandler(errorApp =>
         var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
         var exception = feature?.Error;
 
+        // AppException y ArgumentException son violaciones de reglas de negocio/invariantes
+        // de dominio (input inválido del cliente) -> 400 con el mensaje. El resto son bugs -> 500 genérico.
+        var esErrorDeCliente = exception is AppException or ArgumentException;
+
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = exception is AppException
+        context.Response.StatusCode = esErrorDeCliente
             ? StatusCodes.Status400BadRequest
             : StatusCodes.Status500InternalServerError;
 
-        var mensaje = exception is AppException ? exception.Message : "Ocurrió un error inesperado.";
+        var mensaje = esErrorDeCliente ? exception!.Message : "Ocurrió un error inesperado.";
         await context.Response.WriteAsJsonAsync(new { error = mensaje });
     });
 });

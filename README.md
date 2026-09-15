@@ -70,6 +70,14 @@ Swagger en `http://localhost:5080/swagger` (solo en Development).
 - `POST /api/auth/registro-negocio` — crea un negocio (tenant) + su usuario admin, devuelve JWT
 - `POST /api/auth/login` — login por email/password, devuelve JWT
 - `GET /api/usuarios` — lista usuarios del negocio del token (requiere `Authorization: Bearer <token>`)
+- `GET/POST/PUT/DELETE /api/categorias` — CRUD de categorías (delete = baja lógica)
+- `GET /api/productos?bajoStock=true` — lista productos activos; el filtro trae solo los que están en o bajo su stock mínimo
+- `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
+- `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente (reposición, merma, corrección)
+- `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
+- `GET /api/ventas?fecha=2026-09-15` — lista resumida de ventas (todas, o filtradas por día)
+- `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
+- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar
 - `GET /health` — health check (usado por Railway)
 
 ## Roadmap
@@ -77,8 +85,8 @@ Swagger en `http://localhost:5080/swagger` (solo en Development).
 Ver plan de fases completo en la memoria del proyecto. Resumen:
 
 0. ✅ Setup + núcleo multi-tenant + Auth
-1. Gestión de Stock (productos, categorías, alertas de stock mínimo, precios masivos)
-2. Ventas/POS (venta rápida, cobro, ticket digital por WhatsApp/Email, descuento de stock)
+1. ✅ Gestión de Stock (productos, categorías, alertas de stock mínimo, precios masivos)
+2. ✅ Ventas/POS (venta rápida, cobro, ticket digital vía link de WhatsApp, descuento de stock)
 3. Reportes (caja diaria, ranking de productos, ganancias netas, dashboard)
 4. Panel interno de feature flags por tenant
 5. Deploy productivo (Railway + Netlify) + pulido
