@@ -1,0 +1,74 @@
+@if (cargando()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (cajaRecienCerrada(); as cerrada) {
+  <mat-card class="resumen-cierre">
+    <h2>Caja cerrada</h2>
+    <div class="fila"><span>Apertura</span><span>${{ cerrada.montoApertura }}</span></div>
+    <div class="fila"><span>Esperado</span><span>${{ cerrada.montoCierreEsperado }}</span></div>
+    <div class="fila"><span>Contado</span><span>${{ cerrada.montoCierreReal }}</span></div>
+    <div class="fila diferencia" [class.negativa]="(cerrada.diferencia ?? 0) < 0">
+      <span>Diferencia</span><span>${{ cerrada.diferencia }}</span>
+    </div>
+    <button mat-flat-button color="primary" (click)="volverAAbrir()">Abrir nueva caja</button>
+  </mat-card>
+} @else if (cajaActual(); as caja) {
+  <mat-card class="caja-abierta">
+    <h2>Caja abierta</h2>
+    <p class="apertura">Apertura: ${{ caja.montoApertura }}</p>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Monto real contado para cerrar</mat-label>
+      <input
+        matInput
+        type="number"
+        [ngModel]="montoCierreReal()"
+        (ngModelChange)="montoCierreReal.set($event)"
+        min="0"
+        step="0.01"
+      />
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button mat-flat-button color="warn" (click)="cerrar()" [disabled]="procesando()">
+      @if (procesando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        Cerrar caja
+      }
+    </button>
+  </mat-card>
+} @else {
+  <mat-card class="sin-caja">
+    <h2>No hay una caja abierta</h2>
+    <p>Abrí la caja con el efectivo inicial para empezar a vender.</p>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Monto de apertura</mat-label>
+      <input
+        matInput
+        type="number"
+        [ngModel]="montoApertura()"
+        (ngModelChange)="montoApertura.set($event)"
+        min="0"
+        step="0.01"
+      />
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button mat-flat-button color="primary" (click)="abrir()" [disabled]="procesando()">
+      @if (procesando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        Abrir caja
+      }
+    </button>
+  </mat-card>
+}

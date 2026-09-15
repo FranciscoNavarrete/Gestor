@@ -1,0 +1,48 @@
+<div class="encabezado">
+  <mat-slide-toggle [checked]="soloBajoStock()" (change)="toggleBajoStock()">
+    Solo stock bajo
+  </mat-slide-toggle>
+
+  <button mat-flat-button color="primary" (click)="abrirNuevo()">
+    <mat-icon>add</mat-icon>
+    Nuevo
+  </button>
+</div>
+
+@if (cargando()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (productos().length === 0) {
+  <p class="vacio">No hay productos para mostrar.</p>
+} @else {
+  <div class="lista">
+    @for (producto of productos(); track producto.id) {
+      <mat-card class="producto-card" [class.alerta]="producto.enStockMinimo">
+        <div class="info" (click)="abrirEditar(producto)">
+          <div class="nombre-fila">
+            <span class="nombre">{{ producto.nombre }}</span>
+            @if (producto.enStockMinimo) {
+              <mat-icon class="icono-alerta" aria-label="Stock bajo">warning</mat-icon>
+            }
+          </div>
+          <div class="detalle">
+            {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} }
+          </div>
+          <div class="detalle">
+            Precio ${{ producto.precio }} · Stock {{ producto.stockActual }} (mín. {{ producto.stockMinimo }})
+          </div>
+        </div>
+
+        <div class="acciones">
+          <button mat-icon-button (click)="ajustarStock(producto)" aria-label="Ajustar stock">
+            <mat-icon>inventory</mat-icon>
+          </button>
+          <button mat-icon-button (click)="desactivar(producto)" aria-label="Dar de baja">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </mat-card>
+    }
+  </div>
+}

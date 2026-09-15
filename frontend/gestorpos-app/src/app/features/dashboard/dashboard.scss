@@ -1,0 +1,66 @@
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  mat-icon {
+    color: var(--mat-sys-primary, #6750a4);
+  }
+
+  .valor {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .etiqueta {
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+
+  &.alerta .valor {
+    color: var(--mat-sys-error, #b3261e);
+  }
+}
+
+.top-producto {
+  margin-top: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-icon {
+    color: #f5a623;
+    font-size: 32px;
+    height: 32px;
+    width: 32px;
+  }
+
+  .top-titulo {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .top-nombre {
+    font-weight: 600;
+  }
+
+  .top-detalle {
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
+}

@@ -1,0 +1,48 @@
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.full {
+  width: 100%;
+}
+
+mat-card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  h2 {
+    margin-top: 0;
+  }
+}
+
+.apertura {
+  opacity: 0.7;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}
+
+.resumen-cierre .fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+
+  &.diferencia {
+    font-weight: 700;
+    border-top: 1px solid var(--mat-sys-outline-variant, #eee);
+    margin-top: 4px;
+    padding-top: 8px;
+  }
+
+  &.negativa span:last-child {
+    color: var(--mat-sys-error, #b3261e);
+  }
+}

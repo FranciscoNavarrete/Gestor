@@ -1,0 +1,17 @@
+.full {
+  width: 100%;
+}
+
+.fila {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}

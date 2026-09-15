@@ -1,0 +1,44 @@
+@if (cargando()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (datos(); as d) {
+  <div class="grid">
+    <mat-card class="stat">
+      <mat-icon>payments</mat-icon>
+      <div class="valor">${{ d.ventasHoy | number: '1.0-2' }}</div>
+      <div class="etiqueta">Ventas de hoy ({{ d.cantidadVentasHoy }})</div>
+    </mat-card>
+
+    <mat-card class="stat">
+      <mat-icon>trending_up</mat-icon>
+      <div class="valor">${{ d.gananciaHoy | number: '1.0-2' }}</div>
+      <div class="etiqueta">Ganancia de hoy</div>
+    </mat-card>
+
+    <mat-card class="stat">
+      <mat-icon>calendar_month</mat-icon>
+      <div class="valor">${{ d.ventasMes | number: '1.0-2' }}</div>
+      <div class="etiqueta">Ventas del mes</div>
+    </mat-card>
+
+    <mat-card class="stat" [class.alerta]="d.productosBajoStockMinimo > 0">
+      <mat-icon>warning</mat-icon>
+      <div class="valor">{{ d.productosBajoStockMinimo }}</div>
+      <div class="etiqueta">Productos con stock bajo</div>
+    </mat-card>
+  </div>
+
+  @if (d.productoMasVendidoHoy; as top) {
+    <mat-card class="top-producto">
+      <mat-icon>emoji_events</mat-icon>
+      <div>
+        <div class="top-titulo">Más vendido hoy</div>
+        <div class="top-nombre">{{ top.productoNombre }}</div>
+        <div class="top-detalle">{{ top.cantidadVendida }} unidades · ${{ top.totalVendido | number: '1.0-2' }}</div>
+      </div>
+    </mat-card>
+  }
+} @else {
+  <p>No se pudo cargar el resumen.</p>
+}

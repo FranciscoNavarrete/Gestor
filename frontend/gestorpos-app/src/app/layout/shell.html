@@ -1,0 +1,25 @@
+<mat-toolbar color="primary" class="toolbar">
+  <span class="negocio-nombre">{{ nombreNegocio() }}</span>
+  <span class="spacer"></span>
+  <span class="usuario-nombre">{{ nombreUsuario() }}</span>
+  <button mat-icon-button (click)="cerrarSesion()" aria-label="Cerrar sesión">
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
+
+<main class="contenido">
+  <router-outlet></router-outlet>
+</main>
+
+<nav class="bottom-nav">
+  @for (item of navItems; track item.path) {
+    <a
+      class="nav-item"
+      [routerLink]="item.path"
+      routerLinkActive="active"
+    >
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.label }}</span>
+    </a>
+  }
+</nav>
