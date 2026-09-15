@@ -88,6 +88,8 @@ el puerto).
 - `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
 - `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente (reposición, merma, corrección)
 - `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
+- `GET /api/productos/plantilla-excel` — descarga la plantilla .xlsx (SKU, Nombre, Categoría, Precio, Costo, Stock inicial, Stock mínimo)
+- `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
 - `GET /api/ventas?fecha=2026-09-15` — lista resumida de ventas (todas, o filtradas por día)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
 - `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar
