@@ -29,10 +29,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 8px 12px 16px;
+  padding: 14px 8px 14px 18px;
 
   &.alerta {
-    border-left: 4px solid var(--mat-sys-error, #b3261e);
+    border-color: color-mix(in srgb, var(--mat-sys-error) 35%, var(--border-subtle));
   }
 
   .info {
@@ -44,7 +44,7 @@
   .nombre-fila {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   .nombre {
@@ -54,16 +54,31 @@
     white-space: nowrap;
   }
 
-  .icono-alerta {
-    color: var(--mat-sys-error, #b3261e);
-    font-size: 18px;
-    height: 18px;
-    width: 18px;
+  .stock-pill {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mat-sys-tertiary) 16%, transparent);
+    color: var(--mat-sys-tertiary);
+
+    &.pill-alerta {
+      background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+      color: var(--mat-sys-error);
+    }
   }
 
   .detalle {
     font-size: 0.8rem;
-    opacity: 0.7;
+    opacity: 0.65;
+    margin-top: 2px;
+  }
+
+  .precio {
+    font-weight: 600;
+    opacity: 0.9;
+    color: var(--mat-sys-primary);
   }
 
   .acciones {

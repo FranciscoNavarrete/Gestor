@@ -7,12 +7,24 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--mat-sys-on-surface);
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(64px + env(safe-area-inset-top, 0px));
 
   .negocio-nombre {
     font-weight: 600;
+    font-size: 1.05rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .spacer {
@@ -22,7 +34,7 @@
   .usuario-nombre {
     margin-right: 8px;
     font-size: 0.9rem;
-    opacity: 0.85;
+    opacity: 0.7;
     display: none;
 
     @media (min-width: 480px) {
@@ -32,8 +44,8 @@
 }
 
 .contenido {
-  padding: 16px;
-  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  padding: 20px 16px;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   max-width: 960px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -41,15 +53,22 @@
 
 .bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  left: 12px;
+  right: 12px;
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-around;
   align-items: stretch;
-  background: var(--mat-sys-surface-container, #fff);
-  border-top: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  gap: 2px;
+  padding: 6px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.25);
   z-index: 10;
 
   .nav-item {
@@ -62,7 +81,10 @@
     padding: 8px 4px;
     text-decoration: none;
     color: var(--mat-sys-on-surface-variant, #5f6368);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    transition: color 0.2s ease, background 0.2s ease;
 
     mat-icon {
       font-size: 22px;
@@ -71,7 +93,9 @@
     }
 
     &.active {
-      color: var(--mat-sys-primary, #6750a4);
+      color: var(--mat-sys-on-primary, #fff);
+      background-image: var(--gradient-brand);
+      box-shadow: 0 8px 18px -8px var(--glow-primary);
     }
   }
 }

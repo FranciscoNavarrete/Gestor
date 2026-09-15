@@ -11,13 +11,14 @@
 mat-card {
   max-width: 420px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 
   h2 {
     margin-top: 0;
+    font-family: var(--font-display);
   }
 }
 
@@ -33,13 +34,15 @@ mat-card {
 .resumen-cierre .fila {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
+  padding: 6px 0;
+  font-size: 0.95rem;
 
   &.diferencia {
     font-weight: 700;
-    border-top: 1px solid var(--mat-sys-outline-variant, #eee);
-    margin-top: 4px;
-    padding-top: 8px;
+    font-size: 1.1rem;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 6px;
+    padding-top: 12px;
   }
 
   &.negativa span:last-child {

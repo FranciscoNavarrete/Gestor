@@ -1,15 +1,42 @@
 .auth-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 16px;
   box-sizing: border-box;
+  gap: 20px;
+}
+
+.brand-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background-image: var(--gradient-brand);
+  box-shadow: 0 16px 32px -12px var(--glow-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    color: var(--mat-sys-on-primary, #fff);
+    font-size: 30px;
+    height: 30px;
+    width: 30px;
+  }
 }
 
 .auth-card {
   width: 100%;
   max-width: 400px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  mat-card-title {
+    font-size: 1.4rem;
+  }
 }
 
 .form {
@@ -19,8 +46,8 @@
   margin-top: 8px;
 
   button[type='submit'] {
-    margin-top: 8px;
-    height: 44px;
+    margin-top: 12px;
+    height: 46px;
   }
 }
 

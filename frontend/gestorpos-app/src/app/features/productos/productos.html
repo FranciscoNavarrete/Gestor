@@ -22,16 +22,14 @@
         <div class="info" (click)="abrirEditar(producto)">
           <div class="nombre-fila">
             <span class="nombre">{{ producto.nombre }}</span>
-            @if (producto.enStockMinimo) {
-              <mat-icon class="icono-alerta" aria-label="Stock bajo">warning</mat-icon>
-            }
+            <span class="stock-pill" [class.pill-alerta]="producto.enStockMinimo">
+              {{ producto.stockActual }} u.
+            </span>
           </div>
           <div class="detalle">
             {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} }
           </div>
-          <div class="detalle">
-            Precio ${{ producto.precio }} · Stock {{ producto.stockActual }} (mín. {{ producto.stockMinimo }})
-          </div>
+          <div class="detalle precio">${{ producto.precio }}</div>
         </div>
 
         <div class="acciones">
