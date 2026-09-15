@@ -79,8 +79,9 @@ el puerto).
 
 ## Endpoints actuales
 
-- `POST /api/auth/registro-negocio` — crea un negocio (tenant) + su usuario admin, devuelve JWT
-- `POST /api/auth/login` — login por email/password, devuelve JWT
+- `POST /api/auth/login` — login por email/password, devuelve JWT. **No existe registro público** — un
+  negocio nuevo solo se puede crear desde el panel admin (ver más abajo), para que no cualquiera con la
+  URL se cree su propia cuenta gratis.
 - `GET /api/usuarios` — lista usuarios del negocio del token (requiere `Authorization: Bearer <token>`)
 - `GET/POST/PUT/DELETE /api/categorias` — CRUD de categorías (delete = baja lógica)
 - `GET /api/productos?bajoStock=true` — lista productos activos; el filtro trae solo los que están en o bajo su stock mínimo
@@ -104,6 +105,9 @@ Protegido por header `X-Admin-Api-Key` (configurable en `Admin:ApiKey`), no por 
 separado porque este panel cruza todos los tenants a propósito.
 
 - `GET /api/admin/tenants` — lista todos los negocios registrados
+- `POST /api/admin/tenants` — **da de alta un negocio nuevo** (nombre, admin, email, contraseña — las
+  credenciales que le das al cliente). Desde el frontend: `/admin/crear-negocio` (ruta no vinculada
+  desde ningún lado de la UI pública; pide la API key una vez y la guarda en el navegador)
 - `GET /api/admin/tenants/{tenantId}/features` — features activados/desactivados de un negocio
 - `PUT /api/admin/tenants/{tenantId}/features/{clave}` — activa un feature para ese negocio (lo crea si no existía)
 - `DELETE /api/admin/tenants/{tenantId}/features/{clave}` — lo desactiva
@@ -117,7 +121,7 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 `frontend/gestorpos-app/` — Angular 22 standalone, Material 3, signals, mobile-first con bottom nav
 (Resumen / Vender / Productos / Caja). Cubre las 4 pantallas core:
 
-- **Login / Registro** de negocio
+- **Login** (sin registro público — ver más abajo)
 - **Dashboard**: métricas del `/api/reportes/dashboard`
 - **Productos**: alta/edición (con creación de categoría anidada desde el mismo diálogo), ajuste de
   stock, baja lógica, filtro de stock bajo
@@ -125,8 +129,11 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   para enviarlo por WhatsApp
 - **Caja**: abrir/cerrar con el resumen de diferencia
 
+Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
+los negocios de tus clientes con el usuario y contraseña que vos definís.
+
 No incluye todavía: reportes de ranking/ganancias en pantalla propia (solo el resumen del dashboard),
-ni el panel de admin de feature flags (es para vos, se puede operar por API/Swagger directamente).
+ni gestión de features por tenant en UI (se opera por API/Swagger directamente).
 
 ## Roadmap
 
