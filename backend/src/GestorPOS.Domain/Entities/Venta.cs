@@ -7,6 +7,7 @@ public class Venta : TenantEntity
     public Guid UsuarioId { get; private set; }
     public string MedioPago { get; private set; } = string.Empty;
     public string? TelefonoCliente { get; private set; }
+    public Guid? ClienteId { get; private set; }
     public decimal Total { get; private set; }
 
     private readonly List<VentaItem> _items = new();
@@ -38,4 +39,6 @@ public class Venta : TenantEntity
 
         return venta;
     }
+
+    public void AsignarCliente(Guid clienteId) => ClienteId = clienteId;
 }

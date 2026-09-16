@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using GestorPOS.Application.Caja;
+using GestorPOS.Application.Clientes;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Configuracion;
@@ -21,13 +22,17 @@ public class VentaService : IVentaService
     private readonly ITenantContext _tenantContext;
     private readonly ICajaService _cajaService;
     private readonly IMedioPagoService _medioPagoService;
+    private readonly IClienteService _clienteService;
 
-    public VentaService(AppDbContext db, ITenantContext tenantContext, ICajaService cajaService, IMedioPagoService medioPagoService)
+    public VentaService(
+        AppDbContext db, ITenantContext tenantContext, ICajaService cajaService,
+        IMedioPagoService medioPagoService, IClienteService clienteService)
     {
         _db = db;
         _tenantContext = tenantContext;
         _cajaService = cajaService;
         _medioPagoService = medioPagoService;
+        _clienteService = clienteService;
     }
 
     public async Task<VentaDto> CrearAsync(CrearVentaRequest request, CancellationToken ct = default)
@@ -59,6 +64,12 @@ public class VentaService : IVentaService
         }
 
         var venta = Venta.Crear(_tenantContext.TenantId, _tenantContext.UsuarioId, request.MedioPago, request.TelefonoCliente, items);
+
+        if (!string.IsNullOrWhiteSpace(request.TelefonoCliente))
+        {
+            var clienteId = await _clienteService.ObtenerOCrearPorTelefonoAsync(request.TelefonoCliente, ct);
+            venta.AsignarCliente(clienteId);
+        }
 
         foreach (var (producto, cantidad) in items)
             producto.AjustarStock(-cantidad);

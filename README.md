@@ -100,7 +100,11 @@ el puerto).
 - `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
 - `GET /api/ventas?desde=2026-09-01&hasta=2026-09-15` — lista resumida de ventas (todas, o filtradas por rango de fechas; ambos parámetros son opcionales e independientes)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
-- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo)
+- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo). Si viene `telefonoCliente`, la venta se enlaza automáticamente a un `Cliente` (se busca por teléfono normalizado — solo dígitos — dentro del negocio, y se crea solo si es la primera vez que compra)
+- `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono
+- `GET /api/clientes/{id}` — datos del cliente + estadísticas (cantidad de compras, total gastado, fecha de la última compra)
+- `GET /api/clientes/{id}/ventas` — historial de ventas de ese cliente
+- `PUT /api/clientes/{id}` — edita el nombre del cliente (el teléfono es el identificador y no se edita)
 - `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
 - `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
 - `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período
@@ -154,7 +158,9 @@ los negocios de tus clientes con el usuario y contraseña que vos definís.
 
 No incluye todavía: reporte de movimientos de stock (auditoría de cada cambio con motivo — hoy el stock
 es solo un contador, sin historial), ni gestión de features por tenant en UI (se opera por API/Swagger
-directamente).
+directamente). El módulo de **Clientes** (alta automática por teléfono al cobrar, historial de compras,
+estadísticas) ya tiene el backend completo (`/api/clientes`), pero todavía no tiene pantalla en el
+frontend.
 
 ## Roadmap
 
