@@ -43,6 +43,15 @@ export const routes: Routes = [
         path: 'configuracion',
         loadComponent: () => import('./features/configuracion/configuracion').then((m) => m.Configuracion),
       },
+      {
+        path: 'clientes',
+        loadComponent: () => import('./features/clientes/clientes').then((m) => m.Clientes),
+      },
+      {
+        path: 'clientes/:id',
+        loadComponent: () =>
+          import('./features/clientes/cliente-detalle/cliente-detalle').then((m) => m.ClienteDetalle),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

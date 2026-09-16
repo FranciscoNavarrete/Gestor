@@ -1,0 +1,63 @@
+<mat-form-field appearance="outline" class="buscador">
+  <mat-label>Buscar por nombre o teléfono</mat-label>
+  <input matInput [ngModel]="busqueda()" (ngModelChange)="onBusquedaChange($event)" />
+  <mat-icon matSuffix>search</mat-icon>
+</mat-form-field>
+
+@if (cargando()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (clientes().length === 0) {
+  <p class="vacio">
+    @if (busqueda()) {
+      Ningún cliente coincide con "{{ busqueda() }}".
+    } @else {
+      Todavía no hay clientes. Se cargan solos la primera vez que alguien compra dejando su teléfono.
+    }
+  </p>
+} @else {
+  <div class="lista">
+    @for (cliente of clientes(); track cliente.id) {
+      <mat-card class="cliente-card" (click)="abrirDetalle(cliente)">
+        @if (cliente.nombre) {
+          <div class="avatar">{{ cliente.nombre.charAt(0) }}</div>
+        } @else {
+          <div class="avatar avatar-vacio">
+            <mat-icon>person</mat-icon>
+          </div>
+        }
+
+        <div class="info">
+          <span class="nombre" [class.sin-nombre]="!cliente.nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+          <div class="detalle">
+            {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
+          </div>
+        </div>
+
+        <mat-icon class="chevron">chevron_right</mat-icon>
+      </mat-card>
+    }
+  </div>
+
+  @if (totalPaginas() > 1) {
+    <div class="paginado">
+      <button mat-icon-button (click)="paginaAnterior()" [disabled]="pagina() <= 1" aria-label="Página anterior">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="paginado-info">
+        Página {{ pagina() }} de {{ totalPaginas() }} · {{ totalItems() }} clientes
+      </span>
+      <button
+        mat-icon-button
+        (click)="paginaSiguiente()"
+        [disabled]="pagina() >= totalPaginas()"
+        aria-label="Página siguiente"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  } @else if (totalItems() > 0) {
+    <p class="paginado-info centrado-texto">{{ totalItems() }} cliente{{ totalItems() === 1 ? '' : 's' }}</p>
+  }
+}

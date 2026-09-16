@@ -1,6 +1,6 @@
 namespace GestorPOS.Application.Clientes.Dtos;
 
-public record ClienteDto(Guid Id, string Telefono, string? Nombre, DateTime FechaAlta);
+public record ClienteDto(Guid Id, string Telefono, string? Nombre, DateTime FechaAlta, int CantidadCompras);
 
 public record ClienteDetalleDto(
     Guid Id,

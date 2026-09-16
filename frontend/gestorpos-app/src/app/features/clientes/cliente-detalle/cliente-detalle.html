@@ -1,0 +1,68 @@
+@if (cargando()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (cliente(); as c) {
+  <div class="encabezado">
+    <button mat-icon-button (click)="volver()" aria-label="Volver">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <span class="titulo">{{ c.nombre || 'Sin nombre' }}</span>
+  </div>
+
+  <mat-card class="datos-card">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput [ngModel]="nombreForm()" (ngModelChange)="nombreForm.set($event)" />
+    </mat-form-field>
+    <p class="telefono">
+      <mat-icon>phone</mat-icon>
+      {{ c.telefono }}
+      <span class="no-editable">(no editable)</span>
+    </p>
+    <button mat-flat-button color="primary" class="full" (click)="guardar()" [disabled]="guardando()">
+      @if (guardando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        Guardar
+      }
+    </button>
+  </mat-card>
+
+  <div class="stats">
+    <div class="stat-card">
+      <span class="stat-label">Compras</span>
+      <span class="stat-valor">{{ c.cantidadCompras }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Gastado</span>
+      <span class="stat-valor">${{ c.totalGastado }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Última compra</span>
+      <span class="stat-valor stat-fecha">{{ c.ultimaCompra ? (c.ultimaCompra | date: 'dd/MM/yy') : '—' }}</span>
+    </div>
+  </div>
+
+  <h3 class="subtitulo">Historial de compras</h3>
+
+  @if (cargandoVentas()) {
+    <div class="centrado">
+      <mat-spinner diameter="28"></mat-spinner>
+    </div>
+  } @else if (ventas().length === 0) {
+    <p class="vacio">Todavía no tiene compras registradas.</p>
+  } @else {
+    <div class="lista-ventas">
+      @for (venta of ventas(); track venta.id) {
+        <div class="venta-item">
+          <div>
+            <p class="venta-fecha">{{ venta.fecha | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p class="venta-medio">{{ venta.medioPago }}</p>
+          </div>
+          <span class="venta-total">${{ venta.total }}</span>
+        </div>
+      }
+    </div>
+  }
+}

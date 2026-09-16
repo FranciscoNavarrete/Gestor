@@ -43,7 +43,9 @@ public class ClienteService : IClienteService
             .OrderByDescending(c => c.FechaCreacion)
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
-            .Select(c => ToDto(c))
+            .Select(c => new ClienteDto(
+                c.Id, c.Telefono, c.Nombre, c.FechaCreacion,
+                _db.Ventas.Count(v => v.ClienteId == c.Id)))
             .ToListAsync(ct);
 
         return new PaginaDto<ClienteDto>(items, pagina, tamanoPagina, totalItems, totalPaginas);
@@ -89,7 +91,8 @@ public class ClienteService : IClienteService
         cliente.ActualizarNombre(request.Nombre);
         await _db.SaveChangesAsync(ct);
 
-        return ToDto(cliente);
+        var cantidadCompras = await _db.Ventas.CountAsync(v => v.ClienteId == id, ct);
+        return new ClienteDto(cliente.Id, cliente.Telefono, cliente.Nombre, cliente.FechaCreacion, cantidadCompras);
     }
 
     public async Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, CancellationToken ct = default)
@@ -109,6 +112,4 @@ public class ClienteService : IClienteService
 
     private static string NormalizarTelefono(string telefono) =>
         new(telefono.Where(char.IsDigit).ToArray());
-
-    private static ClienteDto ToDto(Cliente c) => new(c.Id, c.Telefono, c.Nombre, c.FechaCreacion);
 }

@@ -101,7 +101,7 @@ el puerto).
 - `GET /api/ventas?desde=2026-09-01&hasta=2026-09-15` — lista resumida de ventas (todas, o filtradas por rango de fechas; ambos parámetros son opcionales e independientes)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
 - `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo). Si viene `telefonoCliente`, la venta se enlaza automáticamente a un `Cliente` (se busca por teléfono normalizado — solo dígitos — dentro del negocio, y se crea solo si es la primera vez que compra)
-- `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono
+- `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono (cada item ya trae su cantidad de compras)
 - `GET /api/clientes/{id}` — datos del cliente + estadísticas (cantidad de compras, total gastado, fecha de la última compra)
 - `GET /api/clientes/{id}/ventas` — historial de ventas de ese cliente
 - `PUT /api/clientes/{id}` — edita el nombre del cliente (el teléfono es el identificador y no se edita)
@@ -152,15 +152,17 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 - **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
   Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto y logo,
   este último aparece en el encabezado de los reportes PDF)
+- **Clientes** (ícono de personas en el toolbar): listado con búsqueda por nombre/teléfono, y detalle
+  por cliente con nombre editable, estadísticas (compras, total gastado, última compra) e historial de
+  ventas. Los clientes se dan de alta solos la primera vez que alguien compra dejando su teléfono —
+  cargar el teléfono en la venta sigue siendo opcional, se puede vender sin él sin ningún problema
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.
 
 No incluye todavía: reporte de movimientos de stock (auditoría de cada cambio con motivo — hoy el stock
 es solo un contador, sin historial), ni gestión de features por tenant en UI (se opera por API/Swagger
-directamente). El módulo de **Clientes** (alta automática por teléfono al cobrar, historial de compras,
-estadísticas) ya tiene el backend completo (`/api/clientes`), pero todavía no tiene pantalla en el
-frontend.
+directamente).
 
 ## Roadmap
 
