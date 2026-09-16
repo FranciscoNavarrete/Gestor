@@ -122,7 +122,7 @@
         <div class="fila-pago">
           <mat-form-field appearance="outline">
             <mat-label>Medio de pago</mat-label>
-            <mat-select [ngModel]="medioPago()" (ngModelChange)="medioPago.set($event)">
+            <mat-select [ngModel]="medioPago()" (ngModelChange)="cambiarMedioPago($event)">
               <mat-option value="Efectivo">Efectivo</mat-option>
               <mat-option value="Tarjeta">Tarjeta</mat-option>
               <mat-option value="Otro">Otro</mat-option>
@@ -139,6 +139,35 @@
             />
           </mat-form-field>
         </div>
+
+        @if (medioPago() === 'Efectivo') {
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>¿Con cuánto paga?</mat-label>
+            <input
+              matInput
+              type="number"
+              [ngModel]="montoRecibido()"
+              (ngModelChange)="montoRecibido.set($event)"
+              min="0"
+              step="0.01"
+              [placeholder]="total().toString()"
+            />
+          </mat-form-field>
+
+          @if (montoRecibido() != null) {
+            @if (vuelto()! >= 0) {
+              <div class="vuelto">
+                <span>Vuelto</span>
+                <span>${{ vuelto() }}</span>
+              </div>
+            } @else {
+              <div class="vuelto falta">
+                <span>Falta</span>
+                <span>${{ -vuelto()! }}</span>
+              </div>
+            }
+          }
+        }
 
         <button mat-flat-button color="primary" class="cobrar" (click)="cobrar()" [disabled]="procesando()">
           @if (procesando()) {

@@ -250,6 +250,28 @@
   border-radius: var(--radius-sm);
 }
 
+.vuelto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-weight: 600;
+  background: color-mix(in srgb, #1ea672 16%, transparent);
+  color: #1ea672;
+
+  span:last-child {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+  }
+
+  &.falta {
+    background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+    color: var(--mat-sys-error);
+  }
+}
+
 .ticket-card {
   padding: 28px 24px;
   text-align: center;

@@ -58,6 +58,7 @@ export class Venta implements OnInit {
   readonly carritoExpandido = signal(false);
   readonly medioPago = signal<MedioPago>('Efectivo');
   readonly telefonoCliente = signal('');
+  readonly montoRecibido = signal<number | null>(null);
   readonly procesando = signal(false);
   readonly ventaResultado = signal<VentaDto | null>(null);
 
@@ -87,6 +88,11 @@ export class Venta implements OnInit {
   );
 
   readonly cantidadItems = computed(() => this.carrito().reduce((acc, item) => acc + item.cantidad, 0));
+
+  readonly vuelto = computed(() => {
+    const recibido = this.montoRecibido();
+    return recibido == null ? null : recibido - this.total();
+  });
 
   ngOnInit(): void {
     this.cargarProductos();
@@ -153,6 +159,11 @@ export class Venta implements OnInit {
     this.carritoExpandido.set(!this.carritoExpandido());
   }
 
+  cambiarMedioPago(valor: MedioPago): void {
+    this.medioPago.set(valor);
+    if (valor !== 'Efectivo') this.montoRecibido.set(null);
+  }
+
   cobrar(): void {
     if (this.carrito().length === 0 || this.procesando()) return;
 
@@ -180,6 +191,8 @@ export class Venta implements OnInit {
     this.carrito.set([]);
     this.carritoExpandido.set(false);
     this.telefonoCliente.set('');
+    this.montoRecibido.set(null);
+    this.medioPago.set('Efectivo');
     this.ventaResultado.set(null);
     this.busqueda.set('');
     // Refresca stock local para que la siguiente venta valide contra los números actuales.
