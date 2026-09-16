@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,17 +11,21 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
+import { Cliente } from '../../core/models/cliente.models';
 import { MedioPagoDto } from '../../core/models/configuracion.models';
 import { CajaDto, RankingProductoDto } from '../../core/models/reportes.models';
 import { MedioPago, VentaDto } from '../../core/models/venta.models';
 import { CajaService } from '../../core/services/caja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { ClienteService } from '../../core/services/cliente.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 
 const TOP_MAS_VENDIDOS = 6;
+const TAMANO_SUGERENCIAS_CLIENTE = 5;
+const DEBOUNCE_CLIENTE_MS = 300;
 
 interface ItemCarrito {
   producto: Producto;
@@ -32,6 +37,7 @@ interface ItemCarrito {
   imports: [
     FormsModule,
     RouterLink,
+    MatAutocompleteModule,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -43,13 +49,16 @@ interface ItemCarrito {
   templateUrl: './venta.html',
   styleUrl: './venta.scss',
 })
-export class Venta implements OnInit {
+export class Venta implements OnInit, OnDestroy {
   private readonly catalogoService = inject(CatalogoService);
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
   private readonly cajaService = inject(CajaService);
   private readonly configuracionService = inject(ConfiguracionService);
+  private readonly clienteService = inject(ClienteService);
   private readonly snackBar = inject(MatSnackBar);
+
+  private debounceClienteTimer?: ReturnType<typeof setTimeout>;
 
   readonly cargando = signal(true);
   readonly cargandoCaja = signal(true);
@@ -62,6 +71,8 @@ export class Venta implements OnInit {
   readonly carritoExpandido = signal(false);
   readonly medioPago = signal<MedioPago>('Efectivo');
   readonly telefonoCliente = signal('');
+  readonly sugerenciasClientes = signal<Cliente[]>([]);
+  readonly clienteSeleccionado = signal<Cliente | null>(null);
   readonly montoRecibido = signal<number | null>(null);
   readonly procesando = signal(false);
   readonly ventaResultado = signal<VentaDto | null>(null);
@@ -111,6 +122,10 @@ export class Venta implements OnInit {
       },
       error: () => this.cargandoCaja.set(false),
     });
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.debounceClienteTimer);
   }
 
   private cargarProductos(mostrarSpinner = true): void {
@@ -166,6 +181,31 @@ export class Venta implements OnInit {
     this.carritoExpandido.set(!this.carritoExpandido());
   }
 
+  onTelefonoClienteChange(valor: string): void {
+    this.telefonoCliente.set(valor);
+    this.clienteSeleccionado.set(null);
+    clearTimeout(this.debounceClienteTimer);
+
+    const termino = valor.trim();
+    if (termino.length < 2) {
+      this.sugerenciasClientes.set([]);
+      return;
+    }
+
+    this.debounceClienteTimer = setTimeout(() => {
+      this.clienteService.buscar(termino, 1, TAMANO_SUGERENCIAS_CLIENTE).subscribe({
+        next: (resultado) => this.sugerenciasClientes.set(resultado.items),
+        error: () => this.sugerenciasClientes.set([]),
+      });
+    }, DEBOUNCE_CLIENTE_MS);
+  }
+
+  seleccionarCliente(cliente: Cliente): void {
+    this.telefonoCliente.set(cliente.telefono);
+    this.clienteSeleccionado.set(cliente);
+    this.sugerenciasClientes.set([]);
+  }
+
   cambiarMedioPago(valor: MedioPago): void {
     this.medioPago.set(valor);
     if (valor !== 'Efectivo') this.montoRecibido.set(null);
@@ -198,6 +238,8 @@ export class Venta implements OnInit {
     this.carrito.set([]);
     this.carritoExpandido.set(false);
     this.telefonoCliente.set('');
+    this.sugerenciasClientes.set([]);
+    this.clienteSeleccionado.set(null);
     this.montoRecibido.set(null);
     this.medioPago.set('Efectivo');
     this.ventaResultado.set(null);

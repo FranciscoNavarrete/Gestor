@@ -15,10 +15,12 @@
       <mat-label>Nombre</mat-label>
       <input matInput [ngModel]="nombreForm()" (ngModelChange)="nombreForm.set($event)" />
     </mat-form-field>
-    <p class="telefono">
-      <mat-icon>phone</mat-icon>
-      {{ c.telefono }}
-      <span class="no-editable">(no editable)</span>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Teléfono</mat-label>
+      <input matInput [ngModel]="telefonoForm()" (ngModelChange)="telefonoForm.set($event)" />
+    </mat-form-field>
+    <p class="ayuda-telefono">
+      Si lo cambiás, las ventas ya hechas quedan con el número viejo — solo afecta ventas nuevas.
     </p>
     <button mat-flat-button color="primary" class="full" (click)="guardar()" [disabled]="guardando()">
       @if (guardando()) {

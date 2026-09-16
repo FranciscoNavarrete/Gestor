@@ -24,4 +24,11 @@ public class Cliente : TenantEntity
 
     public void ActualizarNombre(string? nombre) =>
         Nombre = string.IsNullOrWhiteSpace(nombre) ? null : nombre.Trim();
+
+    public void ActualizarTelefono(string telefono)
+    {
+        if (string.IsNullOrWhiteSpace(telefono))
+            throw new ArgumentException("El teléfono del cliente es obligatorio.", nameof(telefono));
+        Telefono = telefono.Trim();
+    }
 }

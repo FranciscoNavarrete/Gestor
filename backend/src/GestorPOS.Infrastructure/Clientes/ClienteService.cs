@@ -88,7 +88,19 @@ public class ClienteService : IClienteService
         var cliente = await _db.Clientes.FirstOrDefaultAsync(c => c.Id == id, ct)
             ?? throw new AppException("El cliente no existe.");
 
+        var telefonoNormalizado = NormalizarTelefono(request.Telefono);
+        if (telefonoNormalizado.Length == 0)
+            throw new AppException("El teléfono del cliente es inválido.");
+
+        if (telefonoNormalizado != cliente.Telefono)
+        {
+            var telefonoEnUso = await _db.Clientes.AnyAsync(c => c.Id != id && c.Telefono == telefonoNormalizado, ct);
+            if (telefonoEnUso)
+                throw new AppException("Ya existe otro cliente con ese teléfono.");
+        }
+
         cliente.ActualizarNombre(request.Nombre);
+        cliente.ActualizarTelefono(telefonoNormalizado);
         await _db.SaveChangesAsync(ct);
 
         var cantidadCompras = await _db.Ventas.CountAsync(v => v.ClienteId == id, ct);

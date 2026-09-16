@@ -104,7 +104,7 @@ el puerto).
 - `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono (cada item ya trae su cantidad de compras)
 - `GET /api/clientes/{id}` — datos del cliente + estadísticas (cantidad de compras, total gastado, fecha de la última compra)
 - `GET /api/clientes/{id}/ventas` — historial de ventas de ese cliente
-- `PUT /api/clientes/{id}` — edita el nombre del cliente (el teléfono es el identificador y no se edita)
+- `PUT /api/clientes/{id}` — edita nombre y teléfono del cliente (rechaza el teléfono si ya lo usa otro cliente del negocio; las ventas ya registradas conservan el teléfono con el que se hicieron)
 - `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
 - `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
 - `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período
@@ -153,9 +153,11 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto y logo,
   este último aparece en el encabezado de los reportes PDF)
 - **Clientes** (ícono de personas en el toolbar): listado con búsqueda por nombre/teléfono, y detalle
-  por cliente con nombre editable, estadísticas (compras, total gastado, última compra) e historial de
-  ventas. Los clientes se dan de alta solos la primera vez que alguien compra dejando su teléfono —
-  cargar el teléfono en la venta sigue siendo opcional, se puede vender sin él sin ningún problema
+  por cliente con nombre y teléfono editables, estadísticas (compras, total gastado, última compra) e
+  historial de ventas. Los clientes se dan de alta solos la primera vez que alguien compra dejando su
+  teléfono — cargar el teléfono en la venta sigue siendo opcional, se puede vender sin él sin ningún
+  problema. El campo de teléfono en la pantalla de Venta autocompleta contra clientes existentes
+  (busca por nombre o teléfono) para no tener que re-tipear el número de un cliente que ya compró antes
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.

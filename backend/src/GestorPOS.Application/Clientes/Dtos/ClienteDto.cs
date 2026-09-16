@@ -13,4 +13,4 @@ public record ClienteDetalleDto(
 
 public record ClienteVentaDto(Guid Id, DateTime Fecha, decimal Total, string MedioPago);
 
-public record EditarClienteRequest(string? Nombre);
+public record EditarClienteRequest(string? Nombre, string Telefono);

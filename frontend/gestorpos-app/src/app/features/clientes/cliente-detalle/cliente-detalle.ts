@@ -39,6 +39,7 @@ export class ClienteDetalle implements OnInit {
   readonly cargando = signal(true);
   readonly cliente = signal<ClienteDetalleDto | null>(null);
   readonly nombreForm = signal('');
+  readonly telefonoForm = signal('');
   readonly guardando = signal(false);
 
   readonly cargandoVentas = signal(true);
@@ -55,6 +56,7 @@ export class ClienteDetalle implements OnInit {
       next: (cliente) => {
         this.cliente.set(cliente);
         this.nombreForm.set(cliente.nombre ?? '');
+        this.telefonoForm.set(cliente.telefono);
         this.cargando.set(false);
       },
       error: () => this.cargando.set(false),
@@ -76,17 +78,21 @@ export class ClienteDetalle implements OnInit {
     if (this.guardando()) return;
 
     this.guardando.set(true);
-    this.clienteService.editar(this.id, { nombre: this.nombreForm().trim() || null }).subscribe({
-      next: (cliente) => {
-        this.guardando.set(false);
-        this.cliente.update((actual) => (actual ? { ...actual, nombre: cliente.nombre } : actual));
-        this.snackBar.open('Cliente guardado', 'Cerrar', { duration: 3000 });
-      },
-      error: (err) => {
-        this.guardando.set(false);
-        this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 });
-      },
-    });
+    this.clienteService
+      .editar(this.id, { nombre: this.nombreForm().trim() || null, telefono: this.telefonoForm().trim() })
+      .subscribe({
+        next: (cliente) => {
+          this.guardando.set(false);
+          this.cliente.update((actual) =>
+            actual ? { ...actual, nombre: cliente.nombre, telefono: cliente.telefono } : actual,
+          );
+          this.snackBar.open('Cliente guardado', 'Cerrar', { duration: 3000 });
+        },
+        error: (err) => {
+          this.guardando.set(false);
+          this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 });
+        },
+      });
   }
 
   volver(): void {

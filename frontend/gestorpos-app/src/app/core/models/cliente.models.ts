@@ -20,6 +20,7 @@ export interface ClienteVenta {
 
 export interface EditarClienteRequest {
   nombre: string | null;
+  telefono: string;
 }
 
 export interface PaginaClientes {

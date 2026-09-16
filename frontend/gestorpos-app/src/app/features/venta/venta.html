@@ -134,11 +134,29 @@
             <input
               matInput
               [ngModel]="telefonoCliente()"
-              (ngModelChange)="telefonoCliente.set($event)"
-              placeholder="Para el ticket por WhatsApp"
+              (ngModelChange)="onTelefonoClienteChange($event)"
+              [matAutocomplete]="autoCliente"
+              placeholder="Nombre o teléfono, para el ticket"
             />
+            <mat-autocomplete #autoCliente="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
+              @for (cliente of sugerenciasClientes(); track cliente.id) {
+                <mat-option [value]="cliente">
+                  <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+                  <span class="opcion-detalle">
+                    {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
+                  </span>
+                </mat-option>
+              }
+            </mat-autocomplete>
           </mat-form-field>
         </div>
+
+        @if (clienteSeleccionado(); as cs) {
+          <div class="cliente-reconocido">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ cs.nombre || 'Cliente' }} · {{ cs.cantidadCompras }} compra{{ cs.cantidadCompras === 1 ? '' : 's' }} antes</span>
+          </div>
+        }
 
         @if (medioPago() === 'Efectivo') {
           <mat-form-field appearance="outline" class="full">
