@@ -1,0 +1,145 @@
+.vista-toggle {
+  width: 100%;
+  margin-bottom: 16px;
+  display: flex;
+
+  ::ng-deep .mat-button-toggle {
+    flex: 1;
+  }
+
+  ::ng-deep .mat-button-toggle-checked {
+    background-image: var(--gradient-brand);
+    color: var(--color-accent-on);
+  }
+
+  mat-icon {
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+}
+
+.boton-nuevo {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.vacio {
+  text-align: center;
+  opacity: 0.6;
+  margin-top: 32px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-card {
+  display: flex;
+  // mat-card trae flex-direction: column por defecto.
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+
+  &.inactivo {
+    opacity: 0.6;
+  }
+
+  .nombre {
+    flex: 1;
+    font-size: 0.925rem;
+    font-weight: 500;
+  }
+
+  .pill {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--mat-sys-surface-variant, #eee);
+    color: var(--mat-sys-on-surface-variant, #555);
+
+    &.pill-protegido {
+      background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+      color: var(--color-accent);
+    }
+  }
+
+  .acciones {
+    display: flex;
+    flex-shrink: 0;
+  }
+}
+
+.ayuda {
+  font-size: 0.78rem;
+  opacity: 0.6;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+.negocio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.full {
+  width: 100%;
+}
+
+.logo-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-preview {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--mat-sys-surface-variant, #eee);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  mat-icon {
+    color: var(--mat-sys-on-surface-variant, #8892a6);
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+  }
+}
+
+.logo-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.ayuda-logo {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin: -6px 0 4px;
+}

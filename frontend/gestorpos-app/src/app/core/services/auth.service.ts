@@ -29,6 +29,12 @@ export class AuthService {
     this.authState.set(null);
   }
 
+  actualizarNombreNegocio(nombre: string): void {
+    const actual = this.authState();
+    if (!actual) return;
+    this.guardarSesion({ ...actual, nombreNegocio: nombre });
+  }
+
   private guardarSesion(auth: AuthResponse): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
     this.authState.set(auth);

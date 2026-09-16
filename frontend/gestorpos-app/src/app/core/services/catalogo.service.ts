@@ -7,6 +7,7 @@ import {
   Categoria,
   CrearCategoriaRequest,
   CrearProductoRequest,
+  EditarCategoriaRequest,
   EditarProductoRequest,
   ImportarProductosResultado,
   PaginaProductos,
@@ -23,6 +24,14 @@ export class CatalogoService {
 
   crearCategoria(request: CrearCategoriaRequest): Observable<Categoria> {
     return this.http.post<Categoria>(`${environment.apiUrl}/categorias`, request);
+  }
+
+  editarCategoria(id: string, request: EditarCategoriaRequest): Observable<Categoria> {
+    return this.http.put<Categoria>(`${environment.apiUrl}/categorias/${id}`, request);
+  }
+
+  desactivarCategoria(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/categorias/${id}`);
   }
 
   listarProductos(soloBajoStock = false): Observable<Producto[]> {

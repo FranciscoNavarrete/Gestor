@@ -37,6 +37,12 @@ public class AdminService : IAdminService
         var tenant = Tenant.Crear(request.NombreNegocio, slug);
         _db.Tenants.Add(tenant);
 
+        // Todo negocio arranca con estos tres medios de pago — "Efectivo" queda protegido
+        // porque CajaService lo usa por nombre para calcular el efectivo esperado en caja.
+        _db.MediosPago.Add(MedioPagoConfiguracion.Crear(tenant.Id, "Efectivo", esProtegido: true));
+        _db.MediosPago.Add(MedioPagoConfiguracion.Crear(tenant.Id, "Tarjeta"));
+        _db.MediosPago.Add(MedioPagoConfiguracion.Crear(tenant.Id, "Otro"));
+
         var passwordHash = _passwordHasher.Hash(request.Password);
         var admin = Usuario.Crear(tenant.Id, request.NombreAdmin, emailNormalizado, passwordHash, RolUsuario.Admin);
         _db.Usuarios.Add(admin);

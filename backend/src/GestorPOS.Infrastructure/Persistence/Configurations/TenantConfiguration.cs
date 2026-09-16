@@ -12,6 +12,8 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Nombre).IsRequired().HasMaxLength(200);
         builder.Property(t => t.Slug).IsRequired().HasMaxLength(100);
+        builder.Property(t => t.Telefono).HasMaxLength(40);
+        builder.Property(t => t.LogoContentType).HasMaxLength(50);
         builder.HasIndex(t => t.Slug).IsUnique();
     }
 }

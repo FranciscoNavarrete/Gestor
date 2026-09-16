@@ -1,0 +1,38 @@
+using GestorPOS.Application.Configuracion;
+using GestorPOS.Application.Configuracion.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GestorPOS.WebAPI.Controllers;
+
+[ApiController]
+[Route("api/medios-pago")]
+[Authorize]
+public class MediosPagoController : ControllerBase
+{
+    private readonly IMedioPagoService _medioPagoService;
+
+    public MediosPagoController(IMedioPagoService medioPagoService)
+    {
+        _medioPagoService = medioPagoService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<MedioPagoDto>>> Listar(CancellationToken ct)
+        => Ok(await _medioPagoService.ListarAsync(ct));
+
+    [HttpPost]
+    public async Task<ActionResult<MedioPagoDto>> Crear(CrearMedioPagoRequest request, CancellationToken ct)
+        => Ok(await _medioPagoService.CrearAsync(request, ct));
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<MedioPagoDto>> Editar(Guid id, EditarMedioPagoRequest request, CancellationToken ct)
+        => Ok(await _medioPagoService.EditarAsync(id, request, ct));
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Desactivar(Guid id, CancellationToken ct)
+    {
+        await _medioPagoService.DesactivarAsync(id, ct);
+        return NoContent();
+    }
+}

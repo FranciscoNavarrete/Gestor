@@ -1,12 +1,11 @@
 using GestorPOS.Domain.Common;
-using GestorPOS.Domain.Enums;
 
 namespace GestorPOS.Domain.Entities;
 
 public class Venta : TenantEntity
 {
     public Guid UsuarioId { get; private set; }
-    public MedioPago MedioPago { get; private set; }
+    public string MedioPago { get; private set; } = string.Empty;
     public string? TelefonoCliente { get; private set; }
     public decimal Total { get; private set; }
 
@@ -16,7 +15,7 @@ public class Venta : TenantEntity
     private Venta() { }
 
     public static Venta Crear(
-        Guid tenantId, Guid usuarioId, MedioPago medioPago, string? telefonoCliente,
+        Guid tenantId, Guid usuarioId, string medioPago, string? telefonoCliente,
         IEnumerable<(Producto Producto, int Cantidad)> items)
     {
         var venta = new Venta

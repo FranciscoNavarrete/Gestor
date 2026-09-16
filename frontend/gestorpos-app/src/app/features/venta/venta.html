@@ -123,9 +123,9 @@
           <mat-form-field appearance="outline">
             <mat-label>Medio de pago</mat-label>
             <mat-select [ngModel]="medioPago()" (ngModelChange)="cambiarMedioPago($event)">
-              <mat-option value="Efectivo">Efectivo</mat-option>
-              <mat-option value="Tarjeta">Tarjeta</mat-option>
-              <mat-option value="Otro">Otro</mat-option>
+              @for (medio of mediosPago(); track medio.id) {
+                <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 

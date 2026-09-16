@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<MedioPagoConfiguracion> MediosPago => Set<MedioPagoConfiguracion>();
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Venta> Ventas => Set<Venta>();
     public DbSet<CajaDiaria> CajasDiarias => Set<CajaDiaria>();

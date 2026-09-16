@@ -3,10 +3,10 @@ using System.Text;
 using GestorPOS.Application.Caja;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Application.Configuracion;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Application.Ventas.Dtos;
 using GestorPOS.Domain.Entities;
-using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,12 +20,14 @@ public class VentaService : IVentaService
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
     private readonly ICajaService _cajaService;
+    private readonly IMedioPagoService _medioPagoService;
 
-    public VentaService(AppDbContext db, ITenantContext tenantContext, ICajaService cajaService)
+    public VentaService(AppDbContext db, ITenantContext tenantContext, ICajaService cajaService, IMedioPagoService medioPagoService)
     {
         _db = db;
         _tenantContext = tenantContext;
         _cajaService = cajaService;
+        _medioPagoService = medioPagoService;
     }
 
     public async Task<VentaDto> CrearAsync(CrearVentaRequest request, CancellationToken ct = default)
@@ -36,7 +38,7 @@ public class VentaService : IVentaService
         if (request.Items.Count == 0)
             throw new AppException("La venta debe tener al menos un producto.");
 
-        if (!Enum.TryParse<MedioPago>(request.MedioPago, ignoreCase: true, out var medioPago))
+        if (!await _medioPagoService.EsValidoYActivoAsync(request.MedioPago, ct))
             throw new AppException($"Medio de pago inválido: '{request.MedioPago}'.");
 
         var productoIds = request.Items.Select(i => i.ProductoId).ToList();
@@ -56,7 +58,7 @@ public class VentaService : IVentaService
             items.Add((producto, itemRequest.Cantidad));
         }
 
-        var venta = Venta.Crear(_tenantContext.TenantId, _tenantContext.UsuarioId, medioPago, request.TelefonoCliente, items);
+        var venta = Venta.Crear(_tenantContext.TenantId, _tenantContext.UsuarioId, request.MedioPago, request.TelefonoCliente, items);
 
         foreach (var (producto, cantidad) in items)
             producto.AjustarStock(-cantidad);
@@ -100,7 +102,7 @@ public class VentaService : IVentaService
 
         return await query
             .OrderByDescending(v => v.FechaCreacion)
-            .Select(v => new VentaResumenDto(v.Id, v.FechaCreacion, v.Total, v.MedioPago.ToString()))
+            .Select(v => new VentaResumenDto(v.Id, v.FechaCreacion, v.Total, v.MedioPago))
             .ToListAsync(ct);
     }
 
@@ -114,7 +116,7 @@ public class VentaService : IVentaService
         var whatsAppLink = ConstruirLinkWhatsApp(venta.TelefonoCliente, ticketTexto);
 
         return new VentaDto(
-            venta.Id, venta.FechaCreacion, venta.Total, venta.MedioPago.ToString(),
+            venta.Id, venta.FechaCreacion, venta.Total, venta.MedioPago,
             venta.TelefonoCliente, items, ticketTexto, whatsAppLink);
     }
 

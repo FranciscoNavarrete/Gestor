@@ -2,7 +2,6 @@ using GestorPOS.Application.Caja;
 using GestorPOS.Application.Caja.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
-using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,11 +45,11 @@ public class CajaService : ICajaService
         var ventasPorMedioPago = await _db.Ventas
             .Where(v => v.FechaCreacion >= caja.FechaCreacion)
             .GroupBy(v => v.MedioPago)
-            .Select(g => new VentaPorMedioPagoDto(g.Key.ToString(), g.Sum(v => v.Total)))
+            .Select(g => new VentaPorMedioPagoDto(g.Key, g.Sum(v => v.Total)))
             .ToListAsync(ct);
 
         var ventasEfectivo = ventasPorMedioPago
-            .FirstOrDefault(v => v.MedioPago == nameof(MedioPago.Efectivo))?.Total ?? 0m;
+            .FirstOrDefault(v => v.MedioPago == "Efectivo")?.Total ?? 0m;
 
         caja.Cerrar(ventasEfectivo, request.MontoCierreReal);
         await _db.SaveChangesAsync(ct);

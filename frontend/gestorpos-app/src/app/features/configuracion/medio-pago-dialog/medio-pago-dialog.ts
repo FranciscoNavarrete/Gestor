@@ -4,32 +4,32 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Categoria } from '../../../core/models/catalog.models';
-import { CatalogoService } from '../../../core/services/catalogo.service';
+import { MedioPagoDto } from '../../../core/models/configuracion.models';
+import { ConfiguracionService } from '../../../core/services/configuracion.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
 
-export interface CategoriaDialogData {
-  categoria: Categoria | null;
+export interface MedioPagoDialogData {
+  medioPago: MedioPagoDto | null;
 }
 
 @Component({
-  selector: 'app-categoria-dialog',
+  selector: 'app-medio-pago-dialog',
   imports: [ReactiveFormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule],
-  templateUrl: './categoria-dialog.html',
-  styleUrl: './categoria-dialog.scss',
+  templateUrl: './medio-pago-dialog.html',
+  styleUrl: './medio-pago-dialog.scss',
 })
-export class CategoriaDialog {
+export class MedioPagoDialog {
   private readonly fb = inject(FormBuilder);
-  private readonly catalogoService = inject(CatalogoService);
-  private readonly dialogRef = inject(MatDialogRef<CategoriaDialog>);
-  private readonly data = inject<CategoriaDialogData | null>(MAT_DIALOG_DATA, { optional: true });
+  private readonly configuracionService = inject(ConfiguracionService);
+  private readonly dialogRef = inject(MatDialogRef<MedioPagoDialog>);
+  private readonly data = inject<MedioPagoDialogData>(MAT_DIALOG_DATA);
 
-  readonly esEdicion = !!this.data?.categoria;
+  readonly esEdicion = !!this.data.medioPago;
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
-    nombre: [this.data?.categoria?.nombre ?? '', [Validators.required]],
+    nombre: [this.data.medioPago?.nombre ?? '', [Validators.required]],
   });
 
   guardar(): void {
@@ -40,11 +40,11 @@ export class CategoriaDialog {
 
     const valores = this.form.getRawValue();
     const request$ = this.esEdicion
-      ? this.catalogoService.editarCategoria(this.data!.categoria!.id, valores)
-      : this.catalogoService.crearCategoria(valores);
+      ? this.configuracionService.editarMedioPago(this.data.medioPago!.id, valores)
+      : this.configuracionService.crearMedioPago(valores);
 
     request$.subscribe({
-      next: (categoria: Categoria) => this.dialogRef.close(categoria),
+      next: (medioPago: MedioPagoDto) => this.dialogRef.close(medioPago),
       error: (err) => {
         this.guardando.set(false);
         this.error.set(extraerMensajeError(err));

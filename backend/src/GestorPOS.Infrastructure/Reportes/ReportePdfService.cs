@@ -31,7 +31,7 @@ public class ReportePdfService : IReportePdfService
 
     public async Task<byte[]> GenerarVentasPdfAsync(DateOnly? desde, DateOnly? hasta, CancellationToken ct = default)
     {
-        var nombreNegocio = await ObtenerNombreNegocioAsync(ct);
+        var (nombreNegocio, logo) = await ObtenerDatosNegocioAsync(ct);
 
         var query = _db.Ventas.AsQueryable();
         if (desde is not null)
@@ -59,7 +59,7 @@ public class ReportePdfService : IReportePdfService
             .Select(v => new[]
             {
                 TimeZoneInfo.ConvertTimeFromUtc(v.FechaCreacion, ZonaHorariaArgentina).ToString("dd/MM/yyyy HH:mm", Ci),
-                v.MedioPago.ToString(),
+                v.MedioPago,
                 $"${v.Total.ToString("N2", Ci)}",
             })
             .ToList();
@@ -74,12 +74,19 @@ public class ReportePdfService : IReportePdfService
                 pagina.Margin(30);
                 pagina.DefaultTextStyle(x => x.FontSize(10));
 
-                pagina.Header().Column(col =>
+                pagina.Header().Row(fila =>
                 {
-                    // Espacio pensado para sumar el logo del negocio a futuro (imagen junto al nombre).
-                    col.Item().Text(nombreNegocio).FontSize(18).Bold();
-                    col.Item().PaddingTop(2).Text("Reporte de ventas").FontSize(13).SemiBold();
-                    col.Item().PaddingTop(2).Text(subtitulo).FontSize(9).FontColor(Colors.Grey.Darken1);
+                    if (logo is not null)
+                    {
+                        fila.ConstantItem(40).Height(40).Image(logo).FitArea();
+                        fila.ConstantItem(10);
+                    }
+                    fila.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(nombreNegocio).FontSize(18).Bold();
+                        col.Item().PaddingTop(2).Text("Reporte de ventas").FontSize(13).SemiBold();
+                        col.Item().PaddingTop(2).Text(subtitulo).FontSize(9).FontColor(Colors.Grey.Darken1);
+                    });
                 });
 
                 pagina.Content().PaddingTop(16).Column(col =>
@@ -142,7 +149,7 @@ public class ReportePdfService : IReportePdfService
 
     public async Task<byte[]> GenerarStockPdfAsync(string? busqueda, bool soloBajoStock, CancellationToken ct = default)
     {
-        var nombreNegocio = await ObtenerNombreNegocioAsync(ct);
+        var (nombreNegocio, logo) = await ObtenerDatosNegocioAsync(ct);
 
         var query = _db.Productos.Where(p => p.Activo);
         if (soloBajoStock)
@@ -183,13 +190,20 @@ public class ReportePdfService : IReportePdfService
                 pagina.Margin(30);
                 pagina.DefaultTextStyle(x => x.FontSize(10));
 
-                pagina.Header().Column(col =>
+                pagina.Header().Row(fila =>
                 {
-                    // Espacio pensado para sumar el logo del negocio a futuro (imagen junto al nombre).
-                    col.Item().Text(nombreNegocio).FontSize(18).Bold();
-                    col.Item().PaddingTop(2).Text("Reporte de stock actual").FontSize(13).SemiBold();
-                    col.Item().PaddingTop(2).Text($"{productos.Count} producto{(productos.Count == 1 ? "" : "s")} · Valorizado total: ${valorizadoTotal.ToString("N2", Ci)}")
-                        .FontSize(9).FontColor(Colors.Grey.Darken1);
+                    if (logo is not null)
+                    {
+                        fila.ConstantItem(40).Height(40).Image(logo).FitArea();
+                        fila.ConstantItem(10);
+                    }
+                    fila.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(nombreNegocio).FontSize(18).Bold();
+                        col.Item().PaddingTop(2).Text("Reporte de stock actual").FontSize(13).SemiBold();
+                        col.Item().PaddingTop(2).Text($"{productos.Count} producto{(productos.Count == 1 ? "" : "s")} · Valorizado total: ${valorizadoTotal.ToString("N2", Ci)}")
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+                    });
                 });
 
                 pagina.Content().PaddingTop(16).Table(tabla =>
@@ -236,11 +250,15 @@ public class ReportePdfService : IReportePdfService
         return documento.GeneratePdf();
     }
 
-    private async Task<string> ObtenerNombreNegocioAsync(CancellationToken ct)
-        => await _db.Tenants
+    private async Task<(string Nombre, byte[]? Logo)> ObtenerDatosNegocioAsync(CancellationToken ct)
+    {
+        var tenant = await _db.Tenants
             .Where(t => t.Id == _tenantContext.TenantId)
-            .Select(t => t.Nombre)
-            .FirstOrDefaultAsync(ct) ?? "";
+            .Select(t => new { t.Nombre, t.LogoData })
+            .FirstOrDefaultAsync(ct);
+
+        return (tenant?.Nombre ?? "", tenant?.LogoData);
+    }
 
     private static string ConstruirSubtituloRango(DateOnly? desde, DateOnly? hasta)
     {

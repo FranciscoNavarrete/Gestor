@@ -8,6 +8,10 @@ export interface CrearCategoriaRequest {
   nombre: string;
 }
 
+export interface EditarCategoriaRequest {
+  nombre: string;
+}
+
 export interface Producto {
   id: string;
   sku: string;

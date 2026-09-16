@@ -10,10 +10,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
+import { MedioPagoDto } from '../../core/models/configuracion.models';
 import { CajaDto, RankingProductoDto } from '../../core/models/reportes.models';
 import { MedioPago, VentaDto } from '../../core/models/venta.models';
 import { CajaService } from '../../core/services/caja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
@@ -46,12 +48,14 @@ export class Venta implements OnInit {
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
   private readonly cajaService = inject(CajaService);
+  private readonly configuracionService = inject(ConfiguracionService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly cargando = signal(true);
   readonly cargandoCaja = signal(true);
   readonly cajaAbierta = signal(false);
   readonly productos = signal<Producto[]>([]);
+  readonly mediosPago = signal<MedioPagoDto[]>([]);
   readonly rankingTop = signal<RankingProductoDto[]>([]);
   readonly busqueda = signal('');
   readonly carrito = signal<ItemCarrito[]>([]);
@@ -97,6 +101,9 @@ export class Venta implements OnInit {
   ngOnInit(): void {
     this.cargarProductos();
     this.reportesService.rankingProductos(TOP_MAS_VENDIDOS).subscribe((ranking) => this.rankingTop.set(ranking));
+    this.configuracionService
+      .listarMediosPago()
+      .subscribe((medios) => this.mediosPago.set(medios.filter((m) => m.activo)));
     this.cajaService.actual().subscribe({
       next: (caja: CajaDto | null) => {
         this.cajaAbierta.set(caja !== null);

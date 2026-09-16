@@ -1,4 +1,4 @@
-export type MedioPago = 'Efectivo' | 'Tarjeta' | 'Otro';
+export type MedioPago = string;
 
 export interface ItemVentaRequest {
   productoId: string;

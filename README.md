@@ -85,6 +85,12 @@ el puerto).
   URL se cree su propia cuenta gratis.
 - `GET /api/usuarios` — lista usuarios del negocio del token (requiere `Authorization: Bearer <token>`)
 - `GET/POST/PUT/DELETE /api/categorias` — CRUD de categorías (delete = baja lógica)
+- `GET/POST/PUT/DELETE /api/medios-pago` — CRUD de medios de pago del negocio; "Efectivo" viene protegido (no se puede renombrar ni desactivar, lo usa el cierre de caja para calcular el efectivo esperado)
+- `GET /api/negocio` — nombre, WhatsApp de contacto y si tiene logo cargado
+- `PUT /api/negocio` — actualiza nombre y WhatsApp
+- `POST /api/negocio/logo` (multipart, campo `archivo`) — sube el logo (PNG/JPG, hasta 500 KB); se guarda en la base (no en disco, porque el filesystem de Railway no persiste entre deploys) y aparece en el encabezado de los reportes PDF
+- `GET /api/negocio/logo` — devuelve la imagen del logo (404 si no hay)
+- `DELETE /api/negocio/logo` — saca el logo
 - `GET /api/productos?bajoStock=true` — lista **sin paginar** todos los productos activos (usado por Venta, que necesita todo el catálogo en memoria para buscar al instante mientras se cobra)
 - `GET /api/productos/buscar?busqueda=&bajoStock=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/SKU/categoría, filtrado y paginado en la base de datos (usado por la pantalla de gestión de Productos, pensado para catálogos grandes)
 - `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
@@ -94,7 +100,7 @@ el puerto).
 - `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
 - `GET /api/ventas?desde=2026-09-01&hasta=2026-09-15` — lista resumida de ventas (todas, o filtradas por rango de fechas; ambos parámetros son opcionales e independientes)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
-- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar
+- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo)
 - `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
 - `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
 - `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período
@@ -139,6 +145,9 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 - **Reportes**: dos vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período) y Stock (búsqueda + filtro "solo stock bajo" +
   valorizado por producto, paginado) — ambas exportables a PDF con un botón
+- **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
+  Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto y logo,
+  este último aparece en el encabezado de los reportes PDF)
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.
