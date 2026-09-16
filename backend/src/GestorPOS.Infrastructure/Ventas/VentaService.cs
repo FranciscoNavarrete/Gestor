@@ -124,7 +124,8 @@ public class VentaService : IVentaService
             .ToList();
 
         var ticketTexto = ConstruirTicket(venta, items, nombreNegocio);
-        var whatsAppLink = ConstruirLinkWhatsApp(venta.TelefonoCliente, ticketTexto);
+        var mensajeWhatsApp = ConstruirMensajeWhatsApp(venta, items, nombreNegocio);
+        var whatsAppLink = ConstruirLinkWhatsApp(venta.TelefonoCliente, mensajeWhatsApp);
 
         return new VentaDto(
             venta.Id, venta.FechaCreacion, venta.Total, venta.MedioPago,
@@ -148,13 +149,31 @@ public class VentaService : IVentaService
         return sb.ToString();
     }
 
-    private static string? ConstruirLinkWhatsApp(string? telefonoCliente, string ticketTexto)
+    private static string ConstruirMensajeWhatsApp(Venta venta, IReadOnlyList<VentaItemDto> items, string nombreNegocio)
+    {
+        var ci = CultureInfo.InvariantCulture;
+        var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(venta.FechaCreacion, ZonaHorariaArgentina);
+        var sb = new StringBuilder();
+        sb.AppendLine($"🧾 *{nombreNegocio}*");
+        sb.AppendLine(fechaLocal.ToString("dd/MM/yyyy HH:mm", ci));
+        sb.AppendLine();
+        foreach (var item in items)
+            sb.AppendLine($"{item.Cantidad}x {item.ProductoNombre} - ${item.Subtotal.ToString("0.00", ci)}");
+        sb.AppendLine("──────────────────");
+        sb.AppendLine($"*TOTAL: ${venta.Total.ToString("0.00", ci)}*");
+        sb.AppendLine($"Medio de pago: {venta.MedioPago}");
+        sb.AppendLine();
+        sb.AppendLine("¡Gracias por tu compra! 🙌");
+        return sb.ToString();
+    }
+
+    private static string? ConstruirLinkWhatsApp(string? telefonoCliente, string mensaje)
     {
         if (string.IsNullOrWhiteSpace(telefonoCliente)) return null;
 
         var soloDigitos = new string(telefonoCliente.Where(char.IsDigit).ToArray());
         if (soloDigitos.Length == 0) return null;
 
-        return $"https://wa.me/{soloDigitos}?text={Uri.EscapeDataString(ticketTexto)}";
+        return $"https://wa.me/{soloDigitos}?text={Uri.EscapeDataString(mensaje)}";
     }
 }
