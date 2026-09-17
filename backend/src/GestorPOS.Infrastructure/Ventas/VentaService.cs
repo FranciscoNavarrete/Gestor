@@ -8,6 +8,7 @@ using GestorPOS.Application.Configuracion;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Application.Ventas.Dtos;
 using GestorPOS.Domain.Entities;
+using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,9 +16,6 @@ namespace GestorPOS.Infrastructure.Ventas;
 
 public class VentaService : IVentaService
 {
-    private static readonly TimeZoneInfo ZonaHorariaArgentina =
-        TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
-
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
     private readonly ICajaService _cajaService;
@@ -101,13 +99,13 @@ public class VentaService : IVentaService
 
         if (desde is not null)
         {
-            var desdeUtc = desde.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var desdeUtc = ZonaHoraria.ConvertirAUtc(desde.Value, TimeOnly.MinValue);
             query = query.Where(v => v.FechaCreacion >= desdeUtc);
         }
 
         if (hasta is not null)
         {
-            var hastaUtc = hasta.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var hastaUtc = ZonaHoraria.ConvertirAUtc(hasta.Value.AddDays(1), TimeOnly.MinValue);
             query = query.Where(v => v.FechaCreacion < hastaUtc);
         }
 
@@ -135,7 +133,7 @@ public class VentaService : IVentaService
     private static string ConstruirTicket(Venta venta, IReadOnlyList<VentaItemDto> items, string nombreNegocio)
     {
         var ci = CultureInfo.InvariantCulture;
-        var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(venta.FechaCreacion, ZonaHorariaArgentina);
+        var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(venta.FechaCreacion, ZonaHoraria.Argentina);
         var sb = new StringBuilder();
         sb.AppendLine(nombreNegocio);
         sb.AppendLine($"Fecha: {fechaLocal.ToString("dd/MM/yyyy HH:mm", ci)}");
@@ -152,7 +150,7 @@ public class VentaService : IVentaService
     private static string ConstruirMensajeWhatsApp(Venta venta, IReadOnlyList<VentaItemDto> items, string nombreNegocio)
     {
         var ci = CultureInfo.InvariantCulture;
-        var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(venta.FechaCreacion, ZonaHorariaArgentina);
+        var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(venta.FechaCreacion, ZonaHoraria.Argentina);
         var sb = new StringBuilder();
         sb.AppendLine($"🧾 *{nombreNegocio}*");
         sb.AppendLine(fechaLocal.ToString("dd/MM/yyyy HH:mm", ci));

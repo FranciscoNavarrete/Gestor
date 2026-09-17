@@ -15,6 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
+import { comprimirImagen } from '../../core/utils/imagen.util';
 import { CategoriaDialog, CategoriaDialogData } from '../productos/categoria-dialog/categoria-dialog';
 import { MedioPagoDialog, MedioPagoDialogData } from './medio-pago-dialog/medio-pago-dialog';
 
@@ -220,14 +221,15 @@ export class Configuracion implements OnInit, OnDestroy {
     this.inputLogo?.nativeElement.click();
   }
 
-  logoSeleccionado(event: Event): void {
+  async logoSeleccionado(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const archivo = input.files?.[0];
     input.value = '';
     if (!archivo) return;
 
     this.subiendoLogo.set(true);
-    this.configuracionService.subirLogo(archivo).subscribe({
+    const archivoComprimido = await comprimirImagen(archivo);
+    this.configuracionService.subirLogo(archivoComprimido).subscribe({
       next: (negocio) => {
         this.subiendoLogo.set(false);
         this.negocio.set(negocio);

@@ -16,6 +16,23 @@
     margin-right: 4px;
     vertical-align: middle;
   }
+
+  // En pantallas angostas las tres etiquetas no entran (el texto no se achica ni hace
+  // wrap dentro del toggle) y la última queda directamente cortada, sin scroll para
+  // llegar a ella — se muestran solo los íconos, el texto sigue accesible por aria-label.
+  @media (max-width: 420px) {
+    .etiqueta {
+      display: none;
+    }
+
+    mat-icon {
+      margin-right: 0;
+    }
+
+    ::ng-deep .mat-button-toggle-label-content {
+      padding: 0 8px;
+    }
+  }
 }
 
 .boton-nuevo {

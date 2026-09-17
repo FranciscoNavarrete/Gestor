@@ -1,6 +1,7 @@
 using System.Globalization;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Reportes;
+using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
@@ -11,8 +12,6 @@ namespace GestorPOS.Infrastructure.Reportes;
 
 public class ReportePdfService : IReportePdfService
 {
-    private static readonly TimeZoneInfo ZonaHorariaArgentina =
-        TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
     private static readonly CultureInfo Ci = CultureInfo.InvariantCulture;
 
     static ReportePdfService()
@@ -36,12 +35,12 @@ public class ReportePdfService : IReportePdfService
         var query = _db.Ventas.AsQueryable();
         if (desde is not null)
         {
-            var desdeUtc = desde.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var desdeUtc = ZonaHoraria.ConvertirAUtc(desde.Value, TimeOnly.MinValue);
             query = query.Where(v => v.FechaCreacion >= desdeUtc);
         }
         if (hasta is not null)
         {
-            var hastaUtc = hasta.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var hastaUtc = ZonaHoraria.ConvertirAUtc(hasta.Value.AddDays(1), TimeOnly.MinValue);
             query = query.Where(v => v.FechaCreacion < hastaUtc);
         }
 
@@ -58,7 +57,7 @@ public class ReportePdfService : IReportePdfService
         var filas = ventas
             .Select(v => new[]
             {
-                TimeZoneInfo.ConvertTimeFromUtc(v.FechaCreacion, ZonaHorariaArgentina).ToString("dd/MM/yyyy HH:mm", Ci),
+                TimeZoneInfo.ConvertTimeFromUtc(v.FechaCreacion, ZonaHoraria.Argentina).ToString("dd/MM/yyyy HH:mm", Ci),
                 v.MedioPago,
                 $"${v.Total.ToString("N2", Ci)}",
             })

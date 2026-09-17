@@ -1,6 +1,7 @@
 using GestorPOS.Application.Reportes;
 using GestorPOS.Application.Reportes.Dtos;
 using GestorPOS.Domain.Entities;
+using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +49,7 @@ public class ReporteService : IReporteService
 
     public async Task<DashboardDto> DashboardAsync(CancellationToken ct = default)
     {
-        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+        var hoy = ZonaHoraria.HoyEnArgentina();
         var inicioMes = new DateOnly(hoy.Year, hoy.Month, 1);
 
         var gananciasHoy = await GananciasAsync(hoy, hoy, ct);
@@ -73,13 +74,13 @@ public class ReporteService : IReporteService
 
         if (desde is not null)
         {
-            var desdeUtc = desde.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var desdeUtc = ZonaHoraria.ConvertirAUtc(desde.Value, TimeOnly.MinValue);
             query = query.Where(v => v.FechaCreacion >= desdeUtc);
         }
 
         if (hasta is not null)
         {
-            var hastaUtc = hasta.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var hastaUtc = ZonaHoraria.ConvertirAUtc(hasta.Value.AddDays(1), TimeOnly.MinValue);
             query = query.Where(v => v.FechaCreacion < hastaUtc);
         }
 

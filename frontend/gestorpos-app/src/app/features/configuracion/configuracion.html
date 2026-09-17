@@ -1,15 +1,15 @@
 <mat-button-toggle-group class="vista-toggle" [value]="vista()" (change)="cambiarVista($event.value)">
-  <mat-button-toggle value="categorias">
+  <mat-button-toggle value="categorias" aria-label="Categorías">
     <mat-icon>sell</mat-icon>
-    Categorías
+    <span class="etiqueta">Categorías</span>
   </mat-button-toggle>
-  <mat-button-toggle value="medios-pago">
+  <mat-button-toggle value="medios-pago" aria-label="Métodos de pago">
     <mat-icon>payments</mat-icon>
-    Métodos de pago
+    <span class="etiqueta">Métodos de pago</span>
   </mat-button-toggle>
-  <mat-button-toggle value="negocio">
+  <mat-button-toggle value="negocio" aria-label="Negocio">
     <mat-icon>storefront</mat-icon>
-    Negocio
+    <span class="etiqueta">Negocio</span>
   </mat-button-toggle>
 </mat-button-toggle-group>
 
