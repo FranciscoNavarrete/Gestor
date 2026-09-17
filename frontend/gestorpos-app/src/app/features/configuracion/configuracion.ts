@@ -155,6 +155,13 @@ export class Configuracion implements OnInit, OnDestroy {
     });
   }
 
+  activarMedioPago(medioPago: MedioPagoDto): void {
+    this.configuracionService.activarMedioPago(medioPago.id).subscribe({
+      next: () => this.cargarMediosPago(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
   // --- Negocio ---
 
   private cargarNegocio(): void {

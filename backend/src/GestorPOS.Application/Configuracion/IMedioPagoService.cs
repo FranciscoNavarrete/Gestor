@@ -8,6 +8,7 @@ public interface IMedioPagoService
     Task<MedioPagoDto> CrearAsync(CrearMedioPagoRequest request, CancellationToken ct = default);
     Task<MedioPagoDto> EditarAsync(Guid id, EditarMedioPagoRequest request, CancellationToken ct = default);
     Task DesactivarAsync(Guid id, CancellationToken ct = default);
+    Task<MedioPagoDto> ActivarAsync(Guid id, CancellationToken ct = default);
 
     Task<bool> EsValidoYActivoAsync(string nombre, CancellationToken ct = default);
 }

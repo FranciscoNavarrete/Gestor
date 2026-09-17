@@ -86,6 +86,7 @@ el puerto).
 - `GET /api/usuarios` — lista usuarios del negocio del token (requiere `Authorization: Bearer <token>`)
 - `GET/POST/PUT/DELETE /api/categorias` — CRUD de categorías (delete = baja lógica)
 - `GET/POST/PUT/DELETE /api/medios-pago` — CRUD de medios de pago del negocio; "Efectivo" viene protegido (no se puede renombrar ni desactivar, lo usa el cierre de caja para calcular el efectivo esperado)
+- `POST /api/medios-pago/{id}/activar` — reactiva un medio de pago desactivado
 - `GET /api/negocio` — nombre, WhatsApp de contacto y si tiene logo cargado
 - `PUT /api/negocio` — actualiza nombre y WhatsApp
 - `POST /api/negocio/logo` (multipart, campo `archivo`) — sube el logo (PNG/JPG, hasta 500 KB); se guarda en la base (no en disco, porque el filesystem de Railway no persiste entre deploys) y aparece en el encabezado de los reportes PDF

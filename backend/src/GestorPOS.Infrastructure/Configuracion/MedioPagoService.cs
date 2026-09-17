@@ -61,6 +61,16 @@ public class MedioPagoService : IMedioPagoService
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<MedioPagoDto> ActivarAsync(Guid id, CancellationToken ct = default)
+    {
+        var medioPago = await _db.MediosPago.FirstOrDefaultAsync(m => m.Id == id, ct)
+            ?? throw new AppException("El medio de pago no existe.");
+
+        medioPago.Activar();
+        await _db.SaveChangesAsync(ct);
+        return new MedioPagoDto(medioPago.Id, medioPago.Nombre, medioPago.Activo, medioPago.EsProtegido);
+    }
+
     public async Task<bool> EsValidoYActivoAsync(string nombre, CancellationToken ct = default)
     {
         return await _db.MediosPago.AnyAsync(m => m.Nombre == nombre && m.Activo, ct);

@@ -76,6 +76,10 @@
                 <button mat-icon-button (click)="desactivarMedioPago(medioPago)" aria-label="Eliminar">
                   <mat-icon>delete</mat-icon>
                 </button>
+              } @else {
+                <button mat-icon-button (click)="activarMedioPago(medioPago)" aria-label="Reactivar">
+                  <mat-icon>restore</mat-icon>
+                </button>
               }
             }
           </div>
