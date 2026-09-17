@@ -176,4 +176,4 @@ Ver plan de fases completo en la memoria del proyecto. Backend (fases 0-4) y fro
 3. ✅ Reportes (caja diaria, ranking de productos, ganancias netas, dashboard)
 4. ✅ Panel interno de feature flags por tenant
 5. ✅ Frontend Angular (pantallas core)
-6. Deploy productivo (Railway + Netlify)
+6. ✅ Deploy productivo (Railway + Netlify)
