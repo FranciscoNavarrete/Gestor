@@ -53,4 +53,14 @@ public class CategoriaService : ICategoriaService
         categoria.Desactivar();
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task<CategoriaDto> ActivarAsync(Guid id, CancellationToken ct = default)
+    {
+        var categoria = await _db.Categorias.FirstOrDefaultAsync(c => c.Id == id, ct)
+            ?? throw new AppException("La categoría no existe.");
+
+        categoria.Activar();
+        await _db.SaveChangesAsync(ct);
+        return new CategoriaDto(categoria.Id, categoria.Nombre, categoria.Activo);
+    }
 }

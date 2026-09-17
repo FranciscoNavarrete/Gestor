@@ -115,6 +115,13 @@ export class Configuracion implements OnInit, OnDestroy {
     });
   }
 
+  activarCategoria(categoria: Categoria): void {
+    this.catalogoService.activarCategoria(categoria.id).subscribe({
+      next: () => this.cargarCategorias(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
   // --- Métodos de pago ---
 
   private cargarMediosPago(): void {

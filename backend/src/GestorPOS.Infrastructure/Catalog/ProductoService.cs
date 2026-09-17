@@ -130,6 +130,16 @@ public class ProductoService : IProductoService
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<ProductoDto> ActivarAsync(Guid id, CancellationToken ct = default)
+    {
+        var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new AppException("El producto no existe.");
+
+        producto.Activar();
+        await _db.SaveChangesAsync(ct);
+        return await ObtenerAsync(id, ct);
+    }
+
     public async Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, CancellationToken ct = default)
     {
         if (cantidad == 0)

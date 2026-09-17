@@ -41,6 +41,10 @@
               <button mat-icon-button (click)="desactivarCategoria(categoria)" aria-label="Eliminar">
                 <mat-icon>delete</mat-icon>
               </button>
+            } @else {
+              <button mat-icon-button (click)="activarCategoria(categoria)" aria-label="Reactivar">
+                <mat-icon>restore</mat-icon>
+              </button>
             }
           </div>
         </mat-card>

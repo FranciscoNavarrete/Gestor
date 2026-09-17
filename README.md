@@ -85,6 +85,7 @@ el puerto).
   URL se cree su propia cuenta gratis.
 - `GET /api/usuarios` — lista usuarios del negocio del token (requiere `Authorization: Bearer <token>`)
 - `GET/POST/PUT/DELETE /api/categorias` — CRUD de categorías (delete = baja lógica)
+- `POST /api/categorias/{id}/activar` — reactiva una categoría desactivada
 - `GET/POST/PUT/DELETE /api/medios-pago` — CRUD de medios de pago del negocio; "Efectivo" viene protegido (no se puede renombrar ni desactivar, lo usa el cierre de caja para calcular el efectivo esperado)
 - `POST /api/medios-pago/{id}/activar` — reactiva un medio de pago desactivado
 - `GET /api/negocio` — nombre, WhatsApp de contacto y si tiene logo cargado
@@ -95,6 +96,7 @@ el puerto).
 - `GET /api/productos?bajoStock=true` — lista **sin paginar** todos los productos activos (usado por Venta, que necesita todo el catálogo en memoria para buscar al instante mientras se cobra)
 - `GET /api/productos/buscar?busqueda=&bajoStock=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/SKU/categoría, filtrado y paginado en la base de datos (usado por la pantalla de gestión de Productos, pensado para catálogos grandes)
 - `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
+- `POST /api/productos/{id}/activar` — reactiva un producto desactivado (sin UI todavía: la pantalla de Productos no lista inactivos, falta un filtro para poder llegar a ellos)
 - `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente (reposición, merma, corrección)
 - `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
 - `GET /api/productos/plantilla-excel` — descarga la plantilla .xlsx (SKU, Nombre, Categoría, Precio, Costo, Stock inicial, Stock mínimo)

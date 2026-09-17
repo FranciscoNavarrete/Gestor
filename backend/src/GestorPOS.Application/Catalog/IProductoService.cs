@@ -17,6 +17,7 @@ public interface IProductoService
     Task<ProductoDto> CrearAsync(CrearProductoRequest request, CancellationToken ct = default);
     Task<ProductoDto> EditarAsync(Guid id, EditarProductoRequest request, CancellationToken ct = default);
     Task DesactivarAsync(Guid id, CancellationToken ct = default);
+    Task<ProductoDto> ActivarAsync(Guid id, CancellationToken ct = default);
     Task<int> ActualizarPreciosMasivoAsync(ActualizarPreciosMasivoRequest request, CancellationToken ct = default);
 
     /// <summary>Suma o resta stock manualmente (reposición, merma, corrección de inventario).

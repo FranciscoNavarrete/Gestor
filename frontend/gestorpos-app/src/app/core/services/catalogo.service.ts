@@ -34,6 +34,10 @@ export class CatalogoService {
     return this.http.delete<void>(`${environment.apiUrl}/categorias/${id}`);
   }
 
+  activarCategoria(id: string): Observable<Categoria> {
+    return this.http.post<Categoria>(`${environment.apiUrl}/categorias/${id}/activar`, {});
+  }
+
   listarProductos(soloBajoStock = false): Observable<Producto[]> {
     return this.http.get<Producto[]>(`${environment.apiUrl}/productos`, {
       params: soloBajoStock ? { bajoStock: true } : {},
@@ -61,6 +65,10 @@ export class CatalogoService {
 
   desactivarProducto(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/productos/${id}`);
+  }
+
+  activarProducto(id: string): Observable<Producto> {
+    return this.http.post<Producto>(`${environment.apiUrl}/productos/${id}/activar`, {});
   }
 
   ajustarStock(id: string, cantidad: number): Observable<Producto> {

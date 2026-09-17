@@ -35,4 +35,8 @@ public class CategoriasController : ControllerBase
         await _categoriaService.DesactivarAsync(id, ct);
         return NoContent();
     }
+
+    [HttpPost("{id:guid}/activar")]
+    public async Task<ActionResult<CategoriaDto>> Activar(Guid id, CancellationToken ct)
+        => Ok(await _categoriaService.ActivarAsync(id, ct));
 }
