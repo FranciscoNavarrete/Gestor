@@ -1,10 +1,11 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -21,6 +22,7 @@ import { MovimientoStockService } from '../../core/services/movimiento-stock.ser
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
+import { fechaAIso, isoAFecha } from '../../core/utils/fecha.util';
 
 const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
@@ -36,6 +38,7 @@ type Vista = 'ventas' | 'stock' | 'movimientos';
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -59,6 +62,8 @@ export class Reportes implements OnInit {
   // --- Reporte de ventas ---
   readonly desde = signal('');
   readonly hasta = signal('');
+  readonly desdeFecha = computed(() => isoAFecha(this.desde()));
+  readonly hastaFecha = computed(() => isoAFecha(this.hasta()));
   readonly cargandoVentas = signal(true);
   readonly ganancias = signal<GananciasDto | null>(null);
   readonly ventas = signal<VentaResumenDto[]>([]);
@@ -78,6 +83,8 @@ export class Reportes implements OnInit {
   readonly filtroProductoId = signal('');
   readonly desdeMovimientos = signal('');
   readonly hastaMovimientos = signal('');
+  readonly desdeMovimientosFecha = computed(() => isoAFecha(this.desdeMovimientos()));
+  readonly hastaMovimientosFecha = computed(() => isoAFecha(this.hastaMovimientos()));
   readonly cargandoMovimientos = signal(true);
   readonly movimientos = signal<MovimientoStock[]>([]);
   readonly paginaMovimientos = signal(1);
@@ -96,6 +103,16 @@ export class Reportes implements OnInit {
   }
 
   // --- Ventas ---
+
+  onDesdeChange(fecha: Date | null): void {
+    this.desde.set(fechaAIso(fecha));
+    this.cargarVentas();
+  }
+
+  onHastaChange(fecha: Date | null): void {
+    this.hasta.set(fechaAIso(fecha));
+    this.cargarVentas();
+  }
 
   cargarVentas(): void {
     this.cargandoVentas.set(true);
@@ -192,6 +209,16 @@ export class Reportes implements OnInit {
   onFiltroMovimientosChange(): void {
     this.paginaMovimientos.set(1);
     this.cargarMovimientos();
+  }
+
+  onDesdeMovimientosChange(fecha: Date | null): void {
+    this.desdeMovimientos.set(fechaAIso(fecha));
+    this.onFiltroMovimientosChange();
+  }
+
+  onHastaMovimientosChange(fecha: Date | null): void {
+    this.hastaMovimientos.set(fechaAIso(fecha));
+    this.onFiltroMovimientosChange();
   }
 
   limpiarFiltroMovimientos(): void {

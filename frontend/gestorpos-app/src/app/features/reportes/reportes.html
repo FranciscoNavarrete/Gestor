@@ -17,11 +17,15 @@
   <div class="filtro-fechas">
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
-      <input matInput type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event); cargarVentas()" />
+      <input matInput [matDatepicker]="pickerDesde" [ngModel]="desdeFecha()" (ngModelChange)="onDesdeChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+      <mat-datepicker #pickerDesde></mat-datepicker>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Hasta</mat-label>
-      <input matInput type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event); cargarVentas()" />
+      <input matInput [matDatepicker]="pickerHasta" [ngModel]="hastaFecha()" (ngModelChange)="onHastaChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+      <mat-datepicker #pickerHasta></mat-datepicker>
     </mat-form-field>
     @if (desde() || hasta()) {
       <button mat-icon-button (click)="limpiarFiltroFechas()" aria-label="Limpiar filtro de fechas">
@@ -160,21 +164,15 @@
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
-      <input
-        matInput
-        type="date"
-        [ngModel]="desdeMovimientos()"
-        (ngModelChange)="desdeMovimientos.set($event); onFiltroMovimientosChange()"
-      />
+      <input matInput [matDatepicker]="pickerDesdeMov" [ngModel]="desdeMovimientosFecha()" (ngModelChange)="onDesdeMovimientosChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerDesdeMov"></mat-datepicker-toggle>
+      <mat-datepicker #pickerDesdeMov></mat-datepicker>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Hasta</mat-label>
-      <input
-        matInput
-        type="date"
-        [ngModel]="hastaMovimientos()"
-        (ngModelChange)="hastaMovimientos.set($event); onFiltroMovimientosChange()"
-      />
+      <input matInput [matDatepicker]="pickerHastaMov" [ngModel]="hastaMovimientosFecha()" (ngModelChange)="onHastaMovimientosChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerHastaMov"></mat-datepicker-toggle>
+      <mat-datepicker #pickerHastaMov></mat-datepicker>
     </mat-form-field>
     @if (filtroProductoId() || desdeMovimientos() || hastaMovimientos()) {
       <button mat-icon-button (click)="limpiarFiltroMovimientos()" aria-label="Limpiar filtros">
