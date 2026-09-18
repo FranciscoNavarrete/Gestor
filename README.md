@@ -104,7 +104,7 @@ el puerto).
 - `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
 - `GET /api/ventas?desde=2026-09-01&hasta=2026-09-15` — lista resumida de ventas (todas, o filtradas por rango de fechas; ambos parámetros son opcionales e independientes)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
-- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente opcional), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo). Si viene `telefonoCliente`, la venta se enlaza automáticamente a un `Cliente` (se busca por teléfono normalizado — solo dígitos — dentro del negocio, y se crea solo si es la primera vez que compra). El mensaje del link de WhatsApp usa un formato aparte del ticket en pantalla (negrita `*así*`, separador y emoji) — WhatsApp no permite adjuntar un PDF/imagen vía link, solo texto
+- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente/nombreCliente opcionales), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo). Si viene `telefonoCliente`, la venta se enlaza automáticamente a un `Cliente` (se busca por teléfono normalizado — solo dígitos — dentro del negocio); si no existe todavía se crea, usando `nombreCliente` si vino alguno (se ignora si el cliente ya existía, para no pisarle el nombre con un typo del cajero). El mensaje del link de WhatsApp usa un formato aparte del ticket en pantalla (negrita `*así*`, separador y emoji) — WhatsApp no permite adjuntar un PDF/imagen vía link, solo texto
 - `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono (cada item ya trae su cantidad de compras)
 - `GET /api/clientes/{id}` — datos del cliente + estadísticas (cantidad de compras, total gastado, fecha de la última compra)
 - `GET /api/clientes/{id}/ventas` — historial de ventas de ese cliente
@@ -161,8 +161,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   por cliente con nombre y teléfono editables, estadísticas (compras, total gastado, última compra) e
   historial de ventas. Los clientes se dan de alta solos la primera vez que alguien compra dejando su
   teléfono — cargar el teléfono en la venta sigue siendo opcional, se puede vender sin él sin ningún
-  problema. El campo de teléfono en la pantalla de Venta autocompleta contra clientes existentes
-  (busca por nombre o teléfono) para no tener que re-tipear el número de un cliente que ya compró antes
+  problema. En Venta hay dos campos independientes, Nombre y Teléfono, y cualquiera de los dos busca
+  contra clientes existentes (por nombre o teléfono) — elegís una sugerencia por el que te acuerdes y
+  el otro se completa solo, sin tener que re-tipear nada de un cliente que ya compró antes. Si es la
+  primera vez que compra, el nombre que cargues ahí queda guardado en el cliente nuevo
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.

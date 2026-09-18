@@ -13,8 +13,10 @@ public interface IClienteService
     Task<IReadOnlyList<ClienteVentaDto>> ListarVentasAsync(Guid id, CancellationToken ct = default);
     Task<ClienteDto> EditarAsync(Guid id, EditarClienteRequest request, CancellationToken ct = default);
 
-    /// <summary>Busca un cliente por teléfono en el tenant actual, o lo crea si no existe todavía.
-    /// Usado por VentaService al cobrar una venta con teléfono cargado — no llama SaveChanges por su
-    /// cuenta, queda a cargo del caller persistirlo junto con el resto de los cambios de la venta.</summary>
-    Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, CancellationToken ct = default);
+    /// <summary>Busca un cliente por teléfono en el tenant actual, o lo crea si no existe todavía —
+    /// en ese caso, con el nombre dado (si vino alguno; se ignora si el cliente ya existía, para no
+    /// pisar un nombre ya cargado con un typo del cajero al cobrar). Usado por VentaService al cobrar
+    /// una venta con teléfono cargado — no llama SaveChanges por su cuenta, queda a cargo del caller
+    /// persistirlo junto con el resto de los cambios de la venta.</summary>
+    Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, string? nombre, CancellationToken ct = default);
 }

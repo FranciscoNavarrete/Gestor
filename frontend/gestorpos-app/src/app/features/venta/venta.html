@@ -130,15 +130,36 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
+            <mat-label>Nombre (opcional)</mat-label>
+            <input
+              matInput
+              [ngModel]="nombreCliente()"
+              (ngModelChange)="onNombreClienteChange($event)"
+              [matAutocomplete]="autoClienteNombre"
+              placeholder="Si ya lo conocés"
+            />
+            <mat-autocomplete #autoClienteNombre="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
+              @for (cliente of sugerenciasClientes(); track cliente.id) {
+                <mat-option [value]="cliente">
+                  <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+                  <span class="opcion-detalle">
+                    {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
+                  </span>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
             <mat-label>Teléfono (opcional)</mat-label>
             <input
               matInput
               [ngModel]="telefonoCliente()"
               (ngModelChange)="onTelefonoClienteChange($event)"
-              [matAutocomplete]="autoCliente"
-              placeholder="Nombre o teléfono, para el ticket"
+              [matAutocomplete]="autoClienteTelefono"
+              placeholder="Para el ticket por WhatsApp"
             />
-            <mat-autocomplete #autoCliente="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
+            <mat-autocomplete #autoClienteTelefono="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
               @for (cliente of sugerenciasClientes(); track cliente.id) {
                 <mat-option [value]="cliente">
                   <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>

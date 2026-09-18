@@ -9,6 +9,7 @@ export interface CrearVentaRequest {
   items: ItemVentaRequest[];
   medioPago: MedioPago;
   telefonoCliente: string | null;
+  nombreCliente: string | null;
 }
 
 export interface VentaItemDto {

@@ -107,7 +107,7 @@ public class ClienteService : IClienteService
         return new ClienteDto(cliente.Id, cliente.Telefono, cliente.Nombre, cliente.FechaCreacion, cantidadCompras);
     }
 
-    public async Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, CancellationToken ct = default)
+    public async Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, string? nombre, CancellationToken ct = default)
     {
         var normalizado = NormalizarTelefono(telefono);
         if (normalizado.Length == 0)
@@ -117,7 +117,7 @@ public class ClienteService : IClienteService
         if (cliente is not null)
             return cliente.Id;
 
-        cliente = Cliente.Crear(_tenantContext.TenantId, normalizado);
+        cliente = Cliente.Crear(_tenantContext.TenantId, normalizado, nombre);
         _db.Clientes.Add(cliente);
         return cliente.Id;
     }

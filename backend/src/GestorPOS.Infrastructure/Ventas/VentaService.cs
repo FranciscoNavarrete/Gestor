@@ -69,7 +69,8 @@ public class VentaService : IVentaService
 
         if (!string.IsNullOrWhiteSpace(request.TelefonoCliente))
         {
-            var clienteId = await _clienteService.ObtenerOCrearPorTelefonoAsync(request.TelefonoCliente, ct);
+            var clienteId = await _clienteService.ObtenerOCrearPorTelefonoAsync(
+                request.TelefonoCliente, request.NombreCliente, ct);
             venta.AsignarCliente(clienteId);
         }
 

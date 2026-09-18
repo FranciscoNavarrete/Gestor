@@ -2,7 +2,8 @@ namespace GestorPOS.Application.Ventas.Dtos;
 
 public record ItemVentaRequest(Guid ProductoId, int Cantidad);
 
-public record CrearVentaRequest(IReadOnlyList<ItemVentaRequest> Items, string MedioPago, string? TelefonoCliente);
+public record CrearVentaRequest(
+    IReadOnlyList<ItemVentaRequest> Items, string MedioPago, string? TelefonoCliente, string? NombreCliente);
 
 public record VentaItemDto(Guid ProductoId, string ProductoNombre, int Cantidad, decimal PrecioUnitario, decimal Subtotal);
 

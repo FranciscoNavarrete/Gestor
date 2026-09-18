@@ -70,6 +70,7 @@ export class Venta implements OnInit, OnDestroy {
   readonly carrito = signal<ItemCarrito[]>([]);
   readonly carritoExpandido = signal(false);
   readonly medioPago = signal<MedioPago>('Efectivo');
+  readonly nombreCliente = signal('');
   readonly telefonoCliente = signal('');
   readonly sugerenciasClientes = signal<Cliente[]>([]);
   readonly clienteSeleccionado = signal<Cliente | null>(null);
@@ -181,9 +182,19 @@ export class Venta implements OnInit, OnDestroy {
     this.carritoExpandido.set(!this.carritoExpandido());
   }
 
+  onNombreClienteChange(valor: string): void {
+    this.nombreCliente.set(valor);
+    this.clienteSeleccionado.set(null);
+    this.buscarClienteDebounced(valor);
+  }
+
   onTelefonoClienteChange(valor: string): void {
     this.telefonoCliente.set(valor);
     this.clienteSeleccionado.set(null);
+    this.buscarClienteDebounced(valor);
+  }
+
+  private buscarClienteDebounced(valor: string): void {
     clearTimeout(this.debounceClienteTimer);
 
     const termino = valor.trim();
@@ -201,6 +212,7 @@ export class Venta implements OnInit, OnDestroy {
   }
 
   seleccionarCliente(cliente: Cliente): void {
+    this.nombreCliente.set(cliente.nombre ?? '');
     this.telefonoCliente.set(cliente.telefono);
     this.clienteSeleccionado.set(cliente);
     this.sugerenciasClientes.set([]);
@@ -220,6 +232,7 @@ export class Venta implements OnInit, OnDestroy {
         items: this.carrito().map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad })),
         medioPago: this.medioPago(),
         telefonoCliente: this.telefonoCliente().trim() || null,
+        nombreCliente: this.nombreCliente().trim() || null,
       })
       .subscribe({
         next: (venta) => {
@@ -237,6 +250,7 @@ export class Venta implements OnInit, OnDestroy {
   nuevaVenta(): void {
     this.carrito.set([]);
     this.carritoExpandido.set(false);
+    this.nombreCliente.set('');
     this.telefonoCliente.set('');
     this.sugerenciasClientes.set([]);
     this.clienteSeleccionado.set(null);
