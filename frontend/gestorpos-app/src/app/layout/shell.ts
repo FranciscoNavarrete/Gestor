@@ -27,6 +27,8 @@ export class Shell {
   ];
 
   cerrarSesion(): void {
+    if (!confirm('¿Cerrar sesión?')) return;
+
     this.authService.logout();
     this.router.navigate(['/login']);
   }
