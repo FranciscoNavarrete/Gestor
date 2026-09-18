@@ -39,4 +39,11 @@ public class MediosPagoController : ControllerBase
     [HttpPost("{id:guid}/activar")]
     public async Task<ActionResult<MedioPagoDto>> Activar(Guid id, CancellationToken ct)
         => Ok(await _medioPagoService.ActivarAsync(id, ct));
+
+    [HttpDelete("{id:guid}/permanente")]
+    public async Task<IActionResult> Eliminar(Guid id, CancellationToken ct)
+    {
+        await _medioPagoService.EliminarAsync(id, ct);
+        return NoContent();
+    }
 }

@@ -10,5 +10,9 @@ public interface IMedioPagoService
     Task DesactivarAsync(Guid id, CancellationToken ct = default);
     Task<MedioPagoDto> ActivarAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>Borrado definitivo — solo si el medio de pago nunca se usó en ninguna venta y no es
+    /// el protegido ("Efectivo"). Si ya se usó, rechaza con AppException sugiriendo desactivarlo.</summary>
+    Task EliminarAsync(Guid id, CancellationToken ct = default);
+
     Task<bool> EsValidoYActivoAsync(string nombre, CancellationToken ct = default);
 }

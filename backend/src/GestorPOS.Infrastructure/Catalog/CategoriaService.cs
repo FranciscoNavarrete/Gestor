@@ -63,4 +63,17 @@ public class CategoriaService : ICategoriaService
         await _db.SaveChangesAsync(ct);
         return new CategoriaDto(categoria.Id, categoria.Nombre, categoria.Activo);
     }
+
+    public async Task EliminarAsync(Guid id, CancellationToken ct = default)
+    {
+        var categoria = await _db.Categorias.FirstOrDefaultAsync(c => c.Id == id, ct)
+            ?? throw new AppException("La categoría no existe.");
+
+        var enUso = await _db.Productos.AnyAsync(p => p.CategoriaId == id, ct);
+        if (enUso)
+            throw new AppException($"\"{categoria.Nombre}\" ya se usó en algún producto — no se puede eliminar del todo. Probá desactivarla.");
+
+        _db.Categorias.Remove(categoria);
+        await _db.SaveChangesAsync(ct);
+    }
 }

@@ -38,14 +38,17 @@
               <mat-icon>edit</mat-icon>
             </button>
             @if (categoria.activo) {
-              <button mat-icon-button (click)="desactivarCategoria(categoria)" aria-label="Eliminar">
-                <mat-icon>delete</mat-icon>
+              <button mat-icon-button (click)="desactivarCategoria(categoria)" aria-label="Desactivar">
+                <mat-icon>archive</mat-icon>
               </button>
             } @else {
               <button mat-icon-button (click)="activarCategoria(categoria)" aria-label="Reactivar">
                 <mat-icon>restore</mat-icon>
               </button>
             }
+            <button mat-icon-button (click)="eliminarCategoria(categoria)" aria-label="Eliminar">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
         </mat-card>
       }
@@ -77,14 +80,17 @@
                 <mat-icon>edit</mat-icon>
               </button>
               @if (medioPago.activo) {
-                <button mat-icon-button (click)="desactivarMedioPago(medioPago)" aria-label="Eliminar">
-                  <mat-icon>delete</mat-icon>
+                <button mat-icon-button (click)="desactivarMedioPago(medioPago)" aria-label="Desactivar">
+                  <mat-icon>archive</mat-icon>
                 </button>
               } @else {
                 <button mat-icon-button (click)="activarMedioPago(medioPago)" aria-label="Reactivar">
                   <mat-icon>restore</mat-icon>
                 </button>
               }
+              <button mat-icon-button (click)="eliminarMedioPago(medioPago)" aria-label="Eliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
             }
           </div>
         </mat-card>

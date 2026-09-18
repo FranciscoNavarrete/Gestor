@@ -34,6 +34,10 @@ export class CatalogoService {
     return this.http.delete<void>(`${environment.apiUrl}/categorias/${id}`);
   }
 
+  eliminarCategoria(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/categorias/${id}/permanente`);
+  }
+
   activarCategoria(id: string): Observable<Categoria> {
     return this.http.post<Categoria>(`${environment.apiUrl}/categorias/${id}/activar`, {});
   }

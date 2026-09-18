@@ -71,6 +71,22 @@ public class MedioPagoService : IMedioPagoService
         return new MedioPagoDto(medioPago.Id, medioPago.Nombre, medioPago.Activo, medioPago.EsProtegido);
     }
 
+    public async Task EliminarAsync(Guid id, CancellationToken ct = default)
+    {
+        var medioPago = await _db.MediosPago.FirstOrDefaultAsync(m => m.Id == id, ct)
+            ?? throw new AppException("El medio de pago no existe.");
+
+        if (medioPago.EsProtegido)
+            throw new AppException("\"Efectivo\" es un medio de pago fijo del sistema y no se puede eliminar.");
+
+        var enUso = await _db.Ventas.AnyAsync(v => v.MedioPago == medioPago.Nombre, ct);
+        if (enUso)
+            throw new AppException($"\"{medioPago.Nombre}\" ya se usó en alguna venta — no se puede eliminar del todo. Probá desactivarlo.");
+
+        _db.MediosPago.Remove(medioPago);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> EsValidoYActivoAsync(string nombre, CancellationToken ct = default)
     {
         return await _db.MediosPago.AnyAsync(m => m.Nombre == nombre && m.Activo, ct);

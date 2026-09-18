@@ -34,6 +34,10 @@ export class ConfiguracionService {
     return this.http.post<MedioPagoDto>(`${environment.apiUrl}/medios-pago/${id}/activar`, {});
   }
 
+  eliminarMedioPago(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/medios-pago/${id}/permanente`);
+  }
+
   obtenerNegocio(): Observable<NegocioDto> {
     return this.http.get<NegocioDto>(`${environment.apiUrl}/negocio`);
   }

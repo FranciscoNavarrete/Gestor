@@ -123,6 +123,18 @@ export class Configuracion implements OnInit, OnDestroy {
     });
   }
 
+  eliminarCategoria(categoria: Categoria): void {
+    if (!confirm(`¿Eliminar la categoría "${categoria.nombre}"? Esta acción no se puede deshacer.`)) return;
+
+    this.catalogoService.eliminarCategoria(categoria.id).subscribe({
+      next: () => {
+        this.cargarCategorias();
+        this.snackBar.open('Categoría eliminada', 'Cerrar', { duration: 3000 });
+      },
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 5000 }),
+    });
+  }
+
   // --- Métodos de pago ---
 
   private cargarMediosPago(): void {
@@ -167,6 +179,18 @@ export class Configuracion implements OnInit, OnDestroy {
     this.configuracionService.activarMedioPago(medioPago.id).subscribe({
       next: () => this.cargarMediosPago(),
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  eliminarMedioPago(medioPago: MedioPagoDto): void {
+    if (!confirm(`¿Eliminar el medio de pago "${medioPago.nombre}"? Esta acción no se puede deshacer.`)) return;
+
+    this.configuracionService.eliminarMedioPago(medioPago.id).subscribe({
+      next: () => {
+        this.cargarMediosPago();
+        this.snackBar.open('Medio de pago eliminado', 'Cerrar', { duration: 3000 });
+      },
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 5000 }),
     });
   }
 
