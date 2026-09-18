@@ -10,6 +10,20 @@
       <mat-hint>Ej: 10 para reponer, -2 para descontar por rotura o pérdida</mat-hint>
     </mat-form-field>
 
+    <p class="motivo-label">Motivo</p>
+    <div class="motivo-chips">
+      @for (m of motivos; track m) {
+        <button
+          type="button"
+          class="chip-motivo"
+          [class.activo]="motivo() === m"
+          (click)="elegirMotivo(m)"
+        >
+          {{ m }}
+        </button>
+      }
+    </div>
+
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
@@ -17,7 +31,7 @@
 
   <mat-dialog-actions align="end">
     <button mat-button type="button" mat-dialog-close>Cancelar</button>
-    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || !motivo() || guardando()">
       Ajustar
     </button>
   </mat-dialog-actions>

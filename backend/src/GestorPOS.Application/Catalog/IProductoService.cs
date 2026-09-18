@@ -22,5 +22,5 @@ public interface IProductoService
 
     /// <summary>Suma o resta stock manualmente (reposición, merma, corrección de inventario).
     /// Las ventas descuentan stock por su cuenta; esto es para todo lo demás.</summary>
-    Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, CancellationToken ct = default);
+    Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, string motivo, CancellationToken ct = default);
 }

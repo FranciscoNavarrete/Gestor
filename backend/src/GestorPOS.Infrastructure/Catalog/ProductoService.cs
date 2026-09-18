@@ -3,6 +3,7 @@ using GestorPOS.Application.Catalog.Dtos;
 using GestorPOS.Application.Common.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Application.MovimientosStock;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,13 @@ public class ProductoService : IProductoService
 {
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
+    private readonly IMovimientoStockService _movimientoStockService;
 
-    public ProductoService(AppDbContext db, ITenantContext tenantContext)
+    public ProductoService(AppDbContext db, ITenantContext tenantContext, IMovimientoStockService movimientoStockService)
     {
         _db = db;
         _tenantContext = tenantContext;
+        _movimientoStockService = movimientoStockService;
     }
 
     public async Task<IReadOnlyList<ProductoDto>> ListarAsync(bool soloBajoStock, CancellationToken ct = default)
@@ -140,10 +143,12 @@ public class ProductoService : IProductoService
         return await ObtenerAsync(id, ct);
     }
 
-    public async Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, CancellationToken ct = default)
+    public async Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, string motivo, CancellationToken ct = default)
     {
         if (cantidad == 0)
             throw new AppException("La cantidad a ajustar no puede ser cero.");
+        if (string.IsNullOrWhiteSpace(motivo))
+            throw new AppException("Elegí un motivo para el ajuste.");
 
         var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
             ?? throw new AppException("El producto no existe.");
@@ -157,6 +162,7 @@ public class ProductoService : IProductoService
             throw new AppException(ex.Message);
         }
 
+        _movimientoStockService.Registrar(producto.Id, producto.Nombre, cantidad, producto.StockActual, motivo);
         await _db.SaveChangesAsync(ct);
         return await ObtenerAsync(id, ct);
     }

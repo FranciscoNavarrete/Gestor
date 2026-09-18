@@ -97,7 +97,8 @@ el puerto).
 - `GET /api/productos/buscar?busqueda=&bajoStock=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/SKU/categoría, filtrado y paginado en la base de datos (usado por la pantalla de gestión de Productos, pensado para catálogos grandes)
 - `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
 - `POST /api/productos/{id}/activar` — reactiva un producto desactivado (sin UI todavía: la pantalla de Productos no lista inactivos, falta un filtro para poder llegar a ellos)
-- `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente (reposición, merma, corrección)
+- `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente, con motivo obligatorio (reposición, merma, corrección, u otro texto libre) — registra un `MovimientoStock`
+- `GET /api/movimientos-stock?productoId=&desde=&hasta=&pagina=1&tamanoPagina=20` — historial de movimientos de stock (ajustes manuales y ventas), filtrable por producto y rango de fechas
 - `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
 - `GET /api/productos/plantilla-excel` — descarga la plantilla .xlsx (SKU, Nombre, Categoría, Precio, Costo, Stock inicial, Stock mínimo)
 - `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
@@ -149,9 +150,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   ítem, medio de pago y cobro), aviso con "Deshacer" al sacar un producto, y pantalla de resultado con
   el ticket + botón para enviarlo por WhatsApp
 - **Caja**: abrir/cerrar con el resumen de diferencia
-- **Reportes**: dos vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
-  ganancia neta y listado de ventas del período) y Stock (búsqueda + filtro "solo stock bajo" +
-  valorizado por producto, paginado) — ambas exportables a PDF con un botón
+- **Reportes**: tres vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
+  ganancia neta y listado de ventas del período), Stock (búsqueda + filtro "solo stock bajo" +
+  valorizado por producto, paginado) y Movimientos (historial de ajustes manuales y ventas, filtrable
+  por producto y rango de fechas, con el motivo y quién lo hizo) — Ventas y Stock exportables a PDF
 - **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
   Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto y logo,
   este último aparece en el encabezado de los reportes PDF)
@@ -165,9 +167,7 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís.
 
-No incluye todavía: reporte de movimientos de stock (auditoría de cada cambio con motivo — hoy el stock
-es solo un contador, sin historial), ni gestión de features por tenant en UI (se opera por API/Swagger
-directamente).
+No incluye todavía: gestión de features por tenant en UI (se opera por API/Swagger directamente).
 
 ## Roadmap
 

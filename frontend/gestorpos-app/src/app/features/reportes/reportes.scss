@@ -16,17 +16,35 @@
     margin-right: 4px;
     vertical-align: middle;
   }
+
+  // Con tres pestañas de texto largo no entran en pantallas angostas y la última queda
+  // cortada sin scroll para llegar a ella — se muestran solo los íconos.
+  @media (max-width: 420px) {
+    .etiqueta {
+      display: none;
+    }
+
+    mat-icon {
+      margin-right: 0;
+    }
+
+    ::ng-deep .mat-button-toggle-label-content {
+      padding: 0 8px;
+    }
+  }
 }
 
-.filtro-fechas {
+.filtro-fechas,
+.filtro-movimientos {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 
   mat-form-field {
     flex: 1;
-    min-width: 0;
+    min-width: 120px;
   }
 }
 
@@ -220,5 +238,74 @@
   .valorizado {
     flex-shrink: 0;
     font-weight: 600;
+  }
+}
+
+.lista-movimientos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.movimiento-item {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  .movimiento-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .movimiento-producto {
+    font-weight: 600;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .movimiento-cantidad {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #1ea672;
+
+    &.negativo {
+      color: var(--mat-sys-error);
+    }
+  }
+
+  .movimiento-detalle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+    opacity: 0.65;
+  }
+
+  .motivo-pill {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--mat-sys-surface-variant, #eee);
+    color: var(--mat-sys-on-surface-variant, #555);
+    opacity: 1;
+
+    &.motivo-venta {
+      background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+      color: var(--color-accent);
+    }
+  }
+
+  .movimiento-resultante {
+    margin: 2px 0 0;
+    font-size: 0.72rem;
+    opacity: 0.5;
   }
 }

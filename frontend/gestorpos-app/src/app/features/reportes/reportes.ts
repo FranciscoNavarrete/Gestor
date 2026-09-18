@@ -9,19 +9,23 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
+import { MovimientoStock } from '../../core/models/movimiento-stock.models';
 import { GananciasDto } from '../../core/models/reportes.models';
 import { VentaResumenDto } from '../../core/models/venta.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { MovimientoStockService } from '../../core/services/movimiento-stock.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 
 const TAMANO_PAGINA_STOCK = 20;
+const TAMANO_PAGINA_MOVIMIENTOS = 20;
 
-type Vista = 'ventas' | 'stock';
+type Vista = 'ventas' | 'stock' | 'movimientos';
 
 @Component({
   selector: 'app-reportes',
@@ -36,6 +40,7 @@ type Vista = 'ventas' | 'stock';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
     MatSlideToggleModule,
   ],
   templateUrl: './reportes.html',
@@ -45,6 +50,7 @@ export class Reportes implements OnInit {
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
   private readonly catalogoService = inject(CatalogoService);
+  private readonly movimientoStockService = inject(MovimientoStockService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly vista = signal<Vista>('ventas');
@@ -67,9 +73,22 @@ export class Reportes implements OnInit {
   readonly totalItemsStock = signal(0);
   private debounceStock?: ReturnType<typeof setTimeout>;
 
+  // --- Movimientos de stock ---
+  readonly productosParaFiltro = signal<Producto[]>([]);
+  readonly filtroProductoId = signal('');
+  readonly desdeMovimientos = signal('');
+  readonly hastaMovimientos = signal('');
+  readonly cargandoMovimientos = signal(true);
+  readonly movimientos = signal<MovimientoStock[]>([]);
+  readonly paginaMovimientos = signal(1);
+  readonly totalPaginasMovimientos = signal(1);
+  readonly totalItemsMovimientos = signal(0);
+
   ngOnInit(): void {
     this.cargarVentas();
     this.cargarStock();
+    this.cargarMovimientos();
+    this.catalogoService.listarProductos().subscribe((productos) => this.productosParaFiltro.set(productos));
   }
 
   cambiarVista(vista: Vista): void {
@@ -145,6 +164,53 @@ export class Reportes implements OnInit {
 
   valorizado(producto: Producto): number {
     return producto.stockActual * producto.costo;
+  }
+
+  // --- Movimientos de stock ---
+
+  cargarMovimientos(): void {
+    this.cargandoMovimientos.set(true);
+    this.movimientoStockService
+      .buscar(
+        this.filtroProductoId() || undefined,
+        this.desdeMovimientos() || undefined,
+        this.hastaMovimientos() || undefined,
+        this.paginaMovimientos(),
+        TAMANO_PAGINA_MOVIMIENTOS,
+      )
+      .subscribe({
+        next: (resultado) => {
+          this.movimientos.set(resultado.items);
+          this.totalPaginasMovimientos.set(resultado.totalPaginas);
+          this.totalItemsMovimientos.set(resultado.totalItems);
+          this.cargandoMovimientos.set(false);
+        },
+        error: () => this.cargandoMovimientos.set(false),
+      });
+  }
+
+  onFiltroMovimientosChange(): void {
+    this.paginaMovimientos.set(1);
+    this.cargarMovimientos();
+  }
+
+  limpiarFiltroMovimientos(): void {
+    this.filtroProductoId.set('');
+    this.desdeMovimientos.set('');
+    this.hastaMovimientos.set('');
+    this.onFiltroMovimientosChange();
+  }
+
+  paginaMovimientosAnterior(): void {
+    if (this.paginaMovimientos() <= 1) return;
+    this.paginaMovimientos.set(this.paginaMovimientos() - 1);
+    this.cargarMovimientos();
+  }
+
+  paginaMovimientosSiguiente(): void {
+    if (this.paginaMovimientos() >= this.totalPaginasMovimientos()) return;
+    this.paginaMovimientos.set(this.paginaMovimientos() + 1);
+    this.cargarMovimientos();
   }
 
   exportarVentasPdf(): void {

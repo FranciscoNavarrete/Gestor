@@ -5,6 +5,7 @@ using GestorPOS.Application.Clientes;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Configuracion;
+using GestorPOS.Application.MovimientosStock;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Application.Ventas.Dtos;
 using GestorPOS.Domain.Entities;
@@ -21,16 +22,19 @@ public class VentaService : IVentaService
     private readonly ICajaService _cajaService;
     private readonly IMedioPagoService _medioPagoService;
     private readonly IClienteService _clienteService;
+    private readonly IMovimientoStockService _movimientoStockService;
 
     public VentaService(
         AppDbContext db, ITenantContext tenantContext, ICajaService cajaService,
-        IMedioPagoService medioPagoService, IClienteService clienteService)
+        IMedioPagoService medioPagoService, IClienteService clienteService,
+        IMovimientoStockService movimientoStockService)
     {
         _db = db;
         _tenantContext = tenantContext;
         _cajaService = cajaService;
         _medioPagoService = medioPagoService;
         _clienteService = clienteService;
+        _movimientoStockService = movimientoStockService;
     }
 
     public async Task<VentaDto> CrearAsync(CrearVentaRequest request, CancellationToken ct = default)
@@ -70,7 +74,10 @@ public class VentaService : IVentaService
         }
 
         foreach (var (producto, cantidad) in items)
+        {
             producto.AjustarStock(-cantidad);
+            _movimientoStockService.Registrar(producto.Id, producto.Nombre, -cantidad, producto.StockActual, "Venta");
+        }
 
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync(ct);

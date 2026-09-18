@@ -1,11 +1,15 @@
 <mat-button-toggle-group class="vista-toggle" [value]="vista()" (change)="cambiarVista($event.value)">
-  <mat-button-toggle value="ventas">
+  <mat-button-toggle value="ventas" aria-label="Ventas">
     <mat-icon>receipt_long</mat-icon>
-    Ventas
+    <span class="etiqueta">Ventas</span>
   </mat-button-toggle>
-  <mat-button-toggle value="stock">
+  <mat-button-toggle value="stock" aria-label="Stock">
     <mat-icon>inventory_2</mat-icon>
-    Stock
+    <span class="etiqueta">Stock</span>
+  </mat-button-toggle>
+  <mat-button-toggle value="movimientos" aria-label="Movimientos">
+    <mat-icon>history</mat-icon>
+    <span class="etiqueta">Movimientos</span>
   </mat-button-toggle>
 </mat-button-toggle-group>
 
@@ -66,7 +70,7 @@
       }
     </div>
   }
-} @else {
+} @else if (vista() === 'stock') {
   <mat-form-field appearance="outline" class="buscador">
     <mat-label>Buscar producto</mat-label>
     <input matInput [ngModel]="busquedaStock()" (ngModelChange)="onBusquedaStockChange($event)" />
@@ -141,6 +145,95 @@
       </div>
     } @else if (totalItemsStock() > 0) {
       <p class="paginado-info centrado-texto">{{ totalItemsStock() }} producto{{ totalItemsStock() === 1 ? '' : 's' }}</p>
+    }
+  }
+} @else {
+  <div class="filtro-movimientos">
+    <mat-form-field appearance="outline">
+      <mat-label>Producto</mat-label>
+      <mat-select [ngModel]="filtroProductoId()" (ngModelChange)="filtroProductoId.set($event); onFiltroMovimientosChange()">
+        <mat-option value="">Todos</mat-option>
+        @for (p of productosParaFiltro(); track p.id) {
+          <mat-option [value]="p.id">{{ p.nombre }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input
+        matInput
+        type="date"
+        [ngModel]="desdeMovimientos()"
+        (ngModelChange)="desdeMovimientos.set($event); onFiltroMovimientosChange()"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input
+        matInput
+        type="date"
+        [ngModel]="hastaMovimientos()"
+        (ngModelChange)="hastaMovimientos.set($event); onFiltroMovimientosChange()"
+      />
+    </mat-form-field>
+    @if (filtroProductoId() || desdeMovimientos() || hastaMovimientos()) {
+      <button mat-icon-button (click)="limpiarFiltroMovimientos()" aria-label="Limpiar filtros">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+
+  @if (cargandoMovimientos()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (movimientos().length === 0) {
+    <p class="vacio">No hay movimientos de stock en el período seleccionado.</p>
+  } @else {
+    <div class="lista-movimientos">
+      @for (m of movimientos(); track m.id) {
+        <mat-card class="movimiento-item">
+          <div class="movimiento-top">
+            <span class="movimiento-producto">{{ m.productoNombre }}</span>
+            <span class="movimiento-cantidad" [class.negativo]="m.cantidad < 0">
+              {{ m.cantidad > 0 ? '+' : '' }}{{ m.cantidad }}
+            </span>
+          </div>
+          <div class="movimiento-detalle">
+            <span>{{ m.fecha | date: 'dd/MM HH:mm' }} · {{ m.usuarioNombre }}</span>
+            <span class="motivo-pill" [class.motivo-venta]="m.motivo === 'Venta'">{{ m.motivo }}</span>
+          </div>
+          <p class="movimiento-resultante">Stock resultante: {{ m.stockResultante }}</p>
+        </mat-card>
+      }
+    </div>
+
+    @if (totalPaginasMovimientos() > 1) {
+      <div class="paginado">
+        <button
+          mat-icon-button
+          (click)="paginaMovimientosAnterior()"
+          [disabled]="paginaMovimientos() <= 1"
+          aria-label="Página anterior"
+        >
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="paginado-info">
+          Página {{ paginaMovimientos() }} de {{ totalPaginasMovimientos() }} · {{ totalItemsMovimientos() }} movimientos
+        </span>
+        <button
+          mat-icon-button
+          (click)="paginaMovimientosSiguiente()"
+          [disabled]="paginaMovimientos() >= totalPaginasMovimientos()"
+          aria-label="Página siguiente"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    } @else if (totalItemsMovimientos() > 0) {
+      <p class="paginado-info centrado-texto">
+        {{ totalItemsMovimientos() }} movimiento{{ totalItemsMovimientos() === 1 ? '' : 's' }}
+      </p>
     }
   }
 }

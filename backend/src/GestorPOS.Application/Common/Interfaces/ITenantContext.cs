@@ -5,5 +5,6 @@ public interface ITenantContext
 {
     Guid TenantId { get; }
     Guid UsuarioId { get; }
+    string UsuarioNombre { get; }
     bool TieneFeature(string clave);
 }

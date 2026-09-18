@@ -71,8 +71,8 @@ export class CatalogoService {
     return this.http.post<Producto>(`${environment.apiUrl}/productos/${id}/activar`, {});
   }
 
-  ajustarStock(id: string, cantidad: number): Observable<Producto> {
-    return this.http.post<Producto>(`${environment.apiUrl}/productos/${id}/ajustar-stock`, { cantidad });
+  ajustarStock(id: string, cantidad: number, motivo: string): Observable<Producto> {
+    return this.http.post<Producto>(`${environment.apiUrl}/productos/${id}/ajustar-stock`, { cantidad, motivo });
   }
 
   actualizarPreciosMasivo(request: ActualizarPreciosMasivoRequest): Observable<{ productosActualizados: number }> {

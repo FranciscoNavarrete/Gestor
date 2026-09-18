@@ -30,6 +30,9 @@ public class TenantContext : ITenantContext
         }
     }
 
+    public string UsuarioNombre =>
+        _httpContextAccessor.HttpContext?.User.FindFirst("nombre")?.Value ?? string.Empty;
+
     public bool TieneFeature(string clave)
     {
         var features = _httpContextAccessor.HttpContext?.User.FindAll("feature").Select(c => c.Value) ?? [];
