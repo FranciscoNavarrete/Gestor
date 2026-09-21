@@ -1,0 +1,53 @@
+name: Actualizar documentación
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '!docs/**'
+
+jobs:
+  actualizar-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: '--allowedTools "Read,Grep,Glob,Edit,Write,Bash(git log:*),Bash(git diff:*),Bash(git show:*)"'
+          prompt: |
+            Usá el skill "actualizar-documentacion" (.claude/skills/actualizar-documentacion/SKILL.md)
+            de este repo para revisar si el último commit en main (podés usar `git log -1` y
+            `git diff HEAD~1 HEAD -- backend frontend` para ver qué cambió) requiere actualizar
+            docs/documentacion-funcional.html y/o docs/casos-de-uso.html.
+
+            Si el cambio es funcional (pantalla, flujo, regla de negocio, endpoint de cara al
+            usuario), actualizá esos archivos siguiendo exactamente las instrucciones del skill.
+            Si el cambio no lo amerita (fix interno, refactor, infraestructura), no toques nada
+            y terminá sin hacer cambios.
+
+      - name: Commitear si los docs cambiaron
+        run: |
+          git config user.name "Claude Bot"
+          git config user.email "noreply@anthropic.com"
+          if git diff --quiet -- docs/; then
+            echo "Sin cambios en docs/, no se commitea nada."
+            exit 0
+          fi
+          git add docs/
+          git commit \
+            -m "docs: actualiza documentación funcional y casos de uso" \
+            -m "Generado automáticamente a partir de los cambios de este push." \
+            -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+          git push
