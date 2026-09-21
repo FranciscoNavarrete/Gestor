@@ -4,6 +4,7 @@ using GestorPOS.Application.Common.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.MovimientosStock;
+using GestorPOS.Application.Notificaciones;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,15 @@ public class ProductoService : IProductoService
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
     private readonly IMovimientoStockService _movimientoStockService;
+    private readonly INotificacionPushService _notificacionPushService;
 
-    public ProductoService(AppDbContext db, ITenantContext tenantContext, IMovimientoStockService movimientoStockService)
+    public ProductoService(
+        AppDbContext db, ITenantContext tenantContext, IMovimientoStockService movimientoStockService,
+        INotificacionPushService notificacionPushService)
     {
         _db = db;
         _tenantContext = tenantContext;
+        _notificacionPushService = notificacionPushService;
         _movimientoStockService = movimientoStockService;
     }
 
@@ -153,6 +158,8 @@ public class ProductoService : IProductoService
         var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
             ?? throw new AppException("El producto no existe.");
 
+        var estabaBajoAntes = producto.EnStockMinimo;
+
         try
         {
             producto.AjustarStock(cantidad);
@@ -164,6 +171,12 @@ public class ProductoService : IProductoService
 
         _movimientoStockService.Registrar(producto.Id, producto.Nombre, cantidad, producto.StockActual, motivo);
         await _db.SaveChangesAsync(ct);
+
+        // Avisa solo en el momento en que CRUZA el mínimo, no en cada ajuste posterior mientras sigue
+        // bajo — si no, spamea un push por cada venta chica mientras el stock no se repone.
+        if (!estabaBajoAntes && producto.EnStockMinimo)
+            await _notificacionPushService.NotificarStockBajoAsync(producto.Nombre, producto.StockActual, ct);
+
         return await ObtenerAsync(id, ct);
     }
 

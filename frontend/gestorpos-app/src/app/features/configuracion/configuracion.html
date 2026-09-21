@@ -153,5 +153,21 @@
         }
       </button>
     </mat-card>
+
+    @if (notificacionesSoportadas) {
+      <mat-card class="negocio-card notificaciones-card">
+        <div class="notificaciones-fila">
+          <div class="notificaciones-texto">
+            <span class="notificaciones-titulo">Notificaciones de stock bajo</span>
+            <span class="notificaciones-ayuda">Recibí un aviso cuando un producto llegue a su stock mínimo.</span>
+          </div>
+          <mat-slide-toggle
+            [checked]="notificacionesActivas()"
+            [disabled]="cambiandoNotificaciones()"
+            (change)="cambiarNotificaciones($event.checked)"
+          ></mat-slide-toggle>
+        </div>
+      </mat-card>
+    }
   }
 }

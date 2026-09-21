@@ -160,3 +160,30 @@
   opacity: 0.6;
   margin: -6px 0 4px;
 }
+
+.notificaciones-card {
+  margin-top: 16px;
+}
+
+.notificaciones-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.notificaciones-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notificaciones-titulo {
+  font-size: 0.925rem;
+  font-weight: 500;
+}
+
+.notificaciones-ayuda {
+  font-size: 0.78rem;
+  opacity: 0.6;
+}

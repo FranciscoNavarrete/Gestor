@@ -6,6 +6,7 @@ using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Configuracion;
 using GestorPOS.Application.MovimientosStock;
+using GestorPOS.Application.Notificaciones;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Application.Ventas.Dtos;
 using GestorPOS.Domain.Entities;
@@ -23,11 +24,12 @@ public class VentaService : IVentaService
     private readonly IMedioPagoService _medioPagoService;
     private readonly IClienteService _clienteService;
     private readonly IMovimientoStockService _movimientoStockService;
+    private readonly INotificacionPushService _notificacionPushService;
 
     public VentaService(
         AppDbContext db, ITenantContext tenantContext, ICajaService cajaService,
         IMedioPagoService medioPagoService, IClienteService clienteService,
-        IMovimientoStockService movimientoStockService)
+        IMovimientoStockService movimientoStockService, INotificacionPushService notificacionPushService)
     {
         _db = db;
         _tenantContext = tenantContext;
@@ -35,6 +37,7 @@ public class VentaService : IVentaService
         _medioPagoService = medioPagoService;
         _clienteService = clienteService;
         _movimientoStockService = movimientoStockService;
+        _notificacionPushService = notificacionPushService;
     }
 
     public async Task<VentaDto> CrearAsync(CrearVentaRequest request, CancellationToken ct = default)
@@ -74,14 +77,24 @@ public class VentaService : IVentaService
             venta.AsignarCliente(clienteId);
         }
 
+        var productosQueCruzanMinimo = new List<Producto>();
         foreach (var (producto, cantidad) in items)
         {
+            var estabaBajoAntes = producto.EnStockMinimo;
             producto.AjustarStock(-cantidad);
             _movimientoStockService.Registrar(producto.Id, producto.Nombre, -cantidad, producto.StockActual, "Venta");
+
+            if (!estabaBajoAntes && producto.EnStockMinimo)
+                productosQueCruzanMinimo.Add(producto);
         }
 
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync(ct);
+
+        // Avisa solo en el momento en que CADA producto CRUZA el mínimo, no en cada venta posterior
+        // mientras sigue bajo — mismo criterio que ProductoService.AjustarStockAsync.
+        foreach (var producto in productosQueCruzanMinimo)
+            await _notificacionPushService.NotificarStockBajoAsync(producto.Nombre, producto.StockActual, ct);
 
         return await ObtenerAsync(venta.Id, ct);
     }

@@ -119,7 +119,19 @@ el puerto).
 - `GET /api/reportes/dashboard` — resumen: ventas/ganancia de hoy, ventas del mes, productos en alerta de stock, producto más vendido del día
 - `GET /api/reportes/ventas/pdf?desde=&hasta=` — descarga un PDF con el resumen (total vendido, ganancia neta) y el listado de ventas del rango de fechas
 - `GET /api/reportes/stock/pdf?busqueda=&bajoStock=` — descarga un PDF con el stock actual (filtrable por búsqueda y/o solo bajo stock) y su valorizado
+- `GET /api/notificaciones/clave-publica` — clave pública VAPID para que el frontend pida la suscripción push del navegador (vacía si el ambiente no tiene las claves configuradas)
+- `POST /api/notificaciones/suscribirse` — guarda la suscripción push del navegador actual (endpoint + claves de cifrado)
+- `POST /api/notificaciones/desuscribirse` — borra esa suscripción (POST y no DELETE a propósito, para evitar el manejo incómodo de DELETE-con-body en Angular `HttpClient`)
 - `GET /health` — health check (usado por Railway)
+
+Notificaciones push (fase 1 — "stock bajo"): cuando un ajuste de stock manual o una venta hacen que un
+producto **cruce** su stock mínimo (no en cada movimiento posterior mientras sigue bajo, para no
+spamear), se manda un push a todos los navegadores suscriptos del negocio. Usa el paquete `WebPush` +
+protocolo VAPID; las claves reales nunca están en `appsettings.json` (solo placeholders, mismo patrón
+que `Jwt:Key`/`Admin:ApiKey`) — en local van por `dotnet user-secrets`, en Railway van como variables de
+entorno `Vapid__PublicKey` / `Vapid__PrivateKey` / `Vapid__Subject`. Un push que falla (red, suscripción
+vencida, claves corruptas) nunca frena la venta o el ajuste que lo disparó — se captura y, si el
+navegador ya no existe (404/410), se borra sola la suscripción.
 
 ### Panel interno (no es para los negocios, es para vos)
 
@@ -157,8 +169,9 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   valorizado por producto, paginado) y Movimientos (historial de ajustes manuales y ventas, filtrable
   por producto y rango de fechas, con el motivo y quién lo hizo) — Ventas y Stock exportables a PDF
 - **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
-  Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto y logo,
-  este último aparece en el encabezado de los reportes PDF)
+  Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto, logo —
+  este último aparece en el encabezado de los reportes PDF — y un toggle de notificaciones push de
+  stock bajo, solo visible si el navegador soporta service worker)
 - **Clientes** (ícono de personas en el toolbar): listado con búsqueda por nombre/teléfono, y detalle
   por cliente con nombre y teléfono editables, estadísticas (compras, total gastado, última compra) e
   historial de ventas. Los clientes se dan de alta solos la primera vez que alguien compra dejando su

@@ -8,12 +8,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria } from '../../core/models/catalog.models';
 import { MedioPagoDto, NegocioDto } from '../../core/models/configuracion.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
+import { NotificacionPushService } from '../../core/services/notificacion-push.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { comprimirImagen } from '../../core/utils/imagen.util';
 import { CategoriaDialog, CategoriaDialogData } from '../productos/categoria-dialog/categoria-dialog';
@@ -32,6 +34,7 @@ type Vista = 'categorias' | 'medios-pago' | 'negocio';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './configuracion.html',
   styleUrl: './configuracion.scss',
@@ -40,6 +43,7 @@ export class Configuracion implements OnInit, OnDestroy {
   private readonly catalogoService = inject(CatalogoService);
   private readonly configuracionService = inject(ConfiguracionService);
   private readonly authService = inject(AuthService);
+  private readonly notificacionPushService = inject(NotificacionPushService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
@@ -62,10 +66,15 @@ export class Configuracion implements OnInit, OnDestroy {
   readonly guardandoNegocio = signal(false);
   readonly subiendoLogo = signal(false);
 
+  readonly notificacionesSoportadas = this.notificacionPushService.soportado;
+  readonly notificacionesActivas = signal(false);
+  readonly cambiandoNotificaciones = signal(false);
+
   ngOnInit(): void {
     this.cargarCategorias();
     this.cargarMediosPago();
     this.cargarNegocio();
+    this.cargarEstadoNotificaciones();
   }
 
   ngOnDestroy(): void {
@@ -278,5 +287,31 @@ export class Configuracion implements OnInit, OnDestroy {
       },
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
     });
+  }
+
+  // --- Notificaciones push ---
+
+  private async cargarEstadoNotificaciones(): Promise<void> {
+    this.notificacionesActivas.set(await this.notificacionPushService.estaSuscripto());
+  }
+
+  async cambiarNotificaciones(activar: boolean): Promise<void> {
+    if (this.cambiandoNotificaciones()) return;
+
+    this.cambiandoNotificaciones.set(true);
+    try {
+      if (activar) {
+        await this.notificacionPushService.suscribirse();
+      } else {
+        await this.notificacionPushService.desuscribirse();
+      }
+      this.notificacionesActivas.set(activar);
+    } catch (err) {
+      this.notificacionesActivas.set(!activar);
+      const mensaje = err instanceof Error ? err.message : 'No se pudo cambiar la configuración de notificaciones.';
+      this.snackBar.open(mensaje, 'Cerrar', { duration: 4000 });
+    } finally {
+      this.cambiandoNotificaciones.set(false);
+    }
   }
 }
