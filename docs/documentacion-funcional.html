@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación funcional — GestorPOS</title>
+<style>
+  :root{
+    --brand:#2f6fed;
+    --brand-dark:#1e4fb8;
+    --brand-bg:#eaf0fe;
+    --ink:#1a1d29;
+    --ink-soft:#5a5f73;
+    --ink-mute:#8b90a3;
+    --paper:#f5f6fa;
+    --surface:#ffffff;
+    --line:#e2e4ec;
+    --ok:#147a5c;
+    --ok-bg:#e2f3ec;
+    --warn:#9a5b12;
+    --warn-bg:#faf1e2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .page{max-width:840px;margin:0 auto;padding:48px 32px 96px;}
+
+  /* Portada */
+  .cover{
+    background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+    color:#fff;
+    border-radius:20px;
+    padding:56px 48px;
+    margin-bottom:48px;
+  }
+  .cover .tag{
+    display:inline-block;
+    background:rgba(255,255,255,.18);
+    padding:4px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .cover h1{font-size:34px;margin:0 0 10px;font-weight:700;}
+  .cover p{font-size:15px;color:#fff;opacity:.92;margin:0;max-width:520px;}
+  .cover .meta{margin-top:28px;font-size:12.5px;opacity:.8;}
+
+  nav.toc{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px 28px;
+    margin-bottom:48px;
+  }
+  nav.toc h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-mute);margin:0 0 14px;}
+  nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px;}
+  nav.toc li{font-size:13.5px;margin-bottom:8px;break-inside:avoid;}
+  nav.toc a{color:var(--brand-dark);text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+
+  section{margin-bottom:44px;}
+  h2{
+    font-size:22px;
+    margin:0 0 6px;
+    padding-bottom:12px;
+    border-bottom:2px solid var(--brand);
+    color:var(--brand-dark);
+  }
+  h2 .n{color:var(--ink-mute);font-weight:500;margin-right:8px;}
+  h3{font-size:16.5px;margin:26px 0 8px;color:var(--ink);}
+  p{font-size:14.5px;color:var(--ink-soft);margin:0 0 12px;}
+  ul{margin:0 0 14px;padding-left:20px;}
+  li{font-size:14.5px;color:var(--ink-soft);margin-bottom:6px;}
+  li strong{color:var(--ink);}
+  strong{color:var(--ink);}
+
+  .module-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 26px;
+    margin-bottom:16px;
+  }
+  .module-card h3{margin-top:0;display:flex;align-items:center;gap:10px;}
+  .module-card .icon{
+    width:30px;height:30px;border-radius:8px;
+    background:var(--brand-bg);color:var(--brand-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:700;flex-shrink:0;
+  }
+
+  .rule{
+    display:flex;
+    gap:14px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--brand);
+    border-radius:10px;
+    padding:16px 20px;
+    margin-bottom:14px;
+  }
+  .rule .rn{font-weight:700;color:var(--brand-dark);font-size:13px;flex-shrink:0;width:22px;}
+  .rule .rt strong{display:block;font-size:14.5px;margin-bottom:3px;}
+  .rule .rt p{margin:0;font-size:13.5px;}
+
+  .note{
+    background:var(--warn-bg);
+    border:1px solid #f0dfc0;
+    border-radius:10px;
+    padding:14px 18px;
+    font-size:13.5px;
+    color:var(--warn);
+    margin:14px 0;
+  }
+  .note strong{color:var(--warn);}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);}
+  th{color:var(--ink-mute);font-weight:600;text-transform:uppercase;font-size:11.5px;letter-spacing:.03em;}
+  td{color:var(--ink-soft);}
+  td strong{color:var(--ink);}
+
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    padding:2px 9px;
+    border-radius:999px;
+    background:var(--ok-bg);
+    color:var(--ok);
+  }
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-mute);
+    margin-top:64px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+
+  @media print{
+    body{background:#fff;}
+    .page{max-width:100%;padding:0;}
+    .cover{border-radius:0;margin:0 0 32px;}
+    section{page-break-inside:avoid;margin-bottom:28px;}
+    .module-card,.rule{page-break-inside:avoid;}
+    nav.toc{page-break-after:always;}
+    a{color:inherit;text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <span class="tag">Documentación funcional</span>
+    <h1>GestorPOS</h1>
+    <p>Sistema de gestión y punto de venta para comercios. Este documento describe qué hace el sistema, cómo está organizado en módulos y qué reglas de negocio aplica en cada uno.</p>
+    <div class="meta">Versión del documento: 1.0 · Última actualización: septiembre 2026</div>
+  </div>
+
+  <nav class="toc">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#intro">Qué es GestorPOS</a></li>
+      <li><a href="#negocios">Un sistema, muchos negocios</a></li>
+      <li><a href="#modulos">Módulos del sistema</a></li>
+      <li><a href="#reglas">Reglas de negocio</a></li>
+      <li><a href="#accesos">Accesos y roles</a></li>
+      <li><a href="#notificaciones">Notificaciones</a></li>
+      <li><a href="#glosario">Glosario</a></li>
+    </ol>
+  </nav>
+
+  <section id="intro">
+    <h2><span class="n">1.</span>Qué es GestorPOS</h2>
+    <p>
+      GestorPOS es un sistema digital para que un comercio (kiosco, almacén, local de venta al público)
+      gestione su día a día: qué productos tiene, cuánto stock queda, qué se vendió, cuánto hay en la
+      caja y quiénes son sus clientes. Funciona desde el navegador, tanto en computadora como en el
+      celular, y se puede instalar como una aplicación para usarlo sin abrir el navegador cada vez.
+    </p>
+    <p>
+      No requiere instalar nada en una PC especial ni comprar hardware: con un teléfono o una tablet con
+      conexión a internet alcanza para vender, cobrar y llevar el control del negocio.
+    </p>
+  </section>
+
+  <section id="negocios">
+    <h2><span class="n">2.</span>Un sistema, muchos negocios</h2>
+    <p>
+      GestorPOS es multi-negocio: la misma plataforma atiende a distintos comercios, pero cada uno ve
+      únicamente su propia información — sus productos, sus ventas, sus clientes y su caja. Ningún
+      negocio puede ver ni afectar los datos de otro, aunque compartan el mismo sistema.
+    </p>
+    <p>
+      El alta de un negocio nuevo no es autoservicio: la hace el administrador de la plataforma desde un
+      panel interno (ver sección 3.8), que le entrega al dueño del negocio un usuario y una contraseña
+      para empezar a usar el sistema.
+    </p>
+  </section>
+
+  <section id="modulos">
+    <h2><span class="n">3.</span>Módulos del sistema</h2>
+
+    <div class="module-card">
+      <h3><span class="icon">1</span>Resumen (panel principal)</h3>
+      <p>Primera pantalla al entrar. Muestra de un vistazo: ventas y ganancia de hoy, ventas del mes,
+        y cuántos productos están con el stock por debajo del mínimo configurado.</p>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">2</span>Productos</h3>
+      <p>Catálogo del negocio: alta, edición y baja de productos, organizados en categorías. Cada
+        producto tiene SKU (código único), precio de venta, costo, stock actual y stock mínimo.</p>
+      <ul>
+        <li>Alta y edición individual, con creación de categoría nueva sin salir del formulario.</li>
+        <li>Ajuste manual de stock (reposición, merma, corrección u otro motivo), quedando registrado
+          quién lo hizo y por qué.</li>
+        <li>Importación masiva desde una planilla Excel (alta y actualización por SKU).</li>
+        <li>Actualización de precios masiva, por porcentaje, para todo el catálogo o una categoría.</li>
+        <li>Filtro de "solo stock bajo" para ver rápido qué reponer.</li>
+        <li>Baja lógica (se puede reactivar) — no se elimina el historial de ventas de un producto dado
+          de baja.</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">3</span>Venta (punto de venta)</h3>
+      <p>Pantalla de cobro rápido, pensada para usarse con el celular en el mostrador.</p>
+      <ul>
+        <li>Sección de productos más vendidos (hasta 6) para no tener que buscarlos cada vez.</li>
+        <li>Búsqueda instantánea del resto del catálogo.</li>
+        <li>Carrito flotante que no tapa la pantalla: se puede sumar y restar cantidad de cada producto,
+          elegir el medio de pago y cobrar.</li>
+        <li>Datos del cliente opcionales — nombre y/o teléfono, cualquiera de los dos alcanza para
+          buscar a un cliente que ya compró antes y autocompletar el otro dato.</li>
+        <li>Al cerrar la venta, se genera un ticket digital con un botón para enviarlo por WhatsApp.</li>
+        <li>El stock de cada producto vendido se descuenta automáticamente.</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">4</span>Caja</h3>
+      <p>Control del efectivo y los demás medios de pago durante el turno de venta.</p>
+      <ul>
+        <li>Apertura de caja con un monto inicial en efectivo.</li>
+        <li>Cierre de caja: el sistema calcula el efectivo que debería haber (apertura + ventas en
+          efectivo) y lo compara contra lo que se cuenta físicamente, mostrando la diferencia.</li>
+        <li>Resumen de ventas del período desglosado por medio de pago.</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">5</span>Clientes</h3>
+      <p>Base de clientes del negocio, que se arma sola con el uso — no hace falta cargarla a mano.</p>
+      <ul>
+        <li>Un cliente se da de alta automáticamente la primera vez que compra dejando su teléfono.</li>
+        <li>Ficha de cliente con estadísticas: cantidad de compras, total gastado, fecha de la última
+          compra e historial completo de ventas.</li>
+        <li>Nombre y teléfono editables desde la ficha del cliente.</li>
+        <li>Búsqueda por nombre o teléfono.</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">6</span>Reportes</h3>
+      <p>Tres vistas para entender cómo viene el negocio, con exportación a PDF en las dos primeras.</p>
+      <ul>
+        <li><strong>Ventas</strong>: total vendido y ganancia neta en un rango de fechas, con el listado
+          de ventas del período.</li>
+        <li><strong>Stock</strong>: stock actual valorizado, con búsqueda y filtro de solo stock bajo.</li>
+        <li><strong>Movimientos</strong>: historial de todos los cambios de stock (ajustes manuales y
+          ventas), con fecha, motivo y quién lo hizo.</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">7</span>Configuración</h3>
+      <p>Ajustes generales del negocio, organizados en tres pestañas.</p>
+      <ul>
+        <li><strong>Categorías</strong>: alta, edición, baja/reactivación y eliminación definitiva
+          (solo si nunca se usó en ningún producto).</li>
+        <li><strong>Métodos de pago</strong>: los mismos controles que categorías. "Efectivo" es fijo
+          del sistema — no se puede renombrar, desactivar ni eliminar, porque el cierre de caja lo
+          necesita para calcular el efectivo esperado.</li>
+        <li><strong>Negocio</strong>: nombre, WhatsApp de contacto y logo (aparece en el encabezado de
+          los reportes en PDF), más el interruptor de notificaciones push de stock bajo.</li>
+      </ul>
+    </div>
+
+    <div class="module-card">
+      <h3><span class="icon">8</span>Panel de administración <span class="badge">interno</span></h3>
+      <p>No es parte de la aplicación que usan los negocios — es una herramienta separada para quien
+        opera la plataforma.</p>
+      <ul>
+        <li>Alta de negocios nuevos, generando el usuario y contraseña que se le entrega al cliente.</li>
+        <li>Activación puntual de funcionalidades especiales para un negocio en particular (features),
+          sin afectar al resto de los negocios.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="reglas">
+    <h2><span class="n">4.</span>Reglas de negocio</h2>
+
+    <div class="rule">
+      <div class="rn">01</div>
+      <div class="rt"><strong>Hace falta la caja abierta para vender</strong>
+      <p>El sistema no deja registrar una venta si no hay una caja abierta en ese momento.</p></div>
+    </div>
+
+    <div class="rule">
+      <div class="rn">02</div>
+      <div class="rt"><strong>"Efectivo" es un medio de pago protegido</strong>
+      <p>No se puede renombrar, desactivar ni eliminar, porque el cierre de caja depende de él para
+        calcular cuánto efectivo debería haber.</p></div>
+    </div>
+
+    <div class="rule">
+      <div class="rn">03</div>
+      <div class="rt"><strong>Baja lógica primero, eliminar solo si nunca se usó</strong>
+      <p>Dar de baja un producto, categoría o medio de pago lo oculta pero conserva el historial de
+        ventas donde se usó. Eliminarlo definitivamente solo está permitido si nunca se usó en ninguna
+        venta — si ya se usó, el sistema lo rechaza y sugiere darlo de baja en su lugar.</p></div>
+    </div>
+
+    <div class="rule">
+      <div class="rn">04</div>
+      <div class="rt"><strong>El teléfono del cliente es opcional en la venta</strong>
+      <p>Se puede vender sin cargar nombre ni teléfono. Si se carga el teléfono, el sistema busca si ya
+        existe un cliente con ese número; si no existe, lo crea. Si el cliente ya existía, un nombre
+        distinto que se cargue en una venta posterior no le pisa el nombre guardado — evita que un
+        error de tipeo del vendedor borre un dato bueno.</p></div>
+    </div>
+
+    <div class="rule">
+      <div class="rn">05</div>
+      <div class="rt"><strong>Aviso de stock bajo solo al cruzar el mínimo</strong>
+      <p>La alerta de un producto con stock bajo (en el panel Resumen y en la notificación push) aparece
+        en el momento en que el stock cae por debajo del mínimo configurado. No se repite en cada venta
+        posterior mientras sigue bajo — solo vuelve a avisar si primero se repone por encima del mínimo
+        y después vuelve a caer.</p></div>
+    </div>
+
+    <div class="rule">
+      <div class="rn">06</div>
+      <div class="rt"><strong>Cada negocio ve solo lo suyo</strong>
+      <p>Ningún dato (productos, ventas, clientes, caja) es visible ni editable entre negocios
+        distintos, aunque compartan el mismo sistema.</p></div>
+    </div>
+  </section>
+
+  <section id="accesos">
+    <h2><span class="n">5.</span>Accesos y roles</h2>
+    <p>Hoy cada negocio tiene sus propios usuarios con acceso completo a todos los módulos — no hay
+      todavía distintos niveles de permiso dentro de un mismo negocio (por ejemplo, "cajero" vs
+      "dueño"). El panel de administración interno (sección 3.8) es un acceso completamente aparte,
+      protegido con su propia clave, reservado para quien opera la plataforma.</p>
+    <table>
+      <tr><th>Acceso</th><th>Quién lo usa</th><th>Alcance</th></tr>
+      <tr><td><strong>Usuario de negocio</strong></td><td>Dueño/empleados del comercio</td><td>Todos los módulos, solo datos de su negocio</td></tr>
+      <tr><td><strong>Panel de administración</strong></td><td>Operador de la plataforma</td><td>Alta de negocios y activación de features, cruza todos los negocios</td></tr>
+    </table>
+  </section>
+
+  <section id="notificaciones">
+    <h2><span class="n">6.</span>Notificaciones</h2>
+    <p>El sistema puede avisar directamente en el celular o la computadora, sin necesidad de tener la
+      aplicación abierta, cuando pasa algo que conviene saber al instante.</p>
+    <ul>
+      <li><strong>Stock bajo</strong> (disponible): avisa apenas un producto cruza su stock mínimo,
+        para reponerlo antes de quedarse sin stock. Se activa desde Configuración → Negocio.</li>
+    </ul>
+    <div class="note">
+      <strong>Sobre el celular:</strong> en iPhone, para recibir notificaciones hace falta instalar
+      GestorPOS a la pantalla de inicio (no alcanza con tenerlo abierto en Safari). En Android funciona
+      directamente desde Chrome, instalado o no.
+    </div>
+  </section>
+
+  <section id="glosario">
+    <h2><span class="n">7.</span>Glosario</h2>
+    <table>
+      <tr><th>Término</th><th>Significado</th></tr>
+      <tr><td><strong>Negocio / tenant</strong></td><td>Un comercio dado de alta en la plataforma, con sus datos completamente separados de los demás.</td></tr>
+      <tr><td><strong>SKU</strong></td><td>Código único que identifica a un producto dentro de un negocio.</td></tr>
+      <tr><td><strong>Stock mínimo</strong></td><td>Cantidad configurada por producto por debajo de la cual el sistema lo marca como "stock bajo".</td></tr>
+      <tr><td><strong>Baja lógica</strong></td><td>Ocultar un registro sin borrarlo — se puede reactivar en cualquier momento y no afecta el historial.</td></tr>
+      <tr><td><strong>Movimiento de stock</strong></td><td>Cualquier cambio en la cantidad de un producto: un ajuste manual o el descuento automático de una venta.</td></tr>
+      <tr><td><strong>Feature</strong></td><td>Una funcionalidad especial que se puede activar solo para un negocio puntual, sin afectar al resto.</td></tr>
+    </table>
+  </section>
+
+  <footer>GestorPOS — Documentación funcional</footer>
+</div>
+</body>
+</html>

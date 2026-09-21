@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casos de uso — GestorPOS</title>
+<style>
+  :root{
+    --brand:#2f6fed;
+    --brand-dark:#1e4fb8;
+    --brand-bg:#eaf0fe;
+    --ink:#1a1d29;
+    --ink-soft:#5a5f73;
+    --ink-mute:#8b90a3;
+    --paper:#f5f6fa;
+    --surface:#ffffff;
+    --line:#e2e4ec;
+    --ok:#147a5c;
+    --ok-bg:#e2f3ec;
+    --warn:#9a5b12;
+    --warn-bg:#faf1e2;
+    --alt:#a13a3a;
+    --alt-bg:#fbe9e9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .page{max-width:840px;margin:0 auto;padding:48px 32px 96px;}
+
+  .cover{
+    background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+    color:#fff;
+    border-radius:20px;
+    padding:56px 48px;
+    margin-bottom:48px;
+  }
+  .cover .tag{
+    display:inline-block;
+    background:rgba(255,255,255,.18);
+    padding:4px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .cover h1{font-size:34px;margin:0 0 10px;font-weight:700;}
+  .cover p{font-size:15px;color:#fff;opacity:.92;margin:0;max-width:520px;}
+  .cover .meta{margin-top:28px;font-size:12.5px;opacity:.8;}
+
+  nav.toc{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px 28px;
+    margin-bottom:48px;
+  }
+  nav.toc h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-mute);margin:0 0 14px;}
+  nav.toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px;}
+  nav.toc li{font-size:13.5px;margin-bottom:8px;break-inside:avoid;}
+  nav.toc a{color:var(--brand-dark);text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+
+  .uc{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:26px 30px;
+    margin-bottom:22px;
+  }
+  .uc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
+  .uc-code{font-size:12px;font-weight:700;color:var(--brand-dark);letter-spacing:.03em;}
+  .uc-title{font-size:18px;font-weight:700;margin:2px 0 0;}
+  .uc-actor{
+    flex-shrink:0;
+    font-size:11.5px;
+    font-weight:600;
+    padding:4px 11px;
+    border-radius:999px;
+    background:var(--brand-bg);
+    color:var(--brand-dark);
+    white-space:nowrap;
+  }
+
+  .uc-row{margin-bottom:14px;}
+  .uc-row:last-child{margin-bottom:0;}
+  .uc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-mute);margin-bottom:6px;}
+  .uc-row p{margin:0;font-size:14px;color:var(--ink-soft);}
+
+  ol.steps{margin:0;padding-left:20px;}
+  ol.steps li{font-size:14px;color:var(--ink-soft);margin-bottom:6px;}
+  ol.steps li strong{color:var(--ink);}
+  ol.steps li:last-child{margin-bottom:0;}
+
+  .alt-box{
+    background:var(--warn-bg);
+    border-left:3px solid var(--warn);
+    border-radius:8px;
+    padding:12px 16px;
+    margin-top:4px;
+  }
+  .alt-box .alt-item{font-size:13.5px;color:var(--warn);margin-bottom:6px;}
+  .alt-box .alt-item:last-child{margin-bottom:0;}
+  .alt-box .alt-item strong{color:var(--warn);}
+
+  .result-box{
+    background:var(--ok-bg);
+    border-left:3px solid var(--ok);
+    border-radius:8px;
+    padding:12px 16px;
+  }
+  .result-box p{color:var(--ok);margin:0;font-size:13.5px;}
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-mute);
+    margin-top:64px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+
+  @media print{
+    body{background:#fff;}
+    .page{max-width:100%;padding:0;}
+    .cover{border-radius:0;margin:0 0 32px;}
+    .uc{page-break-inside:avoid;}
+    nav.toc{page-break-after:always;}
+    a{color:inherit;text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <span class="tag">Casos de uso</span>
+    <h1>GestorPOS</h1>
+    <p>Flujos paso a paso de las operaciones principales del sistema: quién las hace, qué hace falta
+      antes de empezar, los pasos, y qué pasa si algo sale distinto de lo esperado.</p>
+    <div class="meta">Versión del documento: 1.0 · Última actualización: septiembre 2026</div>
+  </div>
+
+  <nav class="toc">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#uc01">Iniciar sesión</a></li>
+      <li><a href="#uc02">Abrir caja</a></li>
+      <li><a href="#uc03">Registrar una venta</a></li>
+      <li><a href="#uc04">Cerrar caja</a></li>
+      <li><a href="#uc05">Dar de alta un producto</a></li>
+      <li><a href="#uc06">Ajustar stock manualmente</a></li>
+      <li><a href="#uc07">Importar catálogo desde Excel</a></li>
+      <li><a href="#uc08">Actualizar precios masivamente</a></li>
+      <li><a href="#uc09">Consultar y editar un cliente</a></li>
+      <li><a href="#uc10">Generar un reporte en PDF</a></li>
+      <li><a href="#uc11">Consultar movimientos de stock</a></li>
+      <li><a href="#uc12">Activar notificaciones de stock bajo</a></li>
+      <li><a href="#uc13">Dar de baja o eliminar una categoría/medio de pago</a></li>
+      <li><a href="#uc14">Dar de alta un negocio nuevo (administrador)</a></li>
+    </ol>
+  </nav>
+
+  <div class="uc" id="uc01">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-01</div><div class="uc-title">Iniciar sesión</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El negocio ya fue dado de alta por el administrador de la plataforma y el usuario tiene su email y contraseña.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario abre GestorPOS y carga su email y contraseña.</li>
+        <li>El sistema valida las credenciales y confirma que el usuario está activo.</li>
+        <li>El sistema inicia la sesión y muestra el panel Resumen del negocio.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>Credenciales inválidas:</strong> el sistema muestra un error y no inicia sesión. No existe la opción de "recuperar contraseña" por autoservicio — hay que contactar al administrador de la plataforma.</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Sesión iniciada, con acceso únicamente a los datos del negocio del usuario.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc02">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-02</div><div class="uc-title">Abrir caja</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Sesión iniciada. No hay otra caja abierta en este momento.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a la sección Caja.</li>
+        <li>Carga el monto inicial en efectivo con el que arranca el turno.</li>
+        <li>Confirma la apertura.</li>
+        <li>El sistema registra la caja como abierta desde ese momento.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box"><div class="alt-item"><strong>Ya hay una caja abierta:</strong> el sistema rechaza la apertura — primero hay que cerrar la caja existente.</div></div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Queda una caja abierta, condición necesaria para poder registrar ventas.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc03">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-03</div><div class="uc-title">Registrar una venta</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Sesión iniciada. Hay una caja abierta. Existe al menos un producto activo con stock.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a la sección Vender.</li>
+        <li>Agrega uno o más productos al carrito, desde los más vendidos o buscándolos.</li>
+        <li>Ajusta la cantidad de cada producto si hace falta.</li>
+        <li>Opcionalmente carga el nombre y/o teléfono del cliente — si ya compró antes, el sistema
+          sugiere sus datos y completa el que falte.</li>
+        <li>Elige el medio de pago.</li>
+        <li>Confirma el cobro.</li>
+        <li>El sistema descuenta el stock de cada producto vendido, registra la venta y genera el
+          ticket digital, con un botón para enviarlo por WhatsApp.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>No hay caja abierta:</strong> el sistema no permite cerrar la venta.</div>
+        <div class="alt-item"><strong>Stock insuficiente de algún producto:</strong> el sistema rechaza la venta e indica cuánto stock hay disponible.</div>
+        <div class="alt-item"><strong>Cliente sin nombre ni teléfono:</strong> la venta se completa igual, sin quedar asociada a ningún cliente.</div>
+        <div class="alt-item"><strong>Un producto cruza su stock mínimo al venderse:</strong> además de descontarse el stock, se dispara una notificación push de stock bajo (si está activada).</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Venta registrada, stock descontado, ticket generado y listo para enviar por WhatsApp.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc04">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-04</div><div class="uc-title">Cerrar caja</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Hay una caja abierta.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a la sección Caja y elige cerrarla.</li>
+        <li>Cuenta el efectivo físico y lo carga en el sistema.</li>
+        <li>El sistema calcula el efectivo esperado (monto de apertura + ventas en efectivo del
+          período) y lo compara contra lo contado, mostrando la diferencia.</li>
+        <li>El usuario confirma el cierre.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box"><div class="alt-item"><strong>Diferencia entre lo esperado y lo contado:</strong> el sistema la muestra igual (positiva o negativa) — no bloquea el cierre, es informativa.</div></div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Caja cerrada, con el resumen de ventas por medio de pago del período y la diferencia de efectivo registrada.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc05">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-05</div><div class="uc-title">Dar de alta un producto</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Sesión iniciada.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Productos y elige agregar uno nuevo.</li>
+        <li>Carga SKU, nombre, categoría (puede crear una nueva sin salir del formulario), precio, costo,
+          stock inicial y stock mínimo.</li>
+        <li>Guarda el producto.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box"><div class="alt-item"><strong>SKU ya usado en el negocio:</strong> el sistema rechaza el alta e indica que el código ya existe.</div></div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Producto disponible en el catálogo, listo para venderse.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc06">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-06</div><div class="uc-title">Ajustar stock manualmente</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El producto ya existe en el catálogo.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Productos y elige ajustar stock de un producto.</li>
+        <li>Carga la cantidad (positiva para sumar, negativa para restar) y el motivo (reposición,
+          merma, corrección u otro).</li>
+        <li>Confirma el ajuste.</li>
+        <li>El sistema actualiza el stock y registra el movimiento con fecha, motivo y usuario.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>No se carga un motivo:</strong> el sistema no permite confirmar el ajuste.</div>
+        <div class="alt-item"><strong>El ajuste cruza el stock mínimo hacia abajo:</strong> se dispara la notificación push de stock bajo (si está activada).</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Stock actualizado y movimiento registrado en el historial.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc07">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-07</div><div class="uc-title">Importar catálogo desde Excel</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El usuario tiene una planilla con las columnas SKU, Nombre, Categoría, Precio, Costo, Stock inicial y Stock mínimo (se puede descargar una plantilla vacía desde el sistema).</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Productos y elige importar desde Excel.</li>
+        <li>Sube el archivo .xlsx completo.</li>
+        <li>El sistema procesa cada fila: si el SKU no existe, da de alta el producto; si ya existe,
+          actualiza sus datos (sin tocar el stock actual). Las categorías que no existan se crean solas.</li>
+        <li>El sistema muestra un resumen del resultado, incluyendo las filas que no se pudieron procesar.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box"><div class="alt-item"><strong>Alguna fila tiene datos inválidos:</strong> esa fila se reporta como error, pero no interrumpe el procesamiento del resto del archivo.</div></div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Catálogo actualizado en bloque, con detalle de qué se creó, qué se actualizó y qué falló.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc08">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-08</div><div class="uc-title">Actualizar precios masivamente</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Existen productos activos en el catálogo.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Productos y elige actualizar precios masivamente.</li>
+        <li>Define un porcentaje de aumento o descuento, y opcionalmente lo limita a una sola categoría.</li>
+        <li>Confirma la actualización.</li>
+        <li>El sistema recalcula el precio de todos los productos alcanzados.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Precios actualizados en bloque, sin tener que editar producto por producto.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc09">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-09</div><div class="uc-title">Consultar y editar un cliente</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El cliente ya realizó al menos una compra dejando su teléfono (se da de alta solo).</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Clientes y busca por nombre o teléfono.</li>
+        <li>Abre la ficha del cliente: ve cantidad de compras, total gastado, última compra e historial
+          completo de ventas.</li>
+        <li>Si hace falta, corrige el nombre o el teléfono y guarda.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box"><div class="alt-item"><strong>El teléfono nuevo ya lo usa otro cliente del negocio:</strong> el sistema rechaza el cambio.</div></div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Datos del cliente al día, sin afectar el teléfono con el que se registraron sus ventas pasadas.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc10">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-10</div><div class="uc-title">Generar un reporte en PDF</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Sesión iniciada.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Reportes y elige la vista Ventas o Stock.</li>
+        <li>Define los filtros que necesite (rango de fechas, búsqueda, solo stock bajo).</li>
+        <li>Elige exportar a PDF.</li>
+        <li>El sistema genera el archivo con el encabezado del negocio (incluyendo el logo, si tiene) y
+          lo descarga.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>PDF descargado, listo para imprimir o compartir.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc11">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-11</div><div class="uc-title">Consultar movimientos de stock</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Sesión iniciada.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Reportes → Movimientos.</li>
+        <li>Opcionalmente filtra por producto y/o rango de fechas.</li>
+        <li>Revisa el listado: cada fila muestra el producto, la cantidad (a favor o en contra), el
+          stock resultante, el motivo y quién hizo el movimiento.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Trazabilidad completa de por qué el stock de un producto es el que es hoy.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc12">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-12</div><div class="uc-title">Activar notificaciones de stock bajo</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El navegador del dispositivo soporta notificaciones push. En iPhone, GestorPOS debe estar instalado a la pantalla de inicio.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Configuración → Negocio.</li>
+        <li>Activa el interruptor "Notificaciones de stock bajo".</li>
+        <li>El navegador pide permiso para mostrar notificaciones; el usuario lo acepta.</li>
+        <li>El sistema guarda ese dispositivo como suscripto.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>El usuario rechaza el permiso del navegador:</strong> el interruptor vuelve a apagarse y el dispositivo no queda suscripto.</div>
+        <div class="alt-item"><strong>El dispositivo no soporta notificaciones push:</strong> el interruptor directamente no se muestra en Configuración.</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Ese dispositivo recibe un aviso apenas un producto del negocio cruza su stock mínimo.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc13">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-13</div><div class="uc-title">Dar de baja o eliminar una categoría / medio de pago</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>La categoría o el medio de pago existen y no son "Efectivo" (protegido).</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Configuración y elige la categoría o medio de pago.</li>
+        <li>Elige darlo de baja (queda oculto, se puede reactivar) o eliminarlo definitivamente.</li>
+        <li>Si elige eliminar, el sistema verifica que nunca se haya usado en ningún producto o venta.</li>
+        <li>El sistema aplica el cambio.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>Se intenta eliminar algo que ya se usó:</strong> el sistema rechaza la eliminación y sugiere darlo de baja en su lugar.</div>
+        <div class="alt-item"><strong>Se intenta modificar "Efectivo":</strong> el sistema lo rechaza siempre, esté o no en uso.</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>La categoría o medio de pago queda oculto (reactivable) o eliminado sin dejar registros huérfanos.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc14">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-14</div><div class="uc-title">Dar de alta un negocio nuevo</div></div>
+      <div class="uc-actor">Administrador de plataforma</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Acceso al panel de administración interno con la clave correspondiente.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El administrador entra a la pantalla interna de alta de negocios.</li>
+        <li>Carga el nombre del negocio y los datos del usuario administrador (email y contraseña) que
+          va a usar ese negocio.</li>
+        <li>Confirma el alta.</li>
+        <li>El sistema crea el negocio, completamente aislado del resto, y el usuario queda listo para
+          iniciar sesión.</li>
+        <li>El administrador le entrega las credenciales al dueño del negocio.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Negocio nuevo operativo en la plataforma, con su propio espacio de datos.</p></div></div>
+  </div>
+
+  <footer>GestorPOS — Casos de uso</footer>
+</div>
+</body>
+</html>
