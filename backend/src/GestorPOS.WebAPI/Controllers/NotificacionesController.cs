@@ -25,6 +25,10 @@ public class NotificacionesController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<SuscripcionPushResumenDto>>> ListarSuscripciones(CancellationToken ct)
         => Ok(await _notificacionPushService.ListarSuscripcionesAsync(ct));
 
+    [HttpPost("probar")]
+    public async Task<ActionResult<IReadOnlyList<ResultadoPruebaPushDto>>> Probar(CancellationToken ct)
+        => Ok(await _notificacionPushService.EnviarPruebaAsync(ct));
+
     [HttpPost("suscribirse")]
     public async Task<IActionResult> Suscribirse(SuscribirsePushRequest request, CancellationToken ct)
     {

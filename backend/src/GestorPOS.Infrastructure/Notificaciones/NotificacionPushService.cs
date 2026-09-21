@@ -56,31 +56,15 @@ public class NotificacionPushService : INotificacionPushService
 
     public async Task NotificarStockBajoAsync(string productoNombre, int stockActual, CancellationToken ct = default)
     {
-        var publicKey = _configuration["Vapid:PublicKey"];
-        var privateKey = _configuration["Vapid:PrivateKey"];
-        var subject = _configuration["Vapid:Subject"];
-
-        // Sin claves configuradas (ambiente que todavía no las tiene) no rompe la venta/ajuste por esto,
-        // simplemente no manda nada.
-        if (string.IsNullOrEmpty(publicKey) || string.IsNullOrEmpty(privateKey) || string.IsNullOrEmpty(subject))
-            return;
+        var vapidDetails = ObtenerVapidDetails();
+        if (vapidDetails is null) return;
 
         var suscripciones = await _db.SuscripcionesPush.ToListAsync(ct);
         if (suscripciones.Count == 0) return;
 
-        var vapidDetails = new VapidDetails(subject, publicKey, privateKey);
-        var payload = JsonSerializer.Serialize(new
-        {
-            notification = new
-            {
-                title = "Stock bajo",
-                body = $"{productoNombre}: quedan {stockActual} unidades.",
-                icon = "/icons/icon-192x192.png",
-                data = new { onActionClick = new { @default = new { operation = "openWindow", url = "/productos" } } },
-            },
-        });
-
+        var payload = ArmarPayload("Stock bajo", $"{productoNombre}: quedan {stockActual} unidades.");
         var cliente = new WebPushClient();
+
         foreach (var suscripcion in suscripciones)
         {
             var pushSubscription = new PushSubscription(suscripcion.Endpoint, suscripcion.P256dh, suscripcion.Auth);
@@ -103,4 +87,59 @@ public class NotificacionPushService : INotificacionPushService
 
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task<IReadOnlyList<ResultadoPruebaPushDto>> EnviarPruebaAsync(CancellationToken ct = default)
+    {
+        var vapidDetails = ObtenerVapidDetails();
+        if (vapidDetails is null)
+            return [new ResultadoPruebaPushDto("(ninguno)", false, "El servidor no tiene las claves VAPID configuradas.")];
+
+        var suscripciones = await _db.SuscripcionesPush.ToListAsync(ct);
+        if (suscripciones.Count == 0)
+            return [new ResultadoPruebaPushDto("(ninguno)", false, "No hay ninguna suscripción guardada para este negocio.")];
+
+        var payload = ArmarPayload("Prueba de notificación", "Si ves esto, las notificaciones push están funcionando.");
+        var cliente = new WebPushClient();
+        var resultados = new List<ResultadoPruebaPushDto>();
+
+        foreach (var suscripcion in suscripciones)
+        {
+            var resumen = suscripcion.Endpoint.Substring(0, Math.Min(60, suscripcion.Endpoint.Length));
+            var pushSubscription = new PushSubscription(suscripcion.Endpoint, suscripcion.P256dh, suscripcion.Auth);
+            try
+            {
+                await cliente.SendNotificationAsync(pushSubscription, payload, vapidDetails);
+                resultados.Add(new ResultadoPruebaPushDto(resumen, true, null));
+            }
+            catch (Exception ex)
+            {
+                resultados.Add(new ResultadoPruebaPushDto(resumen, false, ex.ToString()));
+            }
+        }
+
+        return resultados;
+    }
+
+    private VapidDetails? ObtenerVapidDetails()
+    {
+        var publicKey = _configuration["Vapid:PublicKey"];
+        var privateKey = _configuration["Vapid:PrivateKey"];
+        var subject = _configuration["Vapid:Subject"];
+
+        if (string.IsNullOrEmpty(publicKey) || string.IsNullOrEmpty(privateKey) || string.IsNullOrEmpty(subject))
+            return null;
+
+        return new VapidDetails(subject, publicKey, privateKey);
+    }
+
+    private static string ArmarPayload(string titulo, string cuerpo) => JsonSerializer.Serialize(new
+    {
+        notification = new
+        {
+            title = titulo,
+            body = cuerpo,
+            icon = "/icons/icon-192x192.png",
+            data = new { onActionClick = new { @default = new { operation = "openWindow", url = "/productos" } } },
+        },
+    });
 }
