@@ -46,6 +46,14 @@ public class NotificacionPushService : INotificacionPushService
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<IReadOnlyList<SuscripcionPushResumenDto>> ListarSuscripcionesAsync(CancellationToken ct = default)
+    {
+        return await _db.SuscripcionesPush
+            .OrderByDescending(s => s.FechaCreacion)
+            .Select(s => new SuscripcionPushResumenDto(s.Endpoint.Substring(0, Math.Min(60, s.Endpoint.Length)), s.FechaCreacion))
+            .ToListAsync(ct);
+    }
+
     public async Task NotificarStockBajoAsync(string productoNombre, int stockActual, CancellationToken ct = default)
     {
         var publicKey = _configuration["Vapid:PublicKey"];
