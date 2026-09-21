@@ -35,6 +35,7 @@
         (ngModelChange)="montoCierreReal.set($event)"
         min="0"
         step="0.01"
+        placeholder="0"
       />
     </mat-form-field>
 
@@ -42,7 +43,7 @@
       <p class="error">{{ error() }}</p>
     }
 
-    <button mat-flat-button color="warn" (click)="cerrar()" [disabled]="procesando()">
+    <button mat-flat-button color="warn" (click)="cerrar()" [disabled]="procesando() || montoCierreReal() === null">
       @if (procesando()) {
         <mat-spinner diameter="20"></mat-spinner>
       } @else {
@@ -64,6 +65,7 @@
         (ngModelChange)="montoApertura.set($event)"
         min="0"
         step="0.01"
+        placeholder="0"
       />
     </mat-form-field>
 
@@ -71,7 +73,7 @@
       <p class="error">{{ error() }}</p>
     }
 
-    <button mat-flat-button color="primary" (click)="abrir()" [disabled]="procesando()">
+    <button mat-flat-button color="primary" (click)="abrir()" [disabled]="procesando() || montoApertura() === null">
       @if (procesando()) {
         <mat-spinner diameter="20"></mat-spinner>
       } @else {

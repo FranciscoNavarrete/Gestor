@@ -46,10 +46,10 @@ export class ProductoDialog {
     sku: [this.data.producto?.sku ?? '', [Validators.required]],
     nombre: [this.data.producto?.nombre ?? '', [Validators.required]],
     categoriaId: this.fb.control<string | null>(this.data.producto?.categoriaId ?? null),
-    precio: [this.data.producto?.precio ?? 0, [Validators.required, Validators.min(0)]],
-    costo: [this.data.producto?.costo ?? 0, [Validators.required, Validators.min(0)]],
-    stockActual: [this.data.producto?.stockActual ?? 0, [Validators.required, Validators.min(0)]],
-    stockMinimo: [this.data.producto?.stockMinimo ?? 0, [Validators.required, Validators.min(0)]],
+    precio: this.fb.control<number | null>(this.data.producto?.precio ?? null, [Validators.required, Validators.min(0)]),
+    costo: this.fb.control<number | null>(this.data.producto?.costo ?? null, [Validators.required, Validators.min(0)]),
+    stockActual: this.fb.control<number | null>(this.data.producto?.stockActual ?? null, [Validators.required, Validators.min(0)]),
+    stockMinimo: this.fb.control<number | null>(this.data.producto?.stockMinimo ?? null, [Validators.required, Validators.min(0)]),
   });
 
   nuevaCategoria(): void {
@@ -74,11 +74,19 @@ export class ProductoDialog {
       ? this.catalogoService.editarProducto(this.data.producto!.id, {
           nombre: valores.nombre,
           categoriaId: valores.categoriaId,
-          precio: valores.precio,
-          costo: valores.costo,
-          stockMinimo: valores.stockMinimo,
+          precio: valores.precio!,
+          costo: valores.costo!,
+          stockMinimo: valores.stockMinimo!,
         })
-      : this.catalogoService.crearProducto(valores);
+      : this.catalogoService.crearProducto({
+          sku: valores.sku,
+          nombre: valores.nombre,
+          categoriaId: valores.categoriaId,
+          precio: valores.precio!,
+          costo: valores.costo!,
+          stockActual: valores.stockActual!,
+          stockMinimo: valores.stockMinimo!,
+        });
 
     request$.subscribe({
       next: (producto) => this.dialogRef.close(producto),

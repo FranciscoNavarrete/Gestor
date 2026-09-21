@@ -27,8 +27,8 @@ export class AjustarStockDialog {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly form = this.fb.nonNullable.group({
-    cantidad: [0, [Validators.required]],
+  readonly form = this.fb.group({
+    cantidad: this.fb.control<number | null>(null, [Validators.required]),
   });
 
   elegirMotivo(motivo: string): void {
@@ -38,7 +38,7 @@ export class AjustarStockDialog {
   guardar(): void {
     const cantidad = this.form.getRawValue().cantidad;
     const motivo = this.motivo();
-    if (this.form.invalid || this.guardando() || cantidad === 0 || !motivo) return;
+    if (this.form.invalid || this.guardando() || !cantidad || !motivo) return;
 
     this.guardando.set(true);
     this.error.set(null);

@@ -24,8 +24,8 @@ export class Caja implements OnInit {
   readonly procesando = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly montoApertura = signal<number>(0);
-  readonly montoCierreReal = signal<number>(0);
+  readonly montoApertura = signal<number | null>(null);
+  readonly montoCierreReal = signal<number | null>(null);
 
   ngOnInit(): void {
     this.cargar();
@@ -43,15 +43,16 @@ export class Caja implements OnInit {
   }
 
   abrir(): void {
-    if (this.procesando()) return;
+    const montoApertura = this.montoApertura();
+    if (this.procesando() || montoApertura === null) return;
     this.procesando.set(true);
     this.error.set(null);
 
-    this.cajaService.abrir({ montoApertura: this.montoApertura() }).subscribe({
+    this.cajaService.abrir({ montoApertura }).subscribe({
       next: (caja) => {
         this.procesando.set(false);
         this.cajaActual.set(caja);
-        this.montoApertura.set(0);
+        this.montoApertura.set(null);
       },
       error: (err) => {
         this.procesando.set(false);
@@ -61,16 +62,17 @@ export class Caja implements OnInit {
   }
 
   cerrar(): void {
-    if (this.procesando()) return;
+    const montoCierreReal = this.montoCierreReal();
+    if (this.procesando() || montoCierreReal === null) return;
     this.procesando.set(true);
     this.error.set(null);
 
-    this.cajaService.cerrar({ montoCierreReal: this.montoCierreReal() }).subscribe({
+    this.cajaService.cerrar({ montoCierreReal }).subscribe({
       next: (caja) => {
         this.procesando.set(false);
         this.cajaActual.set(null);
         this.cajaRecienCerrada.set(caja);
-        this.montoCierreReal.set(0);
+        this.montoCierreReal.set(null);
       },
       error: (err) => {
         this.procesando.set(false);
