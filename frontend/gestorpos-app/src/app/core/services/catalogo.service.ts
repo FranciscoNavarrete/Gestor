@@ -51,11 +51,12 @@ export class CatalogoService {
   buscarProductos(
     busqueda: string,
     soloBajoStock: boolean,
+    incluirInactivos: boolean,
     pagina: number,
     tamanoPagina: number,
   ): Observable<PaginaProductos> {
     return this.http.get<PaginaProductos>(`${environment.apiUrl}/productos/buscar`, {
-      params: { busqueda, bajoStock: soloBajoStock, pagina, tamanoPagina },
+      params: { busqueda, bajoStock: soloBajoStock, incluirInactivos, pagina, tamanoPagina },
     });
   }
 

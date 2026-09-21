@@ -96,9 +96,9 @@ el puerto).
 - `GET /api/negocio/logo` — devuelve la imagen del logo (404 si no hay)
 - `DELETE /api/negocio/logo` — saca el logo
 - `GET /api/productos?bajoStock=true` — lista **sin paginar** todos los productos activos (usado por Venta, que necesita todo el catálogo en memoria para buscar al instante mientras se cobra)
-- `GET /api/productos/buscar?busqueda=&bajoStock=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/SKU/categoría, filtrado y paginado en la base de datos (usado por la pantalla de gestión de Productos, pensado para catálogos grandes)
+- `GET /api/productos/buscar?busqueda=&bajoStock=&incluirInactivos=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/SKU/categoría, filtrado y paginado en la base de datos (usado por la pantalla de gestión de Productos, pensado para catálogos grandes); `incluirInactivos=true` mezcla los dados de baja en el mismo listado (marcados aparte) en vez de excluirlos
 - `GET/POST/PUT/DELETE /api/productos` — CRUD de productos (SKU único por negocio, delete = baja lógica)
-- `POST /api/productos/{id}/activar` — reactiva un producto desactivado (sin UI todavía: la pantalla de Productos no lista inactivos, falta un filtro para poder llegar a ellos)
+- `POST /api/productos/{id}/activar` — reactiva un producto desactivado (accesible desde la pantalla de Productos con el filtro "Ver inactivos")
 - `POST /api/productos/{id}/ajustar-stock` — suma o resta stock manualmente, con motivo obligatorio (reposición, merma, corrección, u otro texto libre) — registra un `MovimientoStock`
 - `GET /api/movimientos-stock?productoId=&desde=&hasta=&pagina=1&tamanoPagina=20` — historial de movimientos de stock (ajustes manuales y ventas), filtrable por producto y rango de fechas
 - `POST /api/productos/actualizar-precios-masivo` — sube/baja el precio de todos los productos activos (o de una categoría) un `porcentaje` dado
@@ -115,6 +115,7 @@ el puerto).
 - `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
 - `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período
 - `GET /api/reportes/ranking-productos?desde=&hasta=&top=10` — productos más vendidos por cantidad, en un rango de fechas opcional
+- `GET /api/reportes/ranking-clientes?desde=&hasta=&top=10` — mejores clientes por total gastado en un rango de fechas opcional (solo cuenta ventas con cliente identificado por teléfono)
 - `GET /api/reportes/ganancias?desde=&hasta=` — ventas, costo y ganancia neta en un rango de fechas
 - `GET /api/reportes/dashboard` — resumen: ventas/ganancia de hoy, ventas del mes, productos en alerta de stock, producto más vendido del día
 - `GET /api/reportes/ventas/pdf?desde=&hasta=` — descarga un PDF con el resumen (total vendido, ganancia neta) y el listado de ventas del rango de fechas
@@ -158,16 +159,19 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 - **Login** (sin registro público — ver más abajo)
 - **Dashboard**: métricas del `/api/reportes/dashboard`
 - **Productos**: alta/edición (con creación de categoría anidada desde el mismo diálogo), ajuste de
-  stock, baja lógica, filtro de stock bajo
+  stock, baja lógica, filtro de stock bajo, y filtro "Ver inactivos" para ver los dados de baja
+  mezclados en la misma lista (atenuados, con botón de reactivar en vez de editar/dar de baja)
 - **Venta (POS)**: sección "Más vendidos" (hasta 6, según ranking real) + búsqueda, carrito flotante
   colapsable (nunca empuja el contenido — barra fija con total, se expande a una hoja con +/− por
   ítem, medio de pago y cobro), aviso con "Deshacer" al sacar un producto, y pantalla de resultado con
   el ticket + botón para enviarlo por WhatsApp
 - **Caja**: abrir/cerrar con el resumen de diferencia
-- **Reportes**: tres vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
+- **Reportes**: cuatro vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período), Stock (búsqueda + filtro "solo stock bajo" +
-  valorizado por producto, paginado) y Movimientos (historial de ajustes manuales y ventas, filtrable
-  por producto y rango de fechas, con el motivo y quién lo hizo) — Ventas y Stock exportables a PDF
+  valorizado por producto, paginado), Movimientos (historial de ajustes manuales y ventas, filtrable
+  por producto y rango de fechas, con el motivo y quién lo hizo) y Clientes (ranking de mejores
+  clientes por total gastado en un rango de fechas, con cantidad de compras) — Ventas y Stock
+  exportables a PDF
 - **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
   Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto, logo —
   este último aparece en el encabezado de los reportes PDF — y un toggle de notificaciones push de

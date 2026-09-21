@@ -49,6 +49,7 @@ export class Productos implements OnInit, OnDestroy {
   readonly productos = signal<Producto[]>([]);
   readonly categorias = signal<Categoria[]>([]);
   readonly soloBajoStock = signal(false);
+  readonly verInactivos = signal(false);
   readonly busqueda = signal('');
 
   readonly pagina = signal(1);
@@ -67,7 +68,7 @@ export class Productos implements OnInit, OnDestroy {
   cargar(): void {
     this.cargando.set(true);
     this.catalogoService
-      .buscarProductos(this.busqueda(), this.soloBajoStock(), this.pagina(), TAMANO_PAGINA)
+      .buscarProductos(this.busqueda(), this.soloBajoStock(), this.verInactivos(), this.pagina(), TAMANO_PAGINA)
       .subscribe({
         next: (resultado) => {
           this.productos.set(resultado.items);
@@ -90,6 +91,12 @@ export class Productos implements OnInit, OnDestroy {
 
   toggleBajoStock(): void {
     this.soloBajoStock.set(!this.soloBajoStock());
+    this.pagina.set(1);
+    this.cargar();
+  }
+
+  toggleVerInactivos(): void {
+    this.verInactivos.set(!this.verInactivos());
     this.pagina.set(1);
     this.cargar();
   }
@@ -138,6 +145,16 @@ export class Productos implements OnInit, OnDestroy {
 
     this.catalogoService.desactivarProducto(producto.id).subscribe({
       next: () => this.cargar(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  reactivar(producto: Producto): void {
+    this.catalogoService.activarProducto(producto.id).subscribe({
+      next: () => {
+        this.cargar();
+        this.snackBar.open(`"${producto.nombre}" reactivado`, 'Cerrar', { duration: 3000 });
+      },
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
     });
   }

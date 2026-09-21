@@ -24,6 +24,11 @@ public class ReportesController : ControllerBase
         [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, [FromQuery] int top, CancellationToken ct)
         => Ok(await _reporteService.RankingProductosAsync(desde, hasta, top == 0 ? 10 : top, ct));
 
+    [HttpGet("ranking-clientes")]
+    public async Task<ActionResult<IReadOnlyList<RankingClienteDto>>> RankingClientes(
+        [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, [FromQuery] int top, CancellationToken ct)
+        => Ok(await _reporteService.RankingClientesAsync(desde, hasta, top == 0 ? 10 : top, ct));
+
     [HttpGet("ganancias")]
     public async Task<ActionResult<GananciasDto>> Ganancias(
         [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, CancellationToken ct)

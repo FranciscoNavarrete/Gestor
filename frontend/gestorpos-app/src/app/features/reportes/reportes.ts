@@ -15,7 +15,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
 import { MovimientoStock } from '../../core/models/movimiento-stock.models';
-import { GananciasDto } from '../../core/models/reportes.models';
+import { GananciasDto, RankingClienteDto } from '../../core/models/reportes.models';
 import { VentaResumenDto } from '../../core/models/venta.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { MovimientoStockService } from '../../core/services/movimiento-stock.service';
@@ -27,7 +27,7 @@ import { fechaAIso, isoAFecha } from '../../core/utils/fecha.util';
 const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
 
-type Vista = 'ventas' | 'stock' | 'movimientos';
+type Vista = 'ventas' | 'stock' | 'movimientos' | 'clientes';
 
 @Component({
   selector: 'app-reportes',
@@ -91,10 +91,19 @@ export class Reportes implements OnInit {
   readonly totalPaginasMovimientos = signal(1);
   readonly totalItemsMovimientos = signal(0);
 
+  // --- Ranking de clientes ---
+  readonly desdeClientes = signal('');
+  readonly hastaClientes = signal('');
+  readonly desdeClientesFecha = computed(() => isoAFecha(this.desdeClientes()));
+  readonly hastaClientesFecha = computed(() => isoAFecha(this.hastaClientes()));
+  readonly cargandoClientes = signal(true);
+  readonly rankingClientes = signal<RankingClienteDto[]>([]);
+
   ngOnInit(): void {
     this.cargarVentas();
     this.cargarStock();
     this.cargarMovimientos();
+    this.cargarClientes();
     this.catalogoService.listarProductos().subscribe((productos) => this.productosParaFiltro.set(productos));
   }
 
@@ -140,7 +149,7 @@ export class Reportes implements OnInit {
   cargarStock(): void {
     this.cargandoStock.set(true);
     this.catalogoService
-      .buscarProductos(this.busquedaStock(), this.soloBajoStock(), this.paginaStock(), TAMANO_PAGINA_STOCK)
+      .buscarProductos(this.busquedaStock(), this.soloBajoStock(), false, this.paginaStock(), TAMANO_PAGINA_STOCK)
       .subscribe({
         next: (resultado) => {
           this.productosStock.set(resultado.items);
@@ -238,6 +247,35 @@ export class Reportes implements OnInit {
     if (this.paginaMovimientos() >= this.totalPaginasMovimientos()) return;
     this.paginaMovimientos.set(this.paginaMovimientos() + 1);
     this.cargarMovimientos();
+  }
+
+  // --- Ranking de clientes ---
+
+  cargarClientes(): void {
+    this.cargandoClientes.set(true);
+    this.reportesService.rankingClientes(this.desdeClientes() || undefined, this.hastaClientes() || undefined).subscribe({
+      next: (ranking) => {
+        this.rankingClientes.set(ranking);
+        this.cargandoClientes.set(false);
+      },
+      error: () => this.cargandoClientes.set(false),
+    });
+  }
+
+  onDesdeClientesChange(fecha: Date | null): void {
+    this.desdeClientes.set(fechaAIso(fecha));
+    this.cargarClientes();
+  }
+
+  onHastaClientesChange(fecha: Date | null): void {
+    this.hastaClientes.set(fechaAIso(fecha));
+    this.cargarClientes();
+  }
+
+  limpiarFiltroClientes(): void {
+    this.desdeClientes.set('');
+    this.hastaClientes.set('');
+    this.cargarClientes();
   }
 
   exportarVentasPdf(): void {

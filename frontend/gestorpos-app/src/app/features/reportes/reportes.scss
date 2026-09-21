@@ -17,9 +17,9 @@
     vertical-align: middle;
   }
 
-  // Con tres pestañas de texto largo no entran en pantallas angostas y la última queda
+  // Con cuatro pestañas de texto largo no entran en pantallas angostas y la última queda
   // cortada sin scroll para llegar a ella — se muestran solo los íconos.
-  @media (max-width: 420px) {
+  @media (max-width: 480px) {
     .etiqueta {
       display: none;
     }
@@ -307,5 +307,64 @@
     margin: 2px 0 0;
     font-size: 0.72rem;
     opacity: 0.5;
+  }
+}
+
+.lista-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cliente-item {
+  display: flex;
+  // mat-card trae flex-direction: column por defecto.
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+
+  .cliente-puesto {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: var(--mat-sys-surface-variant, #eee);
+    color: var(--mat-sys-on-surface-variant, #555);
+
+    &.top {
+      background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+      color: var(--color-accent);
+    }
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .nombre {
+    font-weight: 600;
+    font-size: 0.925rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .detalle {
+    font-size: 0.78rem;
+    opacity: 0.65;
+    margin-top: 1px;
+  }
+
+  .cliente-total {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #1ea672;
   }
 }

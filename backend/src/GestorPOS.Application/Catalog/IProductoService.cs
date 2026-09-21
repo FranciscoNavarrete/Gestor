@@ -12,7 +12,7 @@ public interface IProductoService
     /// <summary>Paginado + búsqueda por nombre/SKU/categoría — para la pantalla de gestión de
     /// Productos, pensado para catálogos grandes (ej. migrados por Excel).</summary>
     Task<PaginaDto<ProductoDto>> BuscarAsync(
-        string? busqueda, bool soloBajoStock, int pagina, int tamanoPagina, CancellationToken ct = default);
+        string? busqueda, bool soloBajoStock, bool incluirInactivos, int pagina, int tamanoPagina, CancellationToken ct = default);
     Task<ProductoDto> ObtenerAsync(Guid id, CancellationToken ct = default);
     Task<ProductoDto> CrearAsync(CrearProductoRequest request, CancellationToken ct = default);
     Task<ProductoDto> EditarAsync(Guid id, EditarProductoRequest request, CancellationToken ct = default);

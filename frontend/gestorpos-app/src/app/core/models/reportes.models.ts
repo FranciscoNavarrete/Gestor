@@ -5,6 +5,14 @@ export interface RankingProductoDto {
   totalVendido: number;
 }
 
+export interface RankingClienteDto {
+  clienteId: string;
+  nombre: string | null;
+  telefono: string;
+  cantidadCompras: number;
+  totalGastado: number;
+}
+
 export interface GananciasDto {
   cantidadVentas: number;
   totalVentas: number;

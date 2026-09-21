@@ -11,6 +11,10 @@
     <mat-icon>history</mat-icon>
     <span class="etiqueta">Movimientos</span>
   </mat-button-toggle>
+  <mat-button-toggle value="clientes" aria-label="Clientes">
+    <mat-icon>leaderboard</mat-icon>
+    <span class="etiqueta">Clientes</span>
+  </mat-button-toggle>
 </mat-button-toggle-group>
 
 @if (vista() === 'ventas') {
@@ -151,7 +155,7 @@
       <p class="paginado-info centrado-texto">{{ totalItemsStock() }} producto{{ totalItemsStock() === 1 ? '' : 's' }}</p>
     }
   }
-} @else {
+} @else if (vista() === 'movimientos') {
   <div class="filtro-movimientos">
     <mat-form-field appearance="outline">
       <mat-label>Producto</mat-label>
@@ -233,5 +237,46 @@
         {{ totalItemsMovimientos() }} movimiento{{ totalItemsMovimientos() === 1 ? '' : 's' }}
       </p>
     }
+  }
+} @else {
+  <div class="filtro-fechas">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input matInput [matDatepicker]="pickerDesdeCli" [ngModel]="desdeClientesFecha()" (ngModelChange)="onDesdeClientesChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerDesdeCli"></mat-datepicker-toggle>
+      <mat-datepicker #pickerDesdeCli></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input matInput [matDatepicker]="pickerHastaCli" [ngModel]="hastaClientesFecha()" (ngModelChange)="onHastaClientesChange($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerHastaCli"></mat-datepicker-toggle>
+      <mat-datepicker #pickerHastaCli></mat-datepicker>
+    </mat-form-field>
+    @if (desdeClientes() || hastaClientes()) {
+      <button mat-icon-button (click)="limpiarFiltroClientes()" aria-label="Limpiar filtro de fechas">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+
+  @if (cargandoClientes()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (rankingClientes().length === 0) {
+    <p class="vacio">No hay compras de clientes identificados en el período seleccionado.</p>
+  } @else {
+    <div class="lista-clientes">
+      @for (c of rankingClientes(); track c.clienteId; let i = $index) {
+        <mat-card class="cliente-item">
+          <div class="cliente-puesto" [class.top]="i < 3">{{ i + 1 }}</div>
+          <div class="info">
+            <div class="nombre">{{ c.nombre || c.telefono }}</div>
+            <div class="detalle">{{ c.cantidadCompras }} compra{{ c.cantidadCompras === 1 ? '' : 's' }}</div>
+          </div>
+          <div class="cliente-total">${{ c.totalGastado | number: '1.0-2' }}</div>
+        </mat-card>
+      }
+    </div>
   }
 }

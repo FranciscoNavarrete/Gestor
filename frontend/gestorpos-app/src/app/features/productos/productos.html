@@ -5,9 +5,14 @@
 </mat-form-field>
 
 <div class="encabezado">
-  <mat-slide-toggle [checked]="soloBajoStock()" (change)="toggleBajoStock()">
-    Solo stock bajo
-  </mat-slide-toggle>
+  <div class="filtros-encabezado">
+    <mat-slide-toggle [checked]="soloBajoStock()" (change)="toggleBajoStock()">
+      Solo stock bajo
+    </mat-slide-toggle>
+    <mat-slide-toggle [checked]="verInactivos()" (change)="toggleVerInactivos()">
+      Ver inactivos
+    </mat-slide-toggle>
+  </div>
 
   <div class="acciones-encabezado">
     <button mat-icon-button [matMenuTriggerFor]="menuImportar" aria-label="Importar desde Excel" [disabled]="importando()">
@@ -58,15 +63,19 @@
 } @else {
   <div class="lista">
     @for (producto of productos(); track producto.id) {
-      <mat-card class="producto-card" [class.alerta]="producto.enStockMinimo">
+      <mat-card class="producto-card" [class.alerta]="producto.enStockMinimo" [class.inactivo]="!producto.activo">
         <div class="avatar">{{ producto.nombre.charAt(0) }}</div>
 
         <div class="info" (click)="abrirEditar(producto)">
           <div class="nombre-fila">
             <span class="nombre">{{ producto.nombre }}</span>
-            <span class="stock-pill" [class.pill-alerta]="producto.enStockMinimo">
-              {{ producto.stockActual }} u.
-            </span>
+            @if (!producto.activo) {
+              <span class="pill-inactivo">Inactivo</span>
+            } @else {
+              <span class="stock-pill" [class.pill-alerta]="producto.enStockMinimo">
+                {{ producto.stockActual }} u.
+              </span>
+            }
           </div>
           <div class="detalle">
             {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} } · <span class="precio">${{ producto.precio }}</span>
@@ -74,12 +83,18 @@
         </div>
 
         <div class="acciones">
-          <button mat-icon-button (click)="ajustarStock(producto)" aria-label="Ajustar stock">
-            <mat-icon>inventory</mat-icon>
-          </button>
-          <button mat-icon-button (click)="desactivar(producto)" aria-label="Dar de baja">
-            <mat-icon>delete</mat-icon>
-          </button>
+          @if (producto.activo) {
+            <button mat-icon-button (click)="ajustarStock(producto)" aria-label="Ajustar stock">
+              <mat-icon>inventory</mat-icon>
+            </button>
+            <button mat-icon-button (click)="desactivar(producto)" aria-label="Dar de baja">
+              <mat-icon>delete</mat-icon>
+            </button>
+          } @else {
+            <button mat-icon-button (click)="reactivar(producto)" aria-label="Reactivar">
+              <mat-icon>restore</mat-icon>
+            </button>
+          }
         </div>
       </mat-card>
     }

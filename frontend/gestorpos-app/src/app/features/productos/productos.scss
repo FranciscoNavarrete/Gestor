@@ -12,6 +12,13 @@
   flex-wrap: wrap;
 }
 
+.filtros-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .acciones-encabezado {
   display: flex;
   align-items: center;
@@ -65,6 +72,20 @@
 
   &.alerta {
     border-color: color-mix(in srgb, var(--mat-sys-error) 35%, var(--border-subtle));
+  }
+
+  &.inactivo {
+    opacity: 0.6;
+  }
+
+  .pill-inactivo {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--mat-sys-surface-variant, #eee);
+    color: var(--mat-sys-on-surface-variant, #555);
   }
 
   .avatar {

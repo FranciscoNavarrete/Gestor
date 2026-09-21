@@ -35,6 +35,34 @@ public class ReporteService : IReporteService
             .ToList();
     }
 
+    public async Task<IReadOnlyList<RankingClienteDto>> RankingClientesAsync(
+        DateOnly? desde, DateOnly? hasta, int top, CancellationToken ct = default)
+    {
+        var ventas = await VentasEnRango(desde, hasta)
+            .Where(v => v.ClienteId != null)
+            .Select(v => new { ClienteId = v.ClienteId!.Value, v.Total })
+            .ToListAsync(ct);
+
+        if (ventas.Count == 0) return [];
+
+        var clienteIds = ventas.Select(v => v.ClienteId).Distinct().ToList();
+        var clientes = await _db.Clientes
+            .Where(c => clienteIds.Contains(c.Id))
+            .ToDictionaryAsync(c => c.Id, ct);
+
+        return ventas
+            .GroupBy(v => v.ClienteId)
+            .Select(g =>
+            {
+                clientes.TryGetValue(g.Key, out var cliente);
+                return new RankingClienteDto(
+                    g.Key, cliente?.Nombre, cliente?.Telefono ?? "", g.Count(), g.Sum(v => v.Total));
+            })
+            .OrderByDescending(r => r.TotalGastado)
+            .Take(top)
+            .ToList();
+    }
+
     public async Task<GananciasDto> GananciasAsync(DateOnly? desde, DateOnly? hasta, CancellationToken ct = default)
     {
         var ventas = VentasEnRango(desde, hasta);
