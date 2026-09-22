@@ -106,14 +106,16 @@ el puerto).
 - `POST /api/productos/importar-excel` (multipart, campo `archivo`) — crea o actualiza productos por SKU desde un .xlsx; SKU nuevo = alta, SKU existente = actualiza todo menos el stock actual; categorías que no existen se crean solas; no aborta ante filas inválidas, las reporta en el resultado
 - `GET /api/ventas?desde=2026-09-01&hasta=2026-09-15` — lista resumida de ventas (todas, o filtradas por rango de fechas; ambos parámetros son opcionales e independientes)
 - `GET /api/ventas/{id}` — detalle de una venta con items, ticket de texto y link de WhatsApp
-- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente/nombreCliente opcionales), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo). Si viene `telefonoCliente`, la venta se enlaza automáticamente a un `Cliente` (se busca por teléfono normalizado — solo dígitos — dentro del negocio); si no existe todavía se crea, usando `nombreCliente` si vino alguno (se ignora si el cliente ya existía, para no pisarle el nombre con un typo del cajero). El mensaje del link de WhatsApp usa un formato aparte del ticket en pantalla (negrita `*así*`, separador y emoji) — WhatsApp no permite adjuntar un PDF/imagen vía link, solo texto
-- `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono (cada item ya trae su cantidad de compras)
-- `GET /api/clientes/{id}` — datos del cliente + estadísticas (cantidad de compras, total gastado, fecha de la última compra)
+- `POST /api/ventas` — registra una venta (items + medioPago + telefonoCliente/nombreCliente opcionales), descuenta stock automáticamente y devuelve el ticket + link `wa.me` listo para enviar. `medioPago` es el nombre de un medio de pago activo configurado en `/api/medios-pago` (ya no es un enum fijo), salvo `"A cuenta"` (ver más abajo), que no es un medio de pago configurado sino un valor especial gateado por feature flag. Si viene `telefonoCliente`, la venta se enlaza automáticamente a un `Cliente` (se busca por teléfono normalizado — solo dígitos — dentro del negocio); si no existe todavía se crea, usando `nombreCliente` si vino alguno (se ignora si el cliente ya existía, para no pisarle el nombre con un typo del cajero). El mensaje del link de WhatsApp usa un formato aparte del ticket en pantalla (negrita `*así*`, separador y emoji) — WhatsApp no permite adjuntar un PDF/imagen vía link, solo texto
+- `GET /api/clientes?busqueda=&pagina=1&tamanoPagina=20` — paginado + búsqueda por nombre/teléfono (cada item ya trae su cantidad de compras y su saldo de cuenta corriente)
+- `GET /api/clientes/{id}` — datos del cliente + estadísticas (cantidad de compras, total gastado, fecha de la última compra, saldo de cuenta corriente)
 - `GET /api/clientes/{id}/ventas` — historial de ventas de ese cliente
 - `PUT /api/clientes/{id}` — edita nombre y teléfono del cliente (rechaza el teléfono si ya lo usa otro cliente del negocio; las ventas ya registradas conservan el teléfono con el que se hicieron)
+- `GET /api/clientes/{id}/cuenta` — historial de movimientos de cuenta corriente del cliente (ventas "A cuenta" y pagos), más reciente primero
+- `POST /api/clientes/{id}/pagos-cuenta` — registra un pago total o parcial contra la deuda del cliente (rechaza si el monto supera lo que debe)
 - `GET /api/caja/actual` — la caja abierta en este momento (o `null` si no hay ninguna)
 - `POST /api/caja/abrir` — abre caja con un monto inicial (falla si ya hay una abierta)
-- `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período
+- `POST /api/caja/cerrar` — cierra la caja abierta: calcula el monto esperado (apertura + ventas en efectivo del período + pagos de cuenta corriente cobrados en efectivo) contra el monto real contado, la diferencia, y el desglose de ventas por medio de pago del período (los pagos de cuenta corriente en efectivo se suman dentro de "Efectivo", no aparecen como línea aparte — la venta "A cuenta" original sí aparece como su propia línea, sin sumar al efectivo esperado)
 - `GET /api/reportes/ranking-productos?desde=&hasta=&top=10` — productos más vendidos por cantidad, en un rango de fechas opcional
 - `GET /api/reportes/ranking-clientes?desde=&hasta=&top=10` — mejores clientes por total gastado en un rango de fechas opcional (solo cuenta ventas con cliente identificado por teléfono)
 - `GET /api/reportes/ganancias?desde=&hasta=` — ventas, costo y ganancia neta en un rango de fechas
@@ -149,7 +151,17 @@ separado porque este panel cruza todos los tenants a propósito.
 
 El feature aparece/desaparece del claim `feature` del JWT en el próximo login de ese negocio — así el
 código (backend o frontend) puede chequear `TieneFeature("clave")` para mostrar/habilitar algo puntual
-que le pediste a un cliente, sin que el resto de los negocios lo vean.
+que le pediste a un cliente, sin que el resto de los negocios lo vean. Del lado del frontend, la
+respuesta de `/api/auth/login` también trae `features: string[]` directo en el body (no hace falta
+decodificar el JWT) — `AuthService.tieneFeature(clave)` lo expone.
+
+**Ejemplo real de feature flag — "A cuenta" (cuenta corriente / fiado)**: clave `cuenta-corriente`. Con
+el feature activado para un tenant, aparece un medio de pago especial "A cuenta" en Venta (no es una fila
+en `/api/medios-pago`, es un valor reservado validado en `VentaService` contra el feature) que exige
+cliente cargado y no cuenta como cobrado. La deuda de cada cliente (`saldoCuentaCorriente`) se calcula al
+vuelo — ventas "A cuenta" menos pagos registrados — nunca se guarda como campo aparte, así nunca se
+desincroniza. `POST /api/clientes/{id}/pagos-cuenta` registra un pago total o parcial. Para el resto de
+los negocios (sin el feature), esto no existe en ningún lado de la UI ni de la API.
 
 ## Frontend
 
@@ -170,7 +182,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   resumen — para saber qué se cargó sin tener que abrir el carrito. Cada tarjeta de producto también
   muestra su stock actual ("Stock: N", o "Quedan N" resaltado en rojo si está en el mínimo) — para
   consultar stock sin salir de la pantalla y sin perder la venta en curso (el carrito vive solo en
-  memoria del componente, así que navegar a otra pantalla lo vacía)
+  memoria del componente, así que navegar a otra pantalla lo vacía). Si el negocio tiene el feature
+  `cuenta-corriente`, el selector de medio de pago suma la opción "A cuenta": exige cliente cargado
+  (nombre y teléfono dejan de decir "opcional"), muestra un aviso si falta, y el botón de cobro pasa a
+  decir "Vender a cuenta $X" en vez de "Cobrar"
 - **Caja**: abrir/cerrar con el resumen de diferencia
 - **Reportes**: cuatro vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período), Stock (búsqueda + filtro "solo stock bajo" +
@@ -187,7 +202,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   stock bajo, solo visible si el navegador soporta service worker)
 - **Clientes** (ícono de personas en el toolbar): listado con búsqueda por nombre/teléfono, y detalle
   por cliente con nombre y teléfono editables, estadísticas (compras, total gastado, última compra) e
-  historial de ventas. Los clientes se dan de alta solos la primera vez que alguien compra dejando su
+  historial de ventas. Si el negocio tiene el feature `cuenta-corriente` y el cliente debe algo, el
+  listado muestra un badge "Debe $X" y la ficha suma una tarjeta con el saldo, un botón "Registrar pago"
+  (total o parcial, con vista previa de cuánto queda debiendo) y el historial de movimientos de cuenta
+  (fiados y pagos). Los clientes se dan de alta solos la primera vez que alguien compra dejando su
   teléfono — cargar el teléfono en la venta sigue siendo opcional, se puede vender sin él sin ningún
   problema. En Venta hay dos campos independientes, Nombre y Teléfono, y cualquiera de los dos busca
   contra clientes existentes (por nombre o teléfono) — elegís una sugerencia por el que te acuerdes y

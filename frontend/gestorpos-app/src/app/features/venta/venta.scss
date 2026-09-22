@@ -305,6 +305,15 @@
   }
 }
 
+.aviso-a-cuenta {
+  margin: -4px 0 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, #e0a552 16%, transparent);
+  color: #b5762a;
+  font-size: 0.78rem;
+}
+
 .opcion-nombre {
   display: block;
   font-weight: 600;

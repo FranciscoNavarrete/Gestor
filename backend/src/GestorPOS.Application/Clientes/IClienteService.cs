@@ -19,4 +19,11 @@ public interface IClienteService
     /// una venta con teléfono cargado — no llama SaveChanges por su cuenta, queda a cargo del caller
     /// persistirlo junto con el resto de los cambios de la venta.</summary>
     Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, string? nombre, CancellationToken ct = default);
+
+    Task<IReadOnlyList<MovimientoCuentaDto>> ListarMovimientosCuentaAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Registra un pago total o parcial contra la deuda a cuenta del cliente. Rechaza si el
+    /// monto supera lo que efectivamente debe.</summary>
+    Task<ClienteDetalleDto> RegistrarPagoCuentaAsync(
+        Guid id, RegistrarPagoCuentaRequest request, CancellationToken ct = default);
 }

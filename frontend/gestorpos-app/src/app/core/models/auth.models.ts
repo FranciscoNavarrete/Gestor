@@ -10,4 +10,5 @@ export interface AuthResponse {
   nombreNegocio: string;
   nombreUsuario: string;
   rol: string;
+  features: string[];
 }

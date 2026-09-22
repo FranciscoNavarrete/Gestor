@@ -3,6 +3,7 @@ using GestorPOS.Application.Clientes.Dtos;
 using GestorPOS.Application.Common.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +46,9 @@ public class ClienteService : IClienteService
             .Take(tamanoPagina)
             .Select(c => new ClienteDto(
                 c.Id, c.Telefono, c.Nombre, c.FechaCreacion,
-                _db.Ventas.Count(v => v.ClienteId == c.Id)))
+                _db.Ventas.Count(v => v.ClienteId == c.Id),
+                (_db.Ventas.Where(v => v.ClienteId == c.Id && v.MedioPago == CuentaCorriente.MedioPago).Sum(v => (decimal?)v.Total) ?? 0m)
+                    - (_db.PagosCuenta.Where(p => p.ClienteId == c.Id).Sum(p => (decimal?)p.Monto) ?? 0m)))
             .ToListAsync(ct);
 
         return new PaginaDto<ClienteDto>(items, pagina, tamanoPagina, totalItems, totalPaginas);
@@ -64,10 +67,11 @@ public class ClienteService : IClienteService
             .OrderByDescending(v => v.FechaCreacion)
             .Select(v => (DateTime?)v.FechaCreacion)
             .FirstOrDefaultAsync(ct);
+        var saldoCuentaCorriente = await ObtenerSaldoCuentaCorrienteAsync(id, ct);
 
         return new ClienteDetalleDto(
             cliente.Id, cliente.Telefono, cliente.Nombre, cliente.FechaCreacion,
-            cantidadCompras, totalGastado, ultimaCompra);
+            cantidadCompras, totalGastado, ultimaCompra, saldoCuentaCorriente);
     }
 
     public async Task<IReadOnlyList<ClienteVentaDto>> ListarVentasAsync(Guid id, CancellationToken ct = default)
@@ -104,7 +108,9 @@ public class ClienteService : IClienteService
         await _db.SaveChangesAsync(ct);
 
         var cantidadCompras = await _db.Ventas.CountAsync(v => v.ClienteId == id, ct);
-        return new ClienteDto(cliente.Id, cliente.Telefono, cliente.Nombre, cliente.FechaCreacion, cantidadCompras);
+        var saldoCuentaCorriente = await ObtenerSaldoCuentaCorrienteAsync(id, ct);
+        return new ClienteDto(
+            cliente.Id, cliente.Telefono, cliente.Nombre, cliente.FechaCreacion, cantidadCompras, saldoCuentaCorriente);
     }
 
     public async Task<Guid> ObtenerOCrearPorTelefonoAsync(string telefono, string? nombre, CancellationToken ct = default)
@@ -120,6 +126,59 @@ public class ClienteService : IClienteService
         cliente = Cliente.Crear(_tenantContext.TenantId, normalizado, nombre);
         _db.Clientes.Add(cliente);
         return cliente.Id;
+    }
+
+    public async Task<IReadOnlyList<MovimientoCuentaDto>> ListarMovimientosCuentaAsync(Guid id, CancellationToken ct = default)
+    {
+        var clienteExiste = await _db.Clientes.AnyAsync(c => c.Id == id, ct);
+        if (!clienteExiste)
+            throw new AppException("El cliente no existe.");
+
+        var fiados = await _db.Ventas
+            .Where(v => v.ClienteId == id && v.MedioPago == CuentaCorriente.MedioPago)
+            .Select(v => new MovimientoCuentaDto(v.FechaCreacion, "Fiado", v.Total, null))
+            .ToListAsync(ct);
+
+        var pagos = await _db.PagosCuenta
+            .Where(p => p.ClienteId == id)
+            .Select(p => new MovimientoCuentaDto(p.FechaCreacion, "Pago", -p.Monto, p.MedioPago))
+            .ToListAsync(ct);
+
+        return fiados.Concat(pagos).OrderByDescending(m => m.Fecha).ToList();
+    }
+
+    public async Task<ClienteDetalleDto> RegistrarPagoCuentaAsync(
+        Guid id, RegistrarPagoCuentaRequest request, CancellationToken ct = default)
+    {
+        var clienteExiste = await _db.Clientes.AnyAsync(c => c.Id == id, ct);
+        if (!clienteExiste)
+            throw new AppException("El cliente no existe.");
+
+        if (request.Monto <= 0)
+            throw new AppException("El monto a pagar tiene que ser mayor a cero.");
+        if (string.IsNullOrWhiteSpace(request.MedioPago))
+            throw new AppException("Elegí el medio de pago.");
+
+        var saldoActual = await ObtenerSaldoCuentaCorrienteAsync(id, ct);
+        if (request.Monto > saldoActual)
+            throw new AppException($"El cliente debe ${saldoActual}, no se puede registrar un pago mayor.");
+
+        var pago = PagoCuenta.Crear(_tenantContext.TenantId, id, request.Monto, request.MedioPago, _tenantContext.UsuarioId);
+        _db.PagosCuenta.Add(pago);
+        await _db.SaveChangesAsync(ct);
+
+        return await ObtenerAsync(id, ct);
+    }
+
+    private async Task<decimal> ObtenerSaldoCuentaCorrienteAsync(Guid clienteId, CancellationToken ct)
+    {
+        var totalACuenta = await _db.Ventas
+            .Where(v => v.ClienteId == clienteId && v.MedioPago == CuentaCorriente.MedioPago)
+            .SumAsync(v => (decimal?)v.Total, ct) ?? 0m;
+        var totalPagado = await _db.PagosCuenta
+            .Where(p => p.ClienteId == clienteId)
+            .SumAsync(p => (decimal?)p.Monto, ct) ?? 0m;
+        return totalACuenta - totalPagado;
     }
 
     private static string NormalizarTelefono(string telefono) =>

@@ -29,7 +29,12 @@
         }
 
         <div class="info">
-          <span class="nombre" [class.sin-nombre]="!cliente.nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+          <div class="nombre-fila">
+            <span class="nombre" [class.sin-nombre]="!cliente.nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+            @if (cliente.saldoCuentaCorriente > 0) {
+              <span class="badge-debe">Debe ${{ cliente.saldoCuentaCorriente }}</span>
+            }
+          </div>
           <div class="detalle">
             {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
           </div>

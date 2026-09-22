@@ -7,7 +7,9 @@ import {
   ClienteDetalle,
   ClienteVenta,
   EditarClienteRequest,
+  MovimientoCuenta,
   PaginaClientes,
+  RegistrarPagoCuentaRequest,
 } from '../models/cliente.models';
 
 @Injectable({ providedIn: 'root' })
@@ -30,5 +32,13 @@ export class ClienteService {
 
   editar(id: string, request: EditarClienteRequest): Observable<Cliente> {
     return this.http.put<Cliente>(`${environment.apiUrl}/clientes/${id}`, request);
+  }
+
+  listarMovimientosCuenta(id: string): Observable<MovimientoCuenta[]> {
+    return this.http.get<MovimientoCuenta[]>(`${environment.apiUrl}/clientes/${id}/cuenta`);
+  }
+
+  registrarPagoCuenta(id: string, request: RegistrarPagoCuentaRequest): Observable<ClienteDetalle> {
+    return this.http.post<ClienteDetalle>(`${environment.apiUrl}/clientes/${id}/pagos-cuenta`, request);
   }
 }

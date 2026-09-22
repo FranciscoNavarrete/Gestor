@@ -13,8 +13,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
 import { Cliente } from '../../core/models/cliente.models';
 import { MedioPagoDto } from '../../core/models/configuracion.models';
+import { FEATURE_CUENTA_CORRIENTE, MEDIO_PAGO_A_CUENTA } from '../../core/models/cuenta-corriente';
 import { CajaDto, RankingProductoDto } from '../../core/models/reportes.models';
 import { MedioPago, VentaDto } from '../../core/models/venta.models';
+import { AuthService } from '../../core/services/auth.service';
 import { CajaService } from '../../core/services/caja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { ClienteService } from '../../core/services/cliente.service';
@@ -64,7 +66,11 @@ export class Venta implements OnInit, OnDestroy {
   private readonly cajaService = inject(CajaService);
   private readonly configuracionService = inject(ConfiguracionService);
   private readonly clienteService = inject(ClienteService);
+  private readonly authService = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
+
+  readonly medioPagoACuenta = MEDIO_PAGO_A_CUENTA;
+  readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
 
   private debounceClienteTimer?: ReturnType<typeof setTimeout>;
   private timerUltimoAgregado?: ReturnType<typeof setTimeout>;
@@ -119,6 +125,9 @@ export class Venta implements OnInit, OnDestroy {
     const recibido = this.montoRecibido();
     return recibido == null ? null : recibido - this.total();
   });
+
+  readonly esACuenta = computed(() => this.medioPago() === MEDIO_PAGO_A_CUENTA);
+  readonly faltaClienteParaACuenta = computed(() => this.esACuenta() && !this.telefonoCliente().trim());
 
   cantidadEnCarrito(productoId: string): number {
     return this.carrito().find((i) => i.producto.id === productoId)?.cantidad ?? 0;
@@ -252,7 +261,7 @@ export class Venta implements OnInit, OnDestroy {
   }
 
   cobrar(): void {
-    if (this.carrito().length === 0 || this.procesando()) return;
+    if (this.carrito().length === 0 || this.procesando() || this.faltaClienteParaACuenta()) return;
 
     this.procesando.set(true);
     this.ventasService

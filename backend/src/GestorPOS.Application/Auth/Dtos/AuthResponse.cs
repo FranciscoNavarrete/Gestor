@@ -6,4 +6,5 @@ public record AuthResponse(
     Guid TenantId,
     string NombreNegocio,
     string NombreUsuario,
-    string Rol);
+    string Rol,
+    IReadOnlyList<string> Features);

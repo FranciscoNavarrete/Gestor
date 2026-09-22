@@ -1,0 +1,47 @@
+.full {
+  width: 100%;
+}
+
+.saldo-actual {
+  margin-top: 0;
+  font-size: 0.9rem;
+
+  strong {
+    color: var(--mat-sys-error, #b3261e);
+  }
+}
+
+.chip-pagar-todo {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle, #2c3049);
+  background: transparent;
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.queda-debiendo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+  color: var(--mat-sys-error);
+
+  &.saldado {
+    background: color-mix(in srgb, #1ea672 16%, transparent);
+    color: #1ea672;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}

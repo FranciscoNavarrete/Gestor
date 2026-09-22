@@ -9,6 +9,7 @@ using GestorPOS.Application.MovimientosStock;
 using GestorPOS.Application.Notificaciones;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Application.Ventas.Dtos;
+using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
@@ -48,8 +49,17 @@ public class VentaService : IVentaService
         if (request.Items.Count == 0)
             throw new AppException("La venta debe tener al menos un producto.");
 
-        if (!await _medioPagoService.EsValidoYActivoAsync(request.MedioPago, ct))
+        if (request.MedioPago == CuentaCorriente.MedioPago)
+        {
+            if (!_tenantContext.TieneFeature(CuentaCorriente.Feature))
+                throw new AppException($"Medio de pago inválido: '{request.MedioPago}'.");
+            if (string.IsNullOrWhiteSpace(request.TelefonoCliente))
+                throw new AppException("Para vender a cuenta necesitás cargar el teléfono del cliente.");
+        }
+        else if (!await _medioPagoService.EsValidoYActivoAsync(request.MedioPago, ct))
+        {
             throw new AppException($"Medio de pago inválido: '{request.MedioPago}'.");
+        }
 
         var productoIds = request.Items.Select(i => i.ProductoId).ToList();
         var productos = await _db.Productos

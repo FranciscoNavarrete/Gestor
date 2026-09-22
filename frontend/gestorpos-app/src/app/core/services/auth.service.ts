@@ -15,8 +15,13 @@ export class AuthService {
   readonly nombreNegocio = computed(() => this.authState()?.nombreNegocio ?? '');
   readonly nombreUsuario = computed(() => this.authState()?.nombreUsuario ?? '');
   readonly token = computed(() => this.authState()?.token ?? null);
+  private readonly features = computed(() => new Set(this.authState()?.features ?? []));
 
   constructor(private readonly http: HttpClient) {}
+
+  tieneFeature(clave: string): boolean {
+    return this.features().has(clave);
+  }
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http

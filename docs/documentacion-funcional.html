@@ -252,6 +252,8 @@
           buscar a un cliente que ya compró antes y autocompletar el otro dato.</li>
         <li>Al cerrar la venta, se genera un ticket digital con un botón para enviarlo por WhatsApp.</li>
         <li>El stock de cada producto vendido se descuenta automáticamente.</li>
+        <li><strong>Solo en los negocios que lo tienen activado:</strong> se puede vender "A cuenta"
+          (fiado) — exige cargar el cliente, no se cobra en el momento y queda como deuda pendiente.</li>
       </ul>
     </div>
 
@@ -261,7 +263,8 @@
       <ul>
         <li>Apertura de caja con un monto inicial en efectivo.</li>
         <li>Cierre de caja: el sistema calcula el efectivo que debería haber (apertura + ventas en
-          efectivo) y lo compara contra lo que se cuenta físicamente, mostrando la diferencia.</li>
+          efectivo, más los pagos de cuenta corriente cobrados en efectivo) y lo compara contra lo que
+          se cuenta físicamente, mostrando la diferencia.</li>
         <li>Resumen de ventas del período desglosado por medio de pago.</li>
       </ul>
     </div>
@@ -275,6 +278,10 @@
           compra e historial completo de ventas.</li>
         <li>Nombre y teléfono editables desde la ficha del cliente.</li>
         <li>Búsqueda por nombre o teléfono.</li>
+        <li><strong>Solo en los negocios que lo tienen activado:</strong> si el cliente debe algo "a
+          cuenta", su ficha muestra el saldo, un botón para registrar un pago (total o parcial) y el
+          historial completo de fiados y pagos. El listado general marca con un badge a los clientes
+          que deben.</li>
       </ul>
     </div>
 
@@ -372,6 +379,16 @@
         posterior a "Hasta", y entre ambas no puede haber más de 2 meses de diferencia. El calendario
         directamente no deja tocar una fecha fuera de ese rango.</p></div>
     </div>
+
+    <div class="rule">
+      <div class="rn">08</div>
+      <div class="rt"><strong>Vender a cuenta exige cliente, y nunca cuenta como cobrado</strong>
+      <p>En los negocios que tienen la funcionalidad activada, una venta "a cuenta" necesita sí o sí un
+        cliente cargado (para saber a quién cobrarle después) y no suma al efectivo esperado del cierre
+        de caja — es plata que todavía no entró. Cuando el cliente paga esa deuda (total o
+        parcialmente), recién ahí, si el pago es en efectivo, suma al cierre de caja del día en que se
+        cobra.</p></div>
+    </div>
   </section>
 
   <section id="accesos">
@@ -380,6 +397,10 @@
       todavía distintos niveles de permiso dentro de un mismo negocio (por ejemplo, "cajero" vs
       "dueño"). El panel de administración interno (sección 3.8) es un acceso completamente aparte,
       protegido con su propia clave, reservado para quien opera la plataforma.</p>
+    <p>Algunas funcionalidades (como "A cuenta") no vienen activadas para todos los negocios — se
+      prenden una por una, por negocio, desde el panel de administración interno. Un negocio que no la
+      tenga activada no ve absolutamente nada de eso: ni el medio de pago, ni la deuda de clientes, ni
+      ninguna pantalla relacionada.</p>
     <table>
       <tr><th>Acceso</th><th>Quién lo usa</th><th>Alcance</th></tr>
       <tr><td><strong>Usuario de negocio</strong></td><td>Dueño/empleados del comercio</td><td>Todos los módulos, solo datos de su negocio</td></tr>

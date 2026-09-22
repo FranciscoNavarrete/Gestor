@@ -42,19 +42,29 @@ public class CajaService : ICajaService
         var caja = await _db.CajasDiarias.FirstOrDefaultAsync(c => c.Abierta, ct)
             ?? throw new AppException("No hay ninguna caja abierta para cerrar.");
 
-        var ventasPorMedioPago = await _db.Ventas
+        var ventasPorMedioPago = (await _db.Ventas
             .Where(v => v.FechaCreacion >= caja.FechaCreacion)
             .GroupBy(v => v.MedioPago)
             .Select(g => new VentaPorMedioPagoDto(g.Key, g.Sum(v => v.Total)))
-            .ToListAsync(ct);
+            .ToListAsync(ct))
+            .ToDictionary(v => v.MedioPago, v => v.Total);
 
-        var ventasEfectivo = ventasPorMedioPago
-            .FirstOrDefault(v => v.MedioPago == "Efectivo")?.Total ?? 0m;
+        // Un pago de cuenta corriente cobrado en efectivo es plata real que entra hoy, aunque la
+        // venta original (a cuenta) no haya sumado nada en su momento — suma acá, no como línea aparte.
+        var cobrosCuentaEnEfectivo = await _db.PagosCuenta
+            .Where(p => p.MedioPago == "Efectivo" && p.FechaCreacion >= caja.FechaCreacion)
+            .SumAsync(p => (decimal?)p.Monto, ct) ?? 0m;
+
+        if (cobrosCuentaEnEfectivo > 0)
+            ventasPorMedioPago["Efectivo"] = ventasPorMedioPago.GetValueOrDefault("Efectivo") + cobrosCuentaEnEfectivo;
+
+        var ventasEfectivo = ventasPorMedioPago.GetValueOrDefault("Efectivo");
 
         caja.Cerrar(ventasEfectivo, request.MontoCierreReal);
         await _db.SaveChangesAsync(ct);
 
-        return ToDto(caja, ventasPorMedioPago);
+        var desglose = ventasPorMedioPago.Select(kv => new VentaPorMedioPagoDto(kv.Key, kv.Value)).ToList();
+        return ToDto(caja, desglose);
     }
 
     private static CajaDto ToDto(Domain.Entities.CajaDiaria caja, IReadOnlyList<VentaPorMedioPagoDto> ventasPorMedioPago) => new(

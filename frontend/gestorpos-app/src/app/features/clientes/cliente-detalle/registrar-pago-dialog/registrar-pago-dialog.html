@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>Registrar pago — {{ data.nombreCliente }}</h2>
+
+<mat-dialog-content>
+  <p class="saldo-actual">Debe: <strong>${{ data.saldo }}</strong></p>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Monto a pagar</mat-label>
+    <input
+      matInput
+      type="number"
+      [ngModel]="monto()"
+      (ngModelChange)="monto.set($event)"
+      min="0"
+      step="0.01"
+      cdkFocusInitial
+    />
+  </mat-form-field>
+
+  <button type="button" class="chip-pagar-todo" (click)="pagarTodo()">Pagar todo</button>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Medio de pago</mat-label>
+    <mat-select [ngModel]="medioPago()" (ngModelChange)="medioPago.set($event)">
+      @for (medio of mediosPago(); track medio.id) {
+        <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (monto() != null) {
+    <div class="queda-debiendo" [class.saldado]="quedaDebiendo() <= 0">
+      <span>Queda debiendo</span>
+      <span>${{ quedaDebiendo() }}</span>
+    </div>
+  }
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()" [disabled]="montoInvalido() || guardando()">
+    @if (guardando()) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      Confirmar pago
+    }
+  </button>
+</mat-dialog-actions>

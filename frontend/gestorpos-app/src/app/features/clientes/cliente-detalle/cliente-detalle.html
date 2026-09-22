@@ -46,6 +46,31 @@
     </div>
   </div>
 
+  @if (c.saldoCuentaCorriente > 0) {
+    <mat-card class="saldo-card">
+      <span class="saldo-label">Tiene a cuenta</span>
+      <span class="saldo-valor">${{ c.saldoCuentaCorriente }}</span>
+      <button mat-flat-button color="primary" (click)="abrirRegistrarPago()">Registrar pago</button>
+    </mat-card>
+  }
+
+  @if (movimientos().length > 0) {
+    <h3 class="subtitulo">Cuenta corriente</h3>
+    <div class="lista-movimientos-cuenta">
+      @for (mov of movimientos(); track mov.fecha + mov.monto) {
+        <div class="movimiento-cuenta-item">
+          <div>
+            <p class="mov-fecha">{{ mov.fecha | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p class="mov-tipo">{{ mov.tipo }}{{ mov.medioPago ? ' · ' + mov.medioPago : '' }}</p>
+          </div>
+          <span class="mov-monto" [class.positivo]="mov.monto > 0">
+            {{ mov.monto > 0 ? '+' : '' }}${{ mov.monto }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+
   <h3 class="subtitulo">Historial de compras</h3>
 
   @if (cargandoVentas()) {

@@ -164,6 +164,8 @@
       <li><a href="#uc12">Activar notificaciones de stock bajo</a></li>
       <li><a href="#uc13">Dar de baja o eliminar una categoría/medio de pago</a></li>
       <li><a href="#uc14">Dar de alta un negocio nuevo (administrador)</a></li>
+      <li><a href="#uc15">Vender a cuenta</a></li>
+      <li><a href="#uc16">Registrar un pago de cuenta corriente</a></li>
     </ol>
   </nav>
 
@@ -460,6 +462,57 @@
       </ol>
     </div>
     <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Negocio nuevo operativo en la plataforma, con su propio espacio de datos.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc15">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-15</div><div class="uc-title">Vender a cuenta</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El negocio tiene activada la funcionalidad de cuenta corriente. Hay una caja abierta.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario arma la venta como cualquier otra, agregando productos al carrito.</li>
+        <li>En medio de pago, elige "A cuenta".</li>
+        <li>Carga el teléfono del cliente (obligatorio en este caso, a diferencia de los demás medios
+          de pago) — si ya compró antes, lo busca por nombre o teléfono y se autocompleta el resto.</li>
+        <li>Confirma "Vender a cuenta".</li>
+        <li>El sistema registra la venta, descuenta el stock igual que cualquier venta, y suma el total
+          a la deuda del cliente — sin pedir cobro en el momento.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>No se carga el teléfono del cliente:</strong> el sistema no deja confirmar la venta — sin saber a quién, no se puede fiar.</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Venta registrada y stock descontado, sin cobro — el monto queda como deuda pendiente del cliente. No suma al efectivo esperado del cierre de caja.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc16">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-16</div><div class="uc-title">Registrar un pago de cuenta corriente</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El cliente tiene una deuda a cuenta mayor a cero.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a la ficha del cliente, donde ve cuánto debe.</li>
+        <li>Elige "Registrar pago".</li>
+        <li>Carga el monto que el cliente está pagando (puede tocar "Pagar todo" para saldar la deuda
+          completa) y el medio de pago con el que paga.</li>
+        <li>Confirma el pago.</li>
+        <li>El sistema descuenta el monto de la deuda del cliente y lo agrega al historial de
+          movimientos de cuenta.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>El monto cargado supera lo que el cliente debe:</strong> el sistema no deja confirmar el pago.</div>
+        <div class="alt-item"><strong>El pago es en efectivo:</strong> además de descontar la deuda, ese monto suma al efectivo esperado del cierre de caja del día en que se cobra.</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Deuda del cliente actualizada (total o parcialmente saldada) y movimiento registrado en su historial de cuenta.</p></div></div>
   </div>
 
   <footer>GestorPOS — Casos de uso</footer>

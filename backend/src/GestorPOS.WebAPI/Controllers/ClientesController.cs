@@ -37,4 +37,13 @@ public class ClientesController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<ClienteDto>> Editar(Guid id, EditarClienteRequest request, CancellationToken ct)
         => Ok(await _clienteService.EditarAsync(id, request, ct));
+
+    [HttpGet("{id:guid}/cuenta")]
+    public async Task<ActionResult<IReadOnlyList<MovimientoCuentaDto>>> ListarMovimientosCuenta(Guid id, CancellationToken ct)
+        => Ok(await _clienteService.ListarMovimientosCuentaAsync(id, ct));
+
+    [HttpPost("{id:guid}/pagos-cuenta")]
+    public async Task<ActionResult<ClienteDetalleDto>> RegistrarPagoCuenta(
+        Guid id, RegistrarPagoCuentaRequest request, CancellationToken ct)
+        => Ok(await _clienteService.RegistrarPagoCuentaAsync(id, request, ct));
 }

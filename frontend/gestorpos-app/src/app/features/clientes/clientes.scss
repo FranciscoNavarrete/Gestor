@@ -62,8 +62,15 @@
     min-width: 0;
   }
 
+  .nombre-fila {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .nombre {
-    display: block;
+    flex-shrink: 1;
+    min-width: 0;
     font-weight: 600;
     font-size: 0.925rem;
     overflow: hidden;
@@ -74,6 +81,16 @@
       font-weight: 500;
       opacity: 0.65;
     }
+  }
+
+  .badge-debe {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+    color: var(--mat-sys-error);
   }
 
   .detalle {

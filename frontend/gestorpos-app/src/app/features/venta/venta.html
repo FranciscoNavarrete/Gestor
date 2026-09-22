@@ -146,11 +146,18 @@
               @for (medio of mediosPago(); track medio.id) {
                 <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
               }
+              @if (tieneCuentaCorriente) {
+                <mat-option [value]="medioPagoACuenta">{{ medioPagoACuenta }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
+          @if (faltaClienteParaACuenta()) {
+            <p class="aviso-a-cuenta">Necesitás cargar el cliente para vender a cuenta</p>
+          }
+
           <mat-form-field appearance="outline">
-            <mat-label>Nombre (opcional)</mat-label>
+            <mat-label>Nombre{{ esACuenta() ? '' : ' (opcional)' }}</mat-label>
             <input
               matInput
               [ngModel]="nombreCliente()"
@@ -171,13 +178,13 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Teléfono (opcional)</mat-label>
+            <mat-label>Teléfono{{ esACuenta() ? '' : ' (opcional)' }}</mat-label>
             <input
               matInput
               [ngModel]="telefonoCliente()"
               (ngModelChange)="onTelefonoClienteChange($event)"
               [matAutocomplete]="autoClienteTelefono"
-              placeholder="Para el ticket por WhatsApp"
+              [placeholder]="esACuenta() ? 'Para saber a quién le fías' : 'Para el ticket por WhatsApp'"
             />
             <mat-autocomplete #autoClienteTelefono="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
               @for (cliente of sugerenciasClientes(); track cliente.id) {
@@ -228,11 +235,17 @@
           }
         }
 
-        <button mat-flat-button color="primary" class="cobrar" (click)="cobrar()" [disabled]="procesando()">
+        <button
+          mat-flat-button
+          color="primary"
+          class="cobrar"
+          (click)="cobrar()"
+          [disabled]="procesando() || faltaClienteParaACuenta()"
+        >
           @if (procesando()) {
             <mat-spinner diameter="20"></mat-spinner>
           } @else {
-            Cobrar ${{ total() }}
+            {{ esACuenta() ? 'Vender a cuenta' : 'Cobrar' }} ${{ total() }}
           }
         </button>
       </mat-card>

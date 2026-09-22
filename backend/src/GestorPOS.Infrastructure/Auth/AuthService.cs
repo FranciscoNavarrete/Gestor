@@ -40,6 +40,6 @@ public class AuthService : IAuthService
             .ToListAsync(ct);
 
         var (token, expira) = _jwtService.GenerarToken(usuario, features);
-        return new AuthResponse(token, expira, tenant.Id, tenant.Nombre, usuario.Nombre, usuario.Rol.ToString());
+        return new AuthResponse(token, expira, tenant.Id, tenant.Nombre, usuario.Nombre, usuario.Rol.ToString(), features);
     }
 }

@@ -3,15 +3,21 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ClienteDetalle as ClienteDetalleDto, ClienteVenta } from '../../../core/models/cliente.models';
+import {
+  ClienteDetalle as ClienteDetalleDto,
+  ClienteVenta,
+  MovimientoCuenta,
+} from '../../../core/models/cliente.models';
 import { ClienteService } from '../../../core/services/cliente.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
+import { RegistrarPagoDialog } from './registrar-pago-dialog/registrar-pago-dialog';
 
 @Component({
   selector: 'app-cliente-detalle',
@@ -33,6 +39,7 @@ export class ClienteDetalle implements OnInit {
   private readonly router = inject(Router);
   private readonly clienteService = inject(ClienteService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   private readonly id = this.route.snapshot.paramMap.get('id')!;
 
@@ -45,9 +52,13 @@ export class ClienteDetalle implements OnInit {
   readonly cargandoVentas = signal(true);
   readonly ventas = signal<ClienteVenta[]>([]);
 
+  readonly cargandoMovimientos = signal(true);
+  readonly movimientos = signal<MovimientoCuenta[]>([]);
+
   ngOnInit(): void {
     this.cargarCliente();
     this.cargarVentas();
+    this.cargarMovimientosCuenta();
   }
 
   private cargarCliente(): void {
@@ -72,6 +83,36 @@ export class ClienteDetalle implements OnInit {
       },
       error: () => this.cargandoVentas.set(false),
     });
+  }
+
+  private cargarMovimientosCuenta(): void {
+    this.cargandoMovimientos.set(true);
+    this.clienteService.listarMovimientosCuenta(this.id).subscribe({
+      next: (movimientos) => {
+        this.movimientos.set(movimientos);
+        this.cargandoMovimientos.set(false);
+      },
+      error: () => this.cargandoMovimientos.set(false),
+    });
+  }
+
+  abrirRegistrarPago(): void {
+    const c = this.cliente();
+    if (!c || c.saldoCuentaCorriente <= 0) return;
+
+    this.dialog
+      .open(RegistrarPagoDialog, {
+        data: { clienteId: this.id, nombreCliente: c.nombre || c.telefono, saldo: c.saldoCuentaCorriente },
+        width: '420px',
+        maxWidth: '95vw',
+      })
+      .afterClosed()
+      .subscribe((clienteActualizado: ClienteDetalleDto | undefined) => {
+        if (!clienteActualizado) return;
+        this.cliente.set(clienteActualizado);
+        this.cargarMovimientosCuenta();
+        this.snackBar.open('Pago registrado', 'Cerrar', { duration: 3000 });
+      });
   }
 
   guardar(): void {
