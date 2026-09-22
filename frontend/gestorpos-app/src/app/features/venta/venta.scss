@@ -16,6 +16,7 @@
 }
 
 .resultado-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -37,6 +38,24 @@
   &:hover {
     border-color: color-mix(in srgb, var(--color-accent) 40%, var(--border-subtle));
     box-shadow: 0 10px 20px -14px var(--glow-primary);
+  }
+
+  .badge-cantidad {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background-image: var(--gradient-brand);
+    color: var(--color-accent-on);
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px var(--mat-sys-surface, #fff);
   }
 
   .nombre {
@@ -114,6 +133,32 @@
 
   &:active {
     transform: scale(0.98);
+  }
+
+  .agregado-texto {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+
+    .icono-agregado {
+      flex-shrink: 0;
+    }
+  }
+
+  .agregado-nombre {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .agregado-detalle {
+    flex-shrink: 0;
+    margin-left: 10px;
+    opacity: 0.85;
+    font-size: 0.8rem;
+    font-weight: 500;
   }
 }
 

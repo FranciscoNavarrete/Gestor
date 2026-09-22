@@ -164,7 +164,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
 - **Venta (POS)**: sección "Más vendidos" (hasta 6, según ranking real) + búsqueda, carrito flotante
   colapsable (nunca empuja el contenido — barra fija con total, se expande a una hoja con +/− por
   ítem, medio de pago y cobro), aviso con "Deshacer" al sacar un producto, y pantalla de resultado con
-  el ticket + botón para enviarlo por WhatsApp
+  el ticket + botón para enviarlo por WhatsApp. Cada producto que ya está en el carrito muestra un
+  badge con la cantidad directo en su tarjeta, y al agregar uno la barra del carrito muestra un
+  instante qué se acaba de sumar (nombre, cantidad y subtotal de ese producto) antes de volver al
+  resumen — para saber qué se cargó sin tener que abrir el carrito
 - **Caja**: abrir/cerrar con el resumen de diferencia
 - **Reportes**: cuatro vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período), Stock (búsqueda + filtro "solo stock bajo" +

@@ -32,6 +32,14 @@ interface ItemCarrito {
   cantidad: number;
 }
 
+interface UltimoAgregado {
+  nombre: string;
+  cantidad: number;
+  subtotal: number;
+}
+
+const DURACION_ULTIMO_AGREGADO_MS = 1200;
+
 @Component({
   selector: 'app-venta',
   imports: [
@@ -59,6 +67,7 @@ export class Venta implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
 
   private debounceClienteTimer?: ReturnType<typeof setTimeout>;
+  private timerUltimoAgregado?: ReturnType<typeof setTimeout>;
 
   readonly cargando = signal(true);
   readonly cargandoCaja = signal(true);
@@ -77,6 +86,7 @@ export class Venta implements OnInit, OnDestroy {
   readonly montoRecibido = signal<number | null>(null);
   readonly procesando = signal(false);
   readonly ventaResultado = signal<VentaDto | null>(null);
+  readonly ultimoAgregado = signal<UltimoAgregado | null>(null);
 
   readonly masVendidos = computed(() => {
     const porId = new Map(this.productos().map((p) => [p.id, p]));
@@ -110,6 +120,10 @@ export class Venta implements OnInit, OnDestroy {
     return recibido == null ? null : recibido - this.total();
   });
 
+  cantidadEnCarrito(productoId: string): number {
+    return this.carrito().find((i) => i.producto.id === productoId)?.cantidad ?? 0;
+  }
+
   ngOnInit(): void {
     this.cargarProductos();
     this.reportesService.rankingProductos(TOP_MAS_VENDIDOS).subscribe((ranking) => this.rankingTop.set(ranking));
@@ -127,6 +141,7 @@ export class Venta implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     clearTimeout(this.debounceClienteTimer);
+    clearTimeout(this.timerUltimoAgregado);
   }
 
   private cargarProductos(mostrarSpinner = true): void {
@@ -144,14 +159,27 @@ export class Venta implements OnInit, OnDestroy {
     const actual = this.carrito();
     const existente = actual.find((i) => i.producto.id === producto.id);
 
+    let nuevaCantidad: number;
     if (existente) {
       if (existente.cantidad >= producto.stockActual) return;
+      nuevaCantidad = existente.cantidad + 1;
       this.carrito.set(
-        actual.map((i) => (i.producto.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i)),
+        actual.map((i) => (i.producto.id === producto.id ? { ...i, cantidad: nuevaCantidad } : i)),
       );
     } else {
+      nuevaCantidad = 1;
       this.carrito.set([...actual, { producto, cantidad: 1 }]);
     }
+
+    this.mostrarUltimoAgregado(producto.nombre, nuevaCantidad, producto.precio * nuevaCantidad);
+  }
+
+  // Confirmación breve en la barra del carrito ("+1 Coca Cola · 3 · $6300") para que el vendedor
+  // sepa qué cargó sin tener que abrir el carrito — desaparece sola y vuelve al resumen normal.
+  private mostrarUltimoAgregado(nombre: string, cantidad: number, subtotal: number): void {
+    this.ultimoAgregado.set({ nombre, cantidad, subtotal });
+    clearTimeout(this.timerUltimoAgregado);
+    this.timerUltimoAgregado = setTimeout(() => this.ultimoAgregado.set(null), DURACION_ULTIMO_AGREGADO_MS);
   }
 
   cambiarCantidad(item: ItemCarrito, delta: number): void {

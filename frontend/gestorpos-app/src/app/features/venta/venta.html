@@ -51,6 +51,9 @@
       <div class="resultados resultados-destacados">
         @for (producto of masVendidos(); track producto.id) {
           <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
+            @if (cantidadEnCarrito(producto.id); as cantidad) {
+              <span class="badge-cantidad">{{ cantidad }}</span>
+            }
             <span class="nombre">{{ producto.nombre }}</span>
             <span class="precio">${{ producto.precio }}</span>
           </button>
@@ -62,6 +65,9 @@
       <div class="resultados">
         @for (producto of productosFiltrados(); track producto.id) {
           <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
+            @if (cantidadEnCarrito(producto.id); as cantidad) {
+              <span class="badge-cantidad">{{ cantidad }}</span>
+            }
             <span class="nombre">{{ producto.nombre }}</span>
             <span class="precio">${{ producto.precio }}</span>
           </button>
@@ -78,8 +84,16 @@
 
     @if (!carritoExpandido()) {
       <button type="button" class="carrito-flotante" (click)="toggleCarrito()">
-        <span>{{ cantidadItems() }} producto{{ cantidadItems() === 1 ? '' : 's' }} · ${{ total() }}</span>
-        <mat-icon>keyboard_arrow_up</mat-icon>
+        @if (ultimoAgregado(); as ua) {
+          <span class="agregado-texto">
+            <mat-icon class="icono-agregado">check_circle</mat-icon>
+            <span class="agregado-nombre">+1 {{ ua.nombre }}</span>
+          </span>
+          <span class="agregado-detalle">{{ ua.cantidad }} · ${{ ua.subtotal }}</span>
+        } @else {
+          <span>{{ cantidadItems() }} producto{{ cantidadItems() === 1 ? '' : 's' }} · ${{ total() }}</span>
+          <mat-icon>keyboard_arrow_up</mat-icon>
+        }
       </button>
     } @else {
       <mat-card class="carrito-sheet">
