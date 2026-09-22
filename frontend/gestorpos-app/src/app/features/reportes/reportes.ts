@@ -22,10 +22,11 @@ import { MovimientoStockService } from '../../core/services/movimiento-stock.ser
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
-import { fechaAIso, isoAFecha } from '../../core/utils/fecha.util';
+import { fechaAIso, hoy, isoAFecha, restarMeses } from '../../core/utils/fecha.util';
 
 const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
+const MAX_MESES_RANGO_FECHAS = 2;
 
 type Vista = 'ventas' | 'stock' | 'movimientos' | 'clientes';
 
@@ -58,12 +59,15 @@ export class Reportes implements OnInit {
 
   readonly vista = signal<Vista>('ventas');
   readonly exportando = signal(false);
+  readonly hoy = hoy();
 
   // --- Reporte de ventas ---
   readonly desde = signal('');
   readonly hasta = signal('');
   readonly desdeFecha = computed(() => isoAFecha(this.desde()));
   readonly hastaFecha = computed(() => isoAFecha(this.hasta()));
+  readonly maxDesdeFecha = computed(() => this.hastaFecha() ?? this.hoy);
+  readonly minDesdeFecha = computed(() => restarMeses(this.maxDesdeFecha(), MAX_MESES_RANGO_FECHAS));
   readonly cargandoVentas = signal(true);
   readonly ganancias = signal<GananciasDto | null>(null);
   readonly ventas = signal<VentaResumenDto[]>([]);
@@ -85,6 +89,8 @@ export class Reportes implements OnInit {
   readonly hastaMovimientos = signal('');
   readonly desdeMovimientosFecha = computed(() => isoAFecha(this.desdeMovimientos()));
   readonly hastaMovimientosFecha = computed(() => isoAFecha(this.hastaMovimientos()));
+  readonly maxDesdeMovimientosFecha = computed(() => this.hastaMovimientosFecha() ?? this.hoy);
+  readonly minDesdeMovimientosFecha = computed(() => restarMeses(this.maxDesdeMovimientosFecha(), MAX_MESES_RANGO_FECHAS));
   readonly cargandoMovimientos = signal(true);
   readonly movimientos = signal<MovimientoStock[]>([]);
   readonly paginaMovimientos = signal(1);
@@ -96,6 +102,8 @@ export class Reportes implements OnInit {
   readonly hastaClientes = signal('');
   readonly desdeClientesFecha = computed(() => isoAFecha(this.desdeClientes()));
   readonly hastaClientesFecha = computed(() => isoAFecha(this.hastaClientes()));
+  readonly maxDesdeClientesFecha = computed(() => this.hastaClientesFecha() ?? this.hoy);
+  readonly minDesdeClientesFecha = computed(() => restarMeses(this.maxDesdeClientesFecha(), MAX_MESES_RANGO_FECHAS));
   readonly cargandoClientes = signal(true);
   readonly rankingClientes = signal<RankingClienteDto[]>([]);
 
@@ -120,6 +128,7 @@ export class Reportes implements OnInit {
 
   onHastaChange(fecha: Date | null): void {
     this.hasta.set(fechaAIso(fecha));
+    this.desde.set(this.ajustarDesde(this.desde(), this.hasta()));
     this.cargarVentas();
   }
 
@@ -227,6 +236,7 @@ export class Reportes implements OnInit {
 
   onHastaMovimientosChange(fecha: Date | null): void {
     this.hastaMovimientos.set(fechaAIso(fecha));
+    this.desdeMovimientos.set(this.ajustarDesde(this.desdeMovimientos(), this.hastaMovimientos()));
     this.onFiltroMovimientosChange();
   }
 
@@ -269,6 +279,7 @@ export class Reportes implements OnInit {
 
   onHastaClientesChange(fecha: Date | null): void {
     this.hastaClientes.set(fechaAIso(fecha));
+    this.desdeClientes.set(this.ajustarDesde(this.desdeClientes(), this.hastaClientes()));
     this.cargarClientes();
   }
 
@@ -289,6 +300,20 @@ export class Reportes implements OnInit {
       this.reportesService.exportarStockPdf(this.busquedaStock(), this.soloBajoStock()),
       'reporte-stock.pdf',
     );
+  }
+
+  // Si "hasta" cambia y deja a "desde" fuera del rango permitido (después de "hasta", o a más de
+  // MAX_MESES_RANGO_FECHAS de distancia), lo corrige para que el rango siga siendo válido.
+  private ajustarDesde(desdeIso: string, hastaIso: string): string {
+    if (!desdeIso) return desdeIso;
+
+    const desdeFecha = isoAFecha(desdeIso)!;
+    const hastaFecha = isoAFecha(hastaIso) ?? this.hoy;
+    const minPermitido = restarMeses(hastaFecha, MAX_MESES_RANGO_FECHAS);
+
+    if (desdeFecha > hastaFecha) return fechaAIso(hastaFecha);
+    if (desdeFecha < minPermitido) return fechaAIso(minPermitido);
+    return desdeIso;
   }
 
   private descargarPdf(descarga: Observable<Blob>, nombreArchivo: string): void {

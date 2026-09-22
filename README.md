@@ -171,7 +171,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   valorizado por producto, paginado), Movimientos (historial de ajustes manuales y ventas, filtrable
   por producto y rango de fechas, con el motivo y quién lo hizo) y Clientes (ranking de mejores
   clientes por total gastado en un rango de fechas, con cantidad de compras) — Ventas y Stock
-  exportables a PDF
+  exportables a PDF. Los tres filtros de rango de fechas (Ventas, Movimientos, Clientes) comparten la
+  misma regla: "Hasta" no puede ser posterior a hoy, "Desde" no puede ser posterior a "Hasta", y el
+  rango entre ambos no puede superar los 2 meses — se aplica directamente en el calendario (los días
+  inválidos aparecen apagados, no seleccionables) en vez de validar después con un error
 - **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
   Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto, logo —
   este último aparece en el encabezado de los reportes PDF — y un toggle de notificaciones push de

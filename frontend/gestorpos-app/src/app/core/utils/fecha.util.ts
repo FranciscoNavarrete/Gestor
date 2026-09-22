@@ -15,3 +15,15 @@ export function fechaAIso(fecha: Date | null): string {
   const d = String(fecha.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+/** Hoy a medianoche local, para comparar contra los Date que devuelve el datepicker. */
+export function hoy(): Date {
+  const ahora = new Date();
+  return new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+}
+
+export function restarMeses(fecha: Date, meses: number): Date {
+  const resultado = new Date(fecha);
+  resultado.setMonth(resultado.getMonth() - meses);
+  return resultado;
+}

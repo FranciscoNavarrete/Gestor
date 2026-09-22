@@ -21,13 +21,27 @@
   <div class="filtro-fechas">
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
-      <input matInput [matDatepicker]="pickerDesde" [ngModel]="desdeFecha()" (ngModelChange)="onDesdeChange($event)" />
+      <input
+        matInput
+        [matDatepicker]="pickerDesde"
+        [ngModel]="desdeFecha()"
+        (ngModelChange)="onDesdeChange($event)"
+        [min]="minDesdeFecha()"
+        [max]="maxDesdeFecha()"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
       <mat-datepicker #pickerDesde></mat-datepicker>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Hasta</mat-label>
-      <input matInput [matDatepicker]="pickerHasta" [ngModel]="hastaFecha()" (ngModelChange)="onHastaChange($event)" />
+      <input
+        matInput
+        [matDatepicker]="pickerHasta"
+        [ngModel]="hastaFecha()"
+        (ngModelChange)="onHastaChange($event)"
+        [min]="desdeFecha()"
+        [max]="hoy"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
       <mat-datepicker #pickerHasta></mat-datepicker>
     </mat-form-field>
@@ -168,13 +182,27 @@
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
-      <input matInput [matDatepicker]="pickerDesdeMov" [ngModel]="desdeMovimientosFecha()" (ngModelChange)="onDesdeMovimientosChange($event)" />
+      <input
+        matInput
+        [matDatepicker]="pickerDesdeMov"
+        [ngModel]="desdeMovimientosFecha()"
+        (ngModelChange)="onDesdeMovimientosChange($event)"
+        [min]="minDesdeMovimientosFecha()"
+        [max]="maxDesdeMovimientosFecha()"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="pickerDesdeMov"></mat-datepicker-toggle>
       <mat-datepicker #pickerDesdeMov></mat-datepicker>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Hasta</mat-label>
-      <input matInput [matDatepicker]="pickerHastaMov" [ngModel]="hastaMovimientosFecha()" (ngModelChange)="onHastaMovimientosChange($event)" />
+      <input
+        matInput
+        [matDatepicker]="pickerHastaMov"
+        [ngModel]="hastaMovimientosFecha()"
+        (ngModelChange)="onHastaMovimientosChange($event)"
+        [min]="desdeMovimientosFecha()"
+        [max]="hoy"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="pickerHastaMov"></mat-datepicker-toggle>
       <mat-datepicker #pickerHastaMov></mat-datepicker>
     </mat-form-field>
@@ -242,13 +270,27 @@
   <div class="filtro-fechas">
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
-      <input matInput [matDatepicker]="pickerDesdeCli" [ngModel]="desdeClientesFecha()" (ngModelChange)="onDesdeClientesChange($event)" />
+      <input
+        matInput
+        [matDatepicker]="pickerDesdeCli"
+        [ngModel]="desdeClientesFecha()"
+        (ngModelChange)="onDesdeClientesChange($event)"
+        [min]="minDesdeClientesFecha()"
+        [max]="maxDesdeClientesFecha()"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="pickerDesdeCli"></mat-datepicker-toggle>
       <mat-datepicker #pickerDesdeCli></mat-datepicker>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Hasta</mat-label>
-      <input matInput [matDatepicker]="pickerHastaCli" [ngModel]="hastaClientesFecha()" (ngModelChange)="onHastaClientesChange($event)" />
+      <input
+        matInput
+        [matDatepicker]="pickerHastaCli"
+        [ngModel]="hastaClientesFecha()"
+        (ngModelChange)="onHastaClientesChange($event)"
+        [min]="desdeClientesFecha()"
+        [max]="hoy"
+      />
       <mat-datepicker-toggle matIconSuffix [for]="pickerHastaCli"></mat-datepicker-toggle>
       <mat-datepicker #pickerHastaCli></mat-datepicker>
     </mat-form-field>
