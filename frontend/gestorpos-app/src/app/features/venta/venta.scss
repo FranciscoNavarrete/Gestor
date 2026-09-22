@@ -67,6 +67,22 @@
     color: var(--color-accent);
     font-weight: 700;
   }
+
+  .stock {
+    font-size: 0.68rem;
+    color: var(--mat-sys-on-surface-variant, #8892a6);
+    margin-top: 1px;
+
+    &.stock-bajo {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+      color: var(--mat-sys-error);
+      font-weight: 600;
+      margin-top: 3px;
+    }
+  }
 }
 
 .vacio {

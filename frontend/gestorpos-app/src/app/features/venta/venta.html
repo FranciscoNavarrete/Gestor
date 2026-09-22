@@ -56,6 +56,9 @@
             }
             <span class="nombre">{{ producto.nombre }}</span>
             <span class="precio">${{ producto.precio }}</span>
+            <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
+              {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
+            </span>
           </button>
         }
       </div>
@@ -70,6 +73,9 @@
             }
             <span class="nombre">{{ producto.nombre }}</span>
             <span class="precio">${{ producto.precio }}</span>
+            <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
+              {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
+            </span>
           </button>
         }
         @if (productosFiltrados().length === 0) {

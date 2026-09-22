@@ -167,7 +167,10 @@ que le pediste a un cliente, sin que el resto de los negocios lo vean.
   el ticket + botón para enviarlo por WhatsApp. Cada producto que ya está en el carrito muestra un
   badge con la cantidad directo en su tarjeta, y al agregar uno la barra del carrito muestra un
   instante qué se acaba de sumar (nombre, cantidad y subtotal de ese producto) antes de volver al
-  resumen — para saber qué se cargó sin tener que abrir el carrito
+  resumen — para saber qué se cargó sin tener que abrir el carrito. Cada tarjeta de producto también
+  muestra su stock actual ("Stock: N", o "Quedan N" resaltado en rojo si está en el mínimo) — para
+  consultar stock sin salir de la pantalla y sin perder la venta en curso (el carrito vive solo en
+  memoria del componente, así que navegar a otra pantalla lo vacía)
 - **Caja**: abrir/cerrar con el resumen de diferencia
 - **Reportes**: cuatro vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período), Stock (búsqueda + filtro "solo stock bajo" +
