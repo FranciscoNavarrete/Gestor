@@ -166,6 +166,7 @@
       <li><a href="#uc14">Dar de alta un negocio nuevo (administrador)</a></li>
       <li><a href="#uc15">Vender a cuenta</a></li>
       <li><a href="#uc16">Registrar un pago de cuenta corriente</a></li>
+      <li><a href="#uc17">Activar una funcionalidad para un negocio (administrador)</a></li>
     </ol>
   </nav>
 
@@ -513,6 +514,25 @@
       </div>
     </div>
     <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Deuda del cliente actualizada (total o parcialmente saldada) y movimiento registrado en su historial de cuenta.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc17">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-17</div><div class="uc-title">Activar una funcionalidad para un negocio</div></div>
+      <div class="uc-actor">Administrador de plataforma</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>Acceso al panel de administración interno con la clave correspondiente.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El administrador entra a la pantalla interna de alta de negocios y toca un negocio de la
+          lista de "Negocios existentes".</li>
+        <li>Se despliega la lista de funcionalidades disponibles para activar, cada una con su
+          interruptor.</li>
+        <li>Activa (o desactiva) la que corresponda con un toque.</li>
+        <li>El sistema guarda el cambio al instante, sin pasos adicionales.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Ese negocio ve (o deja de ver) la funcionalidad la próxima vez que inicie sesión — el resto de los negocios no se entera del cambio.</p></div></div>
   </div>
 
   <footer>GestorPOS — Casos de uso</footer>

@@ -49,3 +49,92 @@
   align-self: center;
   opacity: 0.7;
 }
+
+.lista-negocios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.negocio-item {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  &.expandido {
+    border-color: var(--color-accent);
+  }
+}
+
+.negocio-fila {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.negocio-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.negocio-nombre {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.negocio-detalle {
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+.chevron {
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.features-panel {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.centrado-features {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.feature-fila {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feature-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.feature-nombre {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.feature-descripcion {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  margin-top: 1px;
+}

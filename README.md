@@ -213,9 +213,11 @@ los negocios (sin el feature), esto no existe en ningún lado de la UI ni de la 
   primera vez que compra, el nombre que cargues ahí queda guardado en el cliente nuevo
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
-los negocios de tus clientes con el usuario y contraseña que vos definís.
-
-No incluye todavía: gestión de features por tenant en UI (se opera por API/Swagger directamente).
+los negocios de tus clientes con el usuario y contraseña que vos definís. Ahí mismo, cada negocio de la
+lista "Negocios existentes" se puede expandir para ver y activar/desactivar sus funcionalidades con un
+switch — sin tocar Swagger ni la API a mano. El catálogo de funcionalidades disponibles es una constante
+en el frontend (`CATALOGO_FEATURES` en `core/models/admin.models.ts`) — se suma una entrada ahí cada vez
+que se construye una funcionalidad nueva gateada por feature flag (hoy solo "Cuenta corriente").
 
 ## Roadmap
 

@@ -78,6 +78,7 @@
     <mat-card class="card">
       <mat-card-header>
         <mat-card-title>Negocios existentes</mat-card-title>
+        <mat-card-subtitle>Tocá un negocio para ver y activar sus funcionalidades</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (cargandoNegocios()) {
@@ -85,14 +86,43 @@
         } @else if (negocios().length === 0) {
           <p class="vacio">Todavía no hay negocios cargados.</p>
         } @else {
-          <mat-list>
+          <div class="lista-negocios">
             @for (negocio of negocios(); track negocio.id) {
-              <mat-list-item>
-                <span matListItemTitle>{{ negocio.nombre }}</span>
-                <span matListItemLine>{{ negocio.activo ? 'Activo' : 'Inactivo' }}</span>
-              </mat-list-item>
+              <div class="negocio-item" [class.expandido]="negocioExpandidoId() === negocio.id">
+                <button type="button" class="negocio-fila" (click)="toggleExpandido(negocio)">
+                  <div class="negocio-info">
+                    <span class="negocio-nombre">{{ negocio.nombre }}</span>
+                    <span class="negocio-detalle">{{ negocio.activo ? 'Activo' : 'Inactivo' }}</span>
+                  </div>
+                  <mat-icon class="chevron">{{ negocioExpandidoId() === negocio.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+
+                @if (negocioExpandidoId() === negocio.id) {
+                  <div class="features-panel">
+                    @if (cargandoFeatures()) {
+                      <div class="centrado-features">
+                        <mat-spinner diameter="22"></mat-spinner>
+                      </div>
+                    } @else {
+                      @for (feature of catalogoFeatures; track feature.clave) {
+                        <div class="feature-fila">
+                          <div class="feature-info">
+                            <span class="feature-nombre">{{ feature.nombre }}</span>
+                            <span class="feature-descripcion">{{ feature.descripcion }}</span>
+                          </div>
+                          <mat-slide-toggle
+                            [checked]="featuresActivos().has(feature.clave)"
+                            [disabled]="guardandoFeature() === feature.clave"
+                            (change)="toggleFeature(negocio, feature.clave)"
+                          ></mat-slide-toggle>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
             }
-          </mat-list>
+          </div>
         }
       </mat-card-content>
     </mat-card>

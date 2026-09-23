@@ -6,9 +6,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TenantResumen } from '../../../core/models/admin.models';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
@@ -22,8 +22,8 @@ import { extraerMensajeError } from '../../../core/utils/error.util';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatListModule,
     MatProgressSpinnerModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './crear-negocio.html',
   styleUrl: './crear-negocio.scss',
@@ -52,6 +52,12 @@ export class CrearNegocio implements OnInit {
   readonly negocios = signal<TenantResumen[]>([]);
   readonly cargandoNegocios = signal(false);
 
+  readonly catalogoFeatures = CATALOGO_FEATURES;
+  readonly negocioExpandidoId = signal<string | null>(null);
+  readonly cargandoFeatures = signal(false);
+  readonly featuresActivos = signal<Set<string>>(new Set());
+  readonly guardandoFeature = signal<string | null>(null);
+
   ngOnInit(): void {
     if (this.adminAuth.tieneClave()) this.cargarNegocios();
   }
@@ -74,6 +80,48 @@ export class CrearNegocio implements OnInit {
         this.cargandoNegocios.set(false);
         this.manejarPosibleClaveInvalida(err);
       },
+    });
+  }
+
+  toggleExpandido(negocio: TenantResumen): void {
+    if (this.negocioExpandidoId() === negocio.id) {
+      this.negocioExpandidoId.set(null);
+      return;
+    }
+    this.negocioExpandidoId.set(negocio.id);
+    this.cargarFeatures(negocio.id);
+  }
+
+  private cargarFeatures(tenantId: string): void {
+    this.cargandoFeatures.set(true);
+    this.adminService.listarFeatures(tenantId).subscribe({
+      next: (features) => {
+        this.featuresActivos.set(new Set(features.filter((f) => f.habilitado).map((f) => f.clave)));
+        this.cargandoFeatures.set(false);
+      },
+      error: () => this.cargandoFeatures.set(false),
+    });
+  }
+
+  toggleFeature(negocio: TenantResumen, clave: string): void {
+    if (this.guardandoFeature()) return;
+
+    const activo = this.featuresActivos().has(clave);
+    this.guardandoFeature.set(clave);
+
+    const accion$ = activo
+      ? this.adminService.desactivarFeature(negocio.id, clave)
+      : this.adminService.activarFeature(negocio.id, clave);
+
+    accion$.subscribe({
+      next: () => {
+        this.guardandoFeature.set(null);
+        const nuevos = new Set(this.featuresActivos());
+        if (activo) nuevos.delete(clave);
+        else nuevos.add(clave);
+        this.featuresActivos.set(nuevos);
+      },
+      error: () => this.guardandoFeature.set(null),
     });
   }
 

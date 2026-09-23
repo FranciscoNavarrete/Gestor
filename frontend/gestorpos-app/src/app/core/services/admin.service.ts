@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CrearNegocioRequest, TenantResumen } from '../models/admin.models';
+import { CrearNegocioRequest, TenantFeature, TenantResumen } from '../models/admin.models';
 import { AdminAuthService } from './admin-auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -18,6 +18,26 @@ export class AdminService {
 
   listarNegocios(): Observable<TenantResumen[]> {
     return this.http.get<TenantResumen[]>(`${environment.apiUrl}/admin/tenants`, {
+      headers: this.headers(),
+    });
+  }
+
+  listarFeatures(tenantId: string): Observable<TenantFeature[]> {
+    return this.http.get<TenantFeature[]>(`${environment.apiUrl}/admin/tenants/${tenantId}/features`, {
+      headers: this.headers(),
+    });
+  }
+
+  activarFeature(tenantId: string, clave: string): Observable<TenantFeature> {
+    return this.http.put<TenantFeature>(
+      `${environment.apiUrl}/admin/tenants/${tenantId}/features/${clave}`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  desactivarFeature(tenantId: string, clave: string): Observable<TenantFeature> {
+    return this.http.delete<TenantFeature>(`${environment.apiUrl}/admin/tenants/${tenantId}/features/${clave}`, {
       headers: this.headers(),
     });
   }
