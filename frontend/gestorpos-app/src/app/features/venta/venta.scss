@@ -36,8 +36,13 @@
     border-radius: var(--radius-md);
     padding: 16px;
     max-height: calc(100vh - 40px);
+    overflow: hidden;
 
+    // Clave para que la lista de items sea la única parte que scrollea: sin flex:1 el
+    // contenedor no se "encoge" dentro del max-height del panel y todo el carrito termina
+    // empujando la página entera hacia abajo en vez de scrollear internamente.
     .carrito-items {
+      flex: 1;
       overflow-y: auto;
     }
   }
@@ -419,6 +424,12 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+
+  // En mobile 150px evita que el chip le coma lugar al buscador. En desktop hay espacio de
+  // sobra, así que se agranda para no cortar nombres de dos palabras con "...".
+  @media (min-width: 900px) {
+    max-width: 260px;
+  }
 
   mat-icon {
     font-size: 18px;
