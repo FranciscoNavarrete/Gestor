@@ -2,6 +2,7 @@ import { FEATURE_COMPRAS } from './compras-feature';
 import { FEATURE_CUENTA_CORRIENTE } from './cuenta-corriente';
 import { FEATURE_FACTURAS_PROVEEDOR } from './facturas-proveedor-feature';
 import { FEATURE_MENU_LATERAL } from './menu-lateral';
+import { FEATURE_TAREAS } from './tareas-feature';
 
 export interface CrearNegocioRequest {
   nombreNegocio: string;
@@ -52,5 +53,10 @@ export const CATALOGO_FEATURES: FeatureCatalogoItem[] = [
     clave: FEATURE_FACTURAS_PROVEEDOR,
     nombre: 'Facturas a proveedores',
     descripcion: 'Cargar facturas recibidas y llevar el control de qué le debés a cada proveedor',
+  },
+  {
+    clave: FEATURE_TAREAS,
+    nombre: 'Tareas',
+    descripcion: 'Agendar tareas con fecha y hora, con recordatorio por notificación push',
   },
 ];

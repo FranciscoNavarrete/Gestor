@@ -1,0 +1,130 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.acciones-tareas {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.vacio {
+  text-align: center;
+  opacity: 0.6;
+  margin-top: 32px;
+}
+
+.titulo-grupo {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  margin: 0 2px 8px;
+  text-transform: capitalize;
+
+  &.vencida {
+    color: var(--mat-sys-error, #b3261e);
+    opacity: 1;
+  }
+}
+
+.lista-tareas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tarea-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+
+  &.vencida {
+    border-color: color-mix(in srgb, var(--mat-sys-error) 35%, var(--border-subtle, transparent));
+    background: color-mix(in srgb, var(--mat-sys-error) 6%, transparent);
+  }
+
+  &.completada {
+    opacity: 0.55;
+
+    .tarea-titulo {
+      text-decoration: line-through;
+    }
+  }
+
+  .tarea-info {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tarea-titulo {
+    font-weight: 600;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tarea-detalle {
+    font-size: 0.76rem;
+    opacity: 0.65;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &.vencida .tarea-detalle {
+    color: var(--mat-sys-error, #b3261e);
+    opacity: 1;
+  }
+
+  .icono-aviso {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+    opacity: 0.7;
+  }
+}
+
+.checkbox-tarea {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--mat-sys-outline, #999);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.marcado {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: var(--color-accent-on, #fff);
+    }
+  }
+}

@@ -1,0 +1,35 @@
+.full {
+  width: 100%;
+}
+
+.fila-doble {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.aviso-resumen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}

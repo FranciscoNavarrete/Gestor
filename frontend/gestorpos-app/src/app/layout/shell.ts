@@ -4,6 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FEATURE_MENU_LATERAL } from '../core/models/menu-lateral';
+import { FEATURE_TAREAS } from '../core/models/tareas-feature';
 import { AuthService } from '../core/services/auth.service';
 
 @Component({
@@ -19,6 +20,7 @@ export class Shell {
   readonly nombreNegocio = this.authService.nombreNegocio;
   readonly nombreUsuario = this.authService.nombreUsuario;
   readonly tieneMenuLateral = this.authService.tieneFeature(FEATURE_MENU_LATERAL);
+  readonly tieneTareas = this.authService.tieneFeature(FEATURE_TAREAS);
 
   readonly navItems = [
     { path: '/dashboard', icon: 'dashboard', label: 'Resumen' },

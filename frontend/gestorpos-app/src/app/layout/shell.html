@@ -15,6 +15,12 @@
       <mat-icon>people</mat-icon>
       <span>Clientes</span>
     </a>
+    @if (tieneTareas) {
+      <a class="side-nav-item" routerLink="/tareas" routerLinkActive="active">
+        <mat-icon>checklist</mat-icon>
+        <span>Tareas</span>
+      </a>
+    }
     <a class="side-nav-item" routerLink="/configuracion" routerLinkActive="active">
       <mat-icon>settings</mat-icon>
       <span>Configuración</span>
@@ -37,6 +43,11 @@
   <button mat-icon-button routerLink="/clientes" aria-label="Clientes">
     <mat-icon>people</mat-icon>
   </button>
+  @if (tieneTareas) {
+    <button mat-icon-button routerLink="/tareas" aria-label="Tareas">
+      <mat-icon>checklist</mat-icon>
+    </button>
+  }
   <button mat-icon-button routerLink="/configuracion" aria-label="Configuración">
     <mat-icon>settings</mat-icon>
   </button>

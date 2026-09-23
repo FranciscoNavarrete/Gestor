@@ -1,0 +1,90 @@
+<div class="acciones-tareas">
+  <button mat-flat-button color="primary" (click)="nuevaTarea()">
+    <mat-icon>add</mat-icon>
+    Nueva tarea
+  </button>
+</div>
+
+@if (cargando()) {
+  <div class="centrado">
+    <mat-spinner></mat-spinner>
+  </div>
+} @else if (vacio()) {
+  <p class="vacio">No tenés tareas cargadas todavía.</p>
+} @else {
+  @if (tareasVencidas().length > 0) {
+    <p class="titulo-grupo vencida">Vencidas</p>
+    <div class="lista-tareas">
+      @for (tarea of tareasVencidas(); track tarea.id) {
+        <mat-card class="tarea-item vencida">
+          <button
+            type="button"
+            class="checkbox-tarea"
+            (click)="toggleCompletada(tarea)"
+            aria-label="Marcar como hecha"
+          ></button>
+          <div class="tarea-info" (click)="editarTarea(tarea)">
+            <span class="tarea-titulo">{{ tarea.titulo }}</span>
+            <span class="tarea-detalle">Venció {{ tarea.fechaHora | date: 'dd/MM HH:mm' }}</span>
+          </div>
+          <button mat-icon-button (click)="eliminarTarea(tarea)" aria-label="Eliminar tarea">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card>
+      }
+    </div>
+  }
+
+  @for (grupo of gruposProximas(); track grupo.etiqueta) {
+    <p class="titulo-grupo">{{ grupo.etiqueta }}</p>
+    <div class="lista-tareas">
+      @for (tarea of grupo.tareas; track tarea.id) {
+        <mat-card class="tarea-item">
+          <button
+            type="button"
+            class="checkbox-tarea"
+            (click)="toggleCompletada(tarea)"
+            aria-label="Marcar como hecha"
+          ></button>
+          <div class="tarea-info" (click)="editarTarea(tarea)">
+            <span class="tarea-titulo">{{ tarea.titulo }}</span>
+            <span class="tarea-detalle">
+              {{ tarea.fechaHora | date: 'HH:mm' }}
+              @if (tarea.minutosAntesAviso != null) {
+                <mat-icon class="icono-aviso">notifications</mat-icon>
+              }
+            </span>
+          </div>
+          <button mat-icon-button (click)="eliminarTarea(tarea)" aria-label="Eliminar tarea">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card>
+      }
+    </div>
+  }
+
+  @if (tareasCompletadas().length > 0) {
+    <p class="titulo-grupo">Completadas</p>
+    <div class="lista-tareas">
+      @for (tarea of tareasCompletadas(); track tarea.id) {
+        <mat-card class="tarea-item completada">
+          <button
+            type="button"
+            class="checkbox-tarea marcado"
+            (click)="toggleCompletada(tarea)"
+            aria-label="Marcar como pendiente"
+          >
+            <mat-icon>check</mat-icon>
+          </button>
+          <div class="tarea-info" (click)="editarTarea(tarea)">
+            <span class="tarea-titulo">{{ tarea.titulo }}</span>
+            <span class="tarea-detalle">{{ tarea.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <button mat-icon-button (click)="eliminarTarea(tarea)" aria-label="Eliminar tarea">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card>
+      }
+    </div>
+  }
+}

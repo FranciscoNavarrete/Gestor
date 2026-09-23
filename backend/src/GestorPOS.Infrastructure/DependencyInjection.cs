@@ -10,6 +10,7 @@ using GestorPOS.Application.FacturasProveedor;
 using GestorPOS.Application.MovimientosStock;
 using GestorPOS.Application.Notificaciones;
 using GestorPOS.Application.Reportes;
+using GestorPOS.Application.Tareas;
 using GestorPOS.Application.Ventas;
 using GestorPOS.Infrastructure.Admin;
 using GestorPOS.Infrastructure.Auth;
@@ -24,6 +25,7 @@ using GestorPOS.Infrastructure.Notificaciones;
 using GestorPOS.Infrastructure.Persistence;
 using GestorPOS.Infrastructure.Reportes;
 using GestorPOS.Infrastructure.Services;
+using GestorPOS.Infrastructure.Tareas;
 using GestorPOS.Infrastructure.Ventas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -59,6 +61,8 @@ public static class DependencyInjection
         services.AddScoped<IReporteService, ReporteService>();
         services.AddScoped<IReportePdfService, ReportePdfService>();
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<ITareaService, TareaService>();
+        services.AddHostedService<TareaRecordatorioBackgroundService>();
 
         return services;
     }

@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<CompraItem> CompraItems => Set<CompraItem>();
     public DbSet<FacturaProveedor> FacturasProveedor => Set<FacturaProveedor>();
     public DbSet<PagoFacturaProveedor> PagosFacturaProveedor => Set<PagoFacturaProveedor>();
+    public DbSet<Tarea> Tareas => Set<Tarea>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

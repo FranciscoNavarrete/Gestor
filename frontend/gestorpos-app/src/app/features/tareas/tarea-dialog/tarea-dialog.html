@@ -1,0 +1,60 @@
+<h2 mat-dialog-title>{{ esEdicion ? 'Editar tarea' : 'Nueva tarea' }}</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Título</mat-label>
+    <input matInput [ngModel]="titulo()" (ngModelChange)="titulo.set($event)" cdkFocusInitial />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Notas (opcional)</mat-label>
+    <textarea matInput rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
+  </mat-form-field>
+
+  <div class="fila-doble">
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha</mat-label>
+      <input matInput [matDatepicker]="picker" [ngModel]="fecha()" (ngModelChange)="fecha.set($event)" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hora</mat-label>
+      <input matInput type="time" [ngModel]="hora()" (ngModelChange)="hora.set($event)" />
+    </mat-form-field>
+  </div>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Avisarme por notificación</mat-label>
+    <mat-select [ngModel]="minutosAntesAviso()" (ngModelChange)="minutosAntesAviso.set($event)">
+      <mat-option [value]="null">No avisar</mat-option>
+      <mat-option [value]="15">15 minutos antes</mat-option>
+      <mat-option [value]="30">30 minutos antes</mat-option>
+      <mat-option [value]="60">1 hora antes</mat-option>
+      <mat-option [value]="1440">1 día antes</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  @if (resumenAviso(); as resumen) {
+    <div class="aviso-resumen">
+      <mat-icon>notifications</mat-icon>
+      <span>Te va a llegar una notificación el {{ resumen }}</span>
+    </div>
+  }
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()" [disabled]="!esValido() || guardando()">
+    @if (guardando()) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      Guardar tarea
+    }
+  </button>
+</mat-dialog-actions>
