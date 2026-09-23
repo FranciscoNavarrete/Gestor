@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -44,6 +45,7 @@ const DURACION_ULTIMO_AGREGADO_MS = 1200;
   selector: 'app-venta',
   imports: [
     FormsModule,
+    NgTemplateOutlet,
     RouterLink,
     MatButtonModule,
     MatCardModule,

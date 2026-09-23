@@ -2,6 +2,78 @@
   width: 100%;
 }
 
+// --- Layout: en mobile es una sola columna con el carrito flotante/colapsable
+// (comportamiento sin cambios). A partir de 900px hay lugar de sobra, así que el
+// carrito pasa a ser un panel fijo siempre visible al costado en vez de superponerse.
+.venta-layout {
+  @media (min-width: 900px) {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+}
+
+.venta-columna-productos {
+  @media (min-width: 900px) {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.venta-carrito-desktop {
+  display: none;
+
+  @media (min-width: 900px) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    background: var(--mat-sys-surface, #fff);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    max-height: calc(100vh - 40px);
+
+    .carrito-items {
+      overflow-y: auto;
+    }
+  }
+}
+
+.carrito-desktop-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 32px 12px;
+  color: var(--mat-sys-on-surface-variant, #8892a6);
+
+  mat-icon {
+    font-size: 32px;
+    height: 32px;
+    width: 32px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+@media (min-width: 900px) {
+  // El carrito flotante/colapsable de mobile queda reemplazado por el panel fijo de arriba.
+  .espaciador-carrito,
+  .carrito-flotante,
+  .carrito-sheet {
+    display: none !important;
+  }
+}
+
 .centrado {
   display: flex;
   justify-content: center;

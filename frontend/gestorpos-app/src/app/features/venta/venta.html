@@ -30,198 +30,221 @@
     <button mat-flat-button color="primary" routerLink="/caja">Ir a Caja</button>
   </mat-card>
 } @else {
-  <div class="buscador-fila">
-    <mat-form-field appearance="outline" class="full">
-      <mat-label>Buscar producto</mat-label>
-      <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
-
-    @if (hayCliente()) {
-      <button type="button" class="chip-cliente" (click)="abrirClientePicker()">
-        <mat-icon>person</mat-icon>
-        <span class="chip-cliente-nombre">{{ nombreCliente() || telefonoCliente() }}</span>
-        <span
-          class="chip-cliente-quitar"
-          role="button"
-          tabindex="0"
-          aria-label="Quitar cliente"
-          (click)="quitarCliente(); $event.stopPropagation()"
-        >
-          <mat-icon>close</mat-icon>
-        </span>
-      </button>
-    } @else {
-      <button type="button" class="chip-cliente chip-cliente-vacio" (click)="abrirClientePicker()">
-        <mat-icon>add</mat-icon>
-        Cliente
-      </button>
-    }
-  </div>
-
-  @if (cargando()) {
-    <div class="centrado">
-      <mat-spinner></mat-spinner>
-    </div>
-  } @else {
-    @if (!busqueda() && masVendidos().length > 0) {
-      <div class="seccion-titulo">
-        <mat-icon>local_fire_department</mat-icon>
-        Más vendidos
-      </div>
-      <div class="resultados resultados-destacados">
-        @for (producto of masVendidos(); track producto.id) {
-          <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
-            @if (cantidadEnCarrito(producto.id); as cantidad) {
-              <span class="badge-cantidad">{{ cantidad }}</span>
-            }
-            <span class="nombre">{{ producto.nombre }}</span>
-            <span class="precio">${{ producto.precio }}</span>
-            <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
-              {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
-            </span>
-          </button>
-        }
-      </div>
-    }
-
-    @if (busqueda()) {
-      <div class="resultados">
-        @for (producto of productosFiltrados(); track producto.id) {
-          <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
-            @if (cantidadEnCarrito(producto.id); as cantidad) {
-              <span class="badge-cantidad">{{ cantidad }}</span>
-            }
-            <span class="nombre">{{ producto.nombre }}</span>
-            <span class="precio">${{ producto.precio }}</span>
-            <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
-              {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
-            </span>
-          </button>
-        }
-        @if (productosFiltrados().length === 0) {
-          <p class="vacio">No se encontraron productos.</p>
-        }
-      </div>
-    }
-  }
-
-  @if (carrito().length > 0) {
-    <div class="espaciador-carrito" [class.espaciador-expandido]="carritoExpandido()"></div>
-
-    @if (!carritoExpandido()) {
-      <button type="button" class="carrito-flotante" (click)="toggleCarrito()">
-        @if (ultimoAgregado(); as ua) {
-          <span class="agregado-texto">
-            <mat-icon class="icono-agregado">check_circle</mat-icon>
-            <span class="agregado-nombre">+1 {{ ua.nombre }}</span>
-          </span>
-          <span class="agregado-detalle">{{ ua.cantidad }} · ${{ ua.subtotal }}</span>
-        } @else {
-          <span>{{ cantidadItems() }} producto{{ cantidadItems() === 1 ? '' : 's' }} · ${{ total() }}</span>
-          <mat-icon>keyboard_arrow_up</mat-icon>
-        }
-      </button>
-    } @else {
-      <mat-card class="carrito-sheet">
-        <div class="carrito-sheet-header">
-          <span>Carrito · {{ cantidadItems() }}</span>
-          <button mat-icon-button (click)="toggleCarrito()" aria-label="Minimizar carrito">
-            <mat-icon>keyboard_arrow_down</mat-icon>
-          </button>
-        </div>
-
-        <div class="carrito-items">
-          @for (item of carrito(); track item.producto.id) {
-            <div class="item-carrito">
-              <div class="item-nombre">{{ item.producto.nombre }}</div>
-              <div class="item-controles">
-                <button
-                  mat-icon-button
-                  class="boton-cantidad"
-                  [class.boton-quitar]="item.cantidad === 1"
-                  (click)="cambiarCantidad(item, -1)"
-                  [attr.aria-label]="item.cantidad === 1 ? 'Quitar del carrito' : 'Restar'"
-                >
-                  <mat-icon>{{ item.cantidad === 1 ? 'delete_outline' : 'remove' }}</mat-icon>
-                </button>
-                <span class="cantidad">{{ item.cantidad }}</span>
-                <button mat-icon-button class="boton-cantidad boton-sumar" (click)="cambiarCantidad(item, 1)" aria-label="Sumar">
-                  <mat-icon>add</mat-icon>
-                </button>
-              </div>
-              <span class="subtotal">${{ item.producto.precio * item.cantidad }}</span>
-            </div>
-          }
-        </div>
-
-        <div class="total-fila">
-          <span>Total</span>
-          <span class="total-valor">${{ total() }}</span>
-        </div>
-
+  <div class="venta-layout">
+    <div class="venta-columna-productos">
+      <div class="buscador-fila">
         <mat-form-field appearance="outline" class="full">
-          <mat-label>Medio de pago</mat-label>
-          <mat-select [ngModel]="medioPago()" (ngModelChange)="cambiarMedioPago($event)">
-            @for (medio of mediosPago(); track medio.id) {
-              <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
-            }
-            @if (tieneCuentaCorriente) {
-              <mat-option [value]="medioPagoACuenta">{{ medioPagoACuenta }}</mat-option>
-            }
-          </mat-select>
+          <mat-label>Buscar producto</mat-label>
+          <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
+          <mat-icon matSuffix>search</mat-icon>
         </mat-form-field>
 
-        @if (faltaClienteParaACuenta()) {
-          <button type="button" class="aviso-a-cuenta" (click)="abrirClientePicker()">
-            <mat-icon>person_add</mat-icon>
-            Necesitás cargar el cliente para vender a cuenta
+        @if (hayCliente()) {
+          <button type="button" class="chip-cliente" (click)="abrirClientePicker()">
+            <mat-icon>person</mat-icon>
+            <span class="chip-cliente-nombre">{{ nombreCliente() || telefonoCliente() }}</span>
+            <span
+              class="chip-cliente-quitar"
+              role="button"
+              tabindex="0"
+              aria-label="Quitar cliente"
+              (click)="quitarCliente(); $event.stopPropagation()"
+            >
+              <mat-icon>close</mat-icon>
+            </span>
+          </button>
+        } @else {
+          <button type="button" class="chip-cliente chip-cliente-vacio" (click)="abrirClientePicker()">
+            <mat-icon>add</mat-icon>
+            Cliente
           </button>
         }
+      </div>
 
-        @if (medioPago() === 'Efectivo') {
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>¿Con cuánto paga?</mat-label>
-            <input
-              matInput
-              type="number"
-              [ngModel]="montoRecibido()"
-              (ngModelChange)="montoRecibido.set($event)"
-              min="0"
-              step="0.01"
-              [placeholder]="total().toString()"
-            />
-          </mat-form-field>
-
-          @if (montoRecibido() != null) {
-            @if (vuelto()! >= 0) {
-              <div class="vuelto">
-                <span>Vuelto</span>
-                <span>${{ vuelto() }}</span>
-              </div>
-            } @else {
-              <div class="vuelto falta">
-                <span>Falta</span>
-                <span>${{ -vuelto()! }}</span>
-              </div>
+      @if (cargando()) {
+        <div class="centrado">
+          <mat-spinner></mat-spinner>
+        </div>
+      } @else {
+        @if (!busqueda() && masVendidos().length > 0) {
+          <div class="seccion-titulo">
+            <mat-icon>local_fire_department</mat-icon>
+            Más vendidos
+          </div>
+          <div class="resultados resultados-destacados">
+            @for (producto of masVendidos(); track producto.id) {
+              <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
+                @if (cantidadEnCarrito(producto.id); as cantidad) {
+                  <span class="badge-cantidad">{{ cantidad }}</span>
+                }
+                <span class="nombre">{{ producto.nombre }}</span>
+                <span class="precio">${{ producto.precio }}</span>
+                <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
+                  {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
+                </span>
+              </button>
             }
-          }
+          </div>
         }
 
-        <button
-          mat-flat-button
-          color="primary"
-          class="cobrar"
-          (click)="cobrar()"
-          [disabled]="procesando() || faltaClienteParaACuenta()"
-        >
-          @if (procesando()) {
-            <mat-spinner diameter="20"></mat-spinner>
-          } @else {
-            {{ esACuenta() ? 'Vender a cuenta' : 'Cobrar' }} ${{ total() }}
-          }
-        </button>
-      </mat-card>
+        @if (busqueda()) {
+          <div class="resultados">
+            @for (producto of productosFiltrados(); track producto.id) {
+              <button class="resultado-item" type="button" (click)="agregarAlCarrito(producto)">
+                @if (cantidadEnCarrito(producto.id); as cantidad) {
+                  <span class="badge-cantidad">{{ cantidad }}</span>
+                }
+                <span class="nombre">{{ producto.nombre }}</span>
+                <span class="precio">${{ producto.precio }}</span>
+                <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
+                  {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
+                </span>
+              </button>
+            }
+            @if (productosFiltrados().length === 0) {
+              <p class="vacio">No se encontraron productos.</p>
+            }
+          </div>
+        }
+      }
+
+      @if (carrito().length > 0) {
+        <div class="espaciador-carrito" [class.espaciador-expandido]="carritoExpandido()"></div>
+
+        @if (!carritoExpandido()) {
+          <button type="button" class="carrito-flotante" (click)="toggleCarrito()">
+            @if (ultimoAgregado(); as ua) {
+              <span class="agregado-texto">
+                <mat-icon class="icono-agregado">check_circle</mat-icon>
+                <span class="agregado-nombre">+1 {{ ua.nombre }}</span>
+              </span>
+              <span class="agregado-detalle">{{ ua.cantidad }} · ${{ ua.subtotal }}</span>
+            } @else {
+              <span>{{ cantidadItems() }} producto{{ cantidadItems() === 1 ? '' : 's' }} · ${{ total() }}</span>
+              <mat-icon>keyboard_arrow_up</mat-icon>
+            }
+          </button>
+        } @else {
+          <mat-card class="carrito-sheet">
+            <div class="carrito-sheet-header">
+              <span>Carrito · {{ cantidadItems() }}</span>
+              <button mat-icon-button (click)="toggleCarrito()" aria-label="Minimizar carrito">
+                <mat-icon>keyboard_arrow_down</mat-icon>
+              </button>
+            </div>
+
+            <ng-container *ngTemplateOutlet="carritoContenido"></ng-container>
+          </mat-card>
+        }
+      }
+    </div>
+
+    <aside class="venta-carrito-desktop">
+      @if (carrito().length === 0) {
+        <div class="carrito-desktop-vacio">
+          <mat-icon>shopping_cart</mat-icon>
+          <p>Los productos que agregues van a aparecer acá</p>
+        </div>
+      } @else {
+        <div class="carrito-sheet-header">
+          <span>Carrito · {{ cantidadItems() }}</span>
+        </div>
+
+        <ng-container *ngTemplateOutlet="carritoContenido"></ng-container>
+      }
+    </aside>
+  </div>
+
+  <ng-template #carritoContenido>
+    <div class="carrito-items">
+      @for (item of carrito(); track item.producto.id) {
+        <div class="item-carrito">
+          <div class="item-nombre">{{ item.producto.nombre }}</div>
+          <div class="item-controles">
+            <button
+              mat-icon-button
+              class="boton-cantidad"
+              [class.boton-quitar]="item.cantidad === 1"
+              (click)="cambiarCantidad(item, -1)"
+              [attr.aria-label]="item.cantidad === 1 ? 'Quitar del carrito' : 'Restar'"
+            >
+              <mat-icon>{{ item.cantidad === 1 ? 'delete_outline' : 'remove' }}</mat-icon>
+            </button>
+            <span class="cantidad">{{ item.cantidad }}</span>
+            <button mat-icon-button class="boton-cantidad boton-sumar" (click)="cambiarCantidad(item, 1)" aria-label="Sumar">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+          <span class="subtotal">${{ item.producto.precio * item.cantidad }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="total-fila">
+      <span>Total</span>
+      <span class="total-valor">${{ total() }}</span>
+    </div>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Medio de pago</mat-label>
+      <mat-select [ngModel]="medioPago()" (ngModelChange)="cambiarMedioPago($event)">
+        @for (medio of mediosPago(); track medio.id) {
+          <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
+        }
+        @if (tieneCuentaCorriente) {
+          <mat-option [value]="medioPagoACuenta">{{ medioPagoACuenta }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (faltaClienteParaACuenta()) {
+      <button type="button" class="aviso-a-cuenta" (click)="abrirClientePicker()">
+        <mat-icon>person_add</mat-icon>
+        Necesitás cargar el cliente para vender a cuenta
+      </button>
     }
-  }
+
+    @if (medioPago() === 'Efectivo') {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>¿Con cuánto paga?</mat-label>
+        <input
+          matInput
+          type="number"
+          [ngModel]="montoRecibido()"
+          (ngModelChange)="montoRecibido.set($event)"
+          min="0"
+          step="0.01"
+          [placeholder]="total().toString()"
+        />
+      </mat-form-field>
+
+      @if (montoRecibido() != null) {
+        @if (vuelto()! >= 0) {
+          <div class="vuelto">
+            <span>Vuelto</span>
+            <span>${{ vuelto() }}</span>
+          </div>
+        } @else {
+          <div class="vuelto falta">
+            <span>Falta</span>
+            <span>${{ -vuelto()! }}</span>
+          </div>
+        }
+      }
+    }
+
+    <button
+      mat-flat-button
+      color="primary"
+      class="cobrar"
+      (click)="cobrar()"
+      [disabled]="procesando() || faltaClienteParaACuenta()"
+    >
+      @if (procesando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        {{ esACuenta() ? 'Vender a cuenta' : 'Cobrar' }} ${{ total() }}
+      }
+    </button>
+  </ng-template>
 }
