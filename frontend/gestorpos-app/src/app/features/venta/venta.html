@@ -30,12 +30,33 @@
     <button mat-flat-button color="primary" routerLink="/caja">Ir a Caja</button>
   </mat-card>
 } @else {
-  <div class="buscador">
+  <div class="buscador-fila">
     <mat-form-field appearance="outline" class="full">
       <mat-label>Buscar producto</mat-label>
       <input matInput [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
+
+    @if (hayCliente()) {
+      <button type="button" class="chip-cliente" (click)="abrirClientePicker()">
+        <mat-icon>person</mat-icon>
+        <span class="chip-cliente-nombre">{{ nombreCliente() || telefonoCliente() }}</span>
+        <span
+          class="chip-cliente-quitar"
+          role="button"
+          tabindex="0"
+          aria-label="Quitar cliente"
+          (click)="quitarCliente(); $event.stopPropagation()"
+        >
+          <mat-icon>close</mat-icon>
+        </span>
+      </button>
+    } @else {
+      <button type="button" class="chip-cliente chip-cliente-vacio" (click)="abrirClientePicker()">
+        <mat-icon>add</mat-icon>
+        Cliente
+      </button>
+    }
   </div>
 
   @if (cargando()) {
@@ -139,71 +160,23 @@
           <span class="total-valor">${{ total() }}</span>
         </div>
 
-        <div class="fila-pago">
-          <mat-form-field appearance="outline">
-            <mat-label>Medio de pago</mat-label>
-            <mat-select [ngModel]="medioPago()" (ngModelChange)="cambiarMedioPago($event)">
-              @for (medio of mediosPago(); track medio.id) {
-                <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
-              }
-              @if (tieneCuentaCorriente) {
-                <mat-option [value]="medioPagoACuenta">{{ medioPagoACuenta }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Medio de pago</mat-label>
+          <mat-select [ngModel]="medioPago()" (ngModelChange)="cambiarMedioPago($event)">
+            @for (medio of mediosPago(); track medio.id) {
+              <mat-option [value]="medio.nombre">{{ medio.nombre }}</mat-option>
+            }
+            @if (tieneCuentaCorriente) {
+              <mat-option [value]="medioPagoACuenta">{{ medioPagoACuenta }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-          @if (faltaClienteParaACuenta()) {
-            <p class="aviso-a-cuenta">Necesitás cargar el cliente para vender a cuenta</p>
-          }
-
-          <mat-form-field appearance="outline">
-            <mat-label>Nombre{{ esACuenta() ? '' : ' (opcional)' }}</mat-label>
-            <input
-              matInput
-              [ngModel]="nombreCliente()"
-              (ngModelChange)="onNombreClienteChange($event)"
-              [matAutocomplete]="autoClienteNombre"
-              placeholder="Si ya lo conocés"
-            />
-            <mat-autocomplete #autoClienteNombre="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
-              @for (cliente of sugerenciasClientes(); track cliente.id) {
-                <mat-option [value]="cliente">
-                  <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
-                  <span class="opcion-detalle">
-                    {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
-                  </span>
-                </mat-option>
-              }
-            </mat-autocomplete>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Teléfono{{ esACuenta() ? '' : ' (opcional)' }}</mat-label>
-            <input
-              matInput
-              [ngModel]="telefonoCliente()"
-              (ngModelChange)="onTelefonoClienteChange($event)"
-              [matAutocomplete]="autoClienteTelefono"
-              [placeholder]="esACuenta() ? 'Para saber a quién le fías' : 'Para el ticket por WhatsApp'"
-            />
-            <mat-autocomplete #autoClienteTelefono="matAutocomplete" (optionSelected)="seleccionarCliente($event.option.value)">
-              @for (cliente of sugerenciasClientes(); track cliente.id) {
-                <mat-option [value]="cliente">
-                  <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
-                  <span class="opcion-detalle">
-                    {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
-                  </span>
-                </mat-option>
-              }
-            </mat-autocomplete>
-          </mat-form-field>
-        </div>
-
-        @if (clienteSeleccionado(); as cs) {
-          <div class="cliente-reconocido">
-            <mat-icon>check_circle</mat-icon>
-            <span>{{ cs.nombre || 'Cliente' }} · {{ cs.cantidadCompras }} compra{{ cs.cantidadCompras === 1 ? '' : 's' }} antes</span>
-          </div>
+        @if (faltaClienteParaACuenta()) {
+          <button type="button" class="aviso-a-cuenta" (click)="abrirClientePicker()">
+            <mat-icon>person_add</mat-icon>
+            Necesitás cargar el cliente para vender a cuenta
+          </button>
         }
 
         @if (medioPago() === 'Efectivo') {

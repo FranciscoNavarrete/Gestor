@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -19,15 +19,13 @@ import { MedioPago, VentaDto } from '../../core/models/venta.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CajaService } from '../../core/services/caja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
-import { ClienteService } from '../../core/services/cliente.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
+import { ClientePickerDialog, ClientePickerResultado } from './cliente-picker-dialog/cliente-picker-dialog';
 
 const TOP_MAS_VENDIDOS = 6;
-const TAMANO_SUGERENCIAS_CLIENTE = 5;
-const DEBOUNCE_CLIENTE_MS = 300;
 
 interface ItemCarrito {
   producto: Producto;
@@ -47,7 +45,6 @@ const DURACION_ULTIMO_AGREGADO_MS = 1200;
   imports: [
     FormsModule,
     RouterLink,
-    MatAutocompleteModule,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -65,14 +62,13 @@ export class Venta implements OnInit, OnDestroy {
   private readonly reportesService = inject(ReportesService);
   private readonly cajaService = inject(CajaService);
   private readonly configuracionService = inject(ConfiguracionService);
-  private readonly clienteService = inject(ClienteService);
   private readonly authService = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly medioPagoACuenta = MEDIO_PAGO_A_CUENTA;
   readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
 
-  private debounceClienteTimer?: ReturnType<typeof setTimeout>;
   private timerUltimoAgregado?: ReturnType<typeof setTimeout>;
 
   readonly cargando = signal(true);
@@ -87,7 +83,6 @@ export class Venta implements OnInit, OnDestroy {
   readonly medioPago = signal<MedioPago>('Efectivo');
   readonly nombreCliente = signal('');
   readonly telefonoCliente = signal('');
-  readonly sugerenciasClientes = signal<Cliente[]>([]);
   readonly clienteSeleccionado = signal<Cliente | null>(null);
   readonly montoRecibido = signal<number | null>(null);
   readonly procesando = signal(false);
@@ -128,6 +123,7 @@ export class Venta implements OnInit, OnDestroy {
 
   readonly esACuenta = computed(() => this.medioPago() === MEDIO_PAGO_A_CUENTA);
   readonly faltaClienteParaACuenta = computed(() => this.esACuenta() && !this.telefonoCliente().trim());
+  readonly hayCliente = computed(() => !!this.nombreCliente().trim() || !!this.telefonoCliente().trim());
 
   cantidadEnCarrito(productoId: string): number {
     return this.carrito().find((i) => i.producto.id === productoId)?.cantidad ?? 0;
@@ -149,7 +145,6 @@ export class Venta implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    clearTimeout(this.debounceClienteTimer);
     clearTimeout(this.timerUltimoAgregado);
   }
 
@@ -219,40 +214,30 @@ export class Venta implements OnInit, OnDestroy {
     this.carritoExpandido.set(!this.carritoExpandido());
   }
 
-  onNombreClienteChange(valor: string): void {
-    this.nombreCliente.set(valor);
-    this.clienteSeleccionado.set(null);
-    this.buscarClienteDebounced(valor);
-  }
-
-  onTelefonoClienteChange(valor: string): void {
-    this.telefonoCliente.set(valor);
-    this.clienteSeleccionado.set(null);
-    this.buscarClienteDebounced(valor);
-  }
-
-  private buscarClienteDebounced(valor: string): void {
-    clearTimeout(this.debounceClienteTimer);
-
-    const termino = valor.trim();
-    if (termino.length < 2) {
-      this.sugerenciasClientes.set([]);
-      return;
-    }
-
-    this.debounceClienteTimer = setTimeout(() => {
-      this.clienteService.buscar(termino, 1, TAMANO_SUGERENCIAS_CLIENTE).subscribe({
-        next: (resultado) => this.sugerenciasClientes.set(resultado.items),
-        error: () => this.sugerenciasClientes.set([]),
+  abrirClientePicker(): void {
+    this.dialog
+      .open(ClientePickerDialog, {
+        data: { nombre: this.nombreCliente(), telefono: this.telefonoCliente() },
+        width: '420px',
+        maxWidth: '95vw',
+      })
+      .afterClosed()
+      .subscribe((resultado: ClientePickerResultado | null | undefined) => {
+        if (resultado === undefined) return;
+        if (resultado === null) {
+          this.quitarCliente();
+          return;
+        }
+        this.nombreCliente.set(resultado.nombre);
+        this.telefonoCliente.set(resultado.telefono);
+        this.clienteSeleccionado.set(resultado.cliente);
       });
-    }, DEBOUNCE_CLIENTE_MS);
   }
 
-  seleccionarCliente(cliente: Cliente): void {
-    this.nombreCliente.set(cliente.nombre ?? '');
-    this.telefonoCliente.set(cliente.telefono);
-    this.clienteSeleccionado.set(cliente);
-    this.sugerenciasClientes.set([]);
+  quitarCliente(): void {
+    this.nombreCliente.set('');
+    this.telefonoCliente.set('');
+    this.clienteSeleccionado.set(null);
   }
 
   cambiarMedioPago(valor: MedioPago): void {
@@ -289,7 +274,6 @@ export class Venta implements OnInit, OnDestroy {
     this.carritoExpandido.set(false);
     this.nombreCliente.set('');
     this.telefonoCliente.set('');
-    this.sugerenciasClientes.set([]);
     this.clienteSeleccionado.set(null);
     this.montoRecibido.set(null);
     this.medioPago.set('Efectivo');

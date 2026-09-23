@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>Cliente</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Nombre</mat-label>
+    <input
+      matInput
+      [ngModel]="nombre()"
+      (ngModelChange)="onNombreChange($event)"
+      [matAutocomplete]="autoNombre"
+      placeholder="Si ya lo conocés"
+      cdkFocusInitial
+    />
+    <mat-autocomplete
+      #autoNombre="matAutocomplete"
+      [displayWith]="mostrarNombreCliente"
+      (optionSelected)="seleccionar($event.option.value)"
+    >
+      @for (cliente of sugerencias(); track cliente.id) {
+        <mat-option [value]="cliente">
+          <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+          <span class="opcion-detalle">
+            {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
+          </span>
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Teléfono</mat-label>
+    <input
+      matInput
+      [ngModel]="telefono()"
+      (ngModelChange)="onTelefonoChange($event)"
+      [matAutocomplete]="autoTelefono"
+      placeholder="Para el ticket por WhatsApp o vender a cuenta"
+    />
+    <mat-autocomplete
+      #autoTelefono="matAutocomplete"
+      [displayWith]="mostrarTelefonoCliente"
+      (optionSelected)="seleccionar($event.option.value)"
+    >
+      @for (cliente of sugerencias(); track cliente.id) {
+        <mat-option [value]="cliente">
+          <span class="opcion-nombre">{{ cliente.nombre || 'Sin nombre' }}</span>
+          <span class="opcion-detalle">
+            {{ cliente.telefono }} · {{ cliente.cantidadCompras }} compra{{ cliente.cantidadCompras === 1 ? '' : 's' }}
+          </span>
+        </mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  @if (clienteSeleccionado(); as cs) {
+    <div class="cliente-reconocido">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ cs.nombre || 'Cliente' }} · {{ cs.cantidadCompras }} compra{{ cs.cantidadCompras === 1 ? '' : 's' }} antes</span>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (teniaCliente) {
+    <button mat-button type="button" color="warn" (click)="quitar()">Quitar cliente</button>
+  }
+  <span class="spacer"></span>
+  <button mat-button type="button" mat-dialog-close>Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()" [disabled]="!telefono().trim()">Guardar</button>
+</mat-dialog-actions>
