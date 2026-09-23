@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -33,13 +33,16 @@ interface ItemCarrito {
   cantidad: number;
 }
 
-interface UltimoAgregado {
+interface NotificacionAgregado {
+  id: number;
   nombre: string;
   cantidad: number;
   subtotal: number;
+  saliendo: boolean;
 }
 
-const DURACION_ULTIMO_AGREGADO_MS = 1200;
+const DURACION_NOTIFICACION_MS = 1200;
+const DURACION_SALIDA_NOTIFICACION_MS = 200;
 
 @Component({
   selector: 'app-venta',
@@ -58,7 +61,7 @@ const DURACION_ULTIMO_AGREGADO_MS = 1200;
   templateUrl: './venta.html',
   styleUrl: './venta.scss',
 })
-export class Venta implements OnInit, OnDestroy {
+export class Venta implements OnInit {
   private readonly catalogoService = inject(CatalogoService);
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
@@ -71,7 +74,7 @@ export class Venta implements OnInit, OnDestroy {
   readonly medioPagoACuenta = MEDIO_PAGO_A_CUENTA;
   readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
 
-  private timerUltimoAgregado?: ReturnType<typeof setTimeout>;
+  private contadorNotificacion = 0;
 
   readonly cargando = signal(true);
   readonly cargandoCaja = signal(true);
@@ -89,7 +92,7 @@ export class Venta implements OnInit, OnDestroy {
   readonly montoRecibido = signal<number | null>(null);
   readonly procesando = signal(false);
   readonly ventaResultado = signal<VentaDto | null>(null);
-  readonly ultimoAgregado = signal<UltimoAgregado | null>(null);
+  readonly notificaciones = signal<NotificacionAgregado[]>([]);
 
   readonly masVendidos = computed(() => {
     const porId = new Map(this.productos().map((p) => [p.id, p]));
@@ -146,10 +149,6 @@ export class Venta implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    clearTimeout(this.timerUltimoAgregado);
-  }
-
   private cargarProductos(mostrarSpinner = true): void {
     if (mostrarSpinner) this.cargando.set(true);
     this.catalogoService.listarProductos().subscribe({
@@ -177,15 +176,24 @@ export class Venta implements OnInit, OnDestroy {
       this.carrito.set([...actual, { producto, cantidad: 1 }]);
     }
 
-    this.mostrarUltimoAgregado(producto.nombre, nuevaCantidad, producto.precio * nuevaCantidad);
+    this.mostrarNotificacion(producto.nombre, nuevaCantidad, producto.precio * nuevaCantidad);
   }
 
-  // Confirmación breve en la barra del carrito ("+1 Coca Cola · 3 · $6300") para que el vendedor
-  // sepa qué cargó sin tener que abrir el carrito — desaparece sola y vuelve al resumen normal.
-  private mostrarUltimoAgregado(nombre: string, cantidad: number, subtotal: number): void {
-    this.ultimoAgregado.set({ nombre, cantidad, subtotal });
-    clearTimeout(this.timerUltimoAgregado);
-    this.timerUltimoAgregado = setTimeout(() => this.ultimoAgregado.set(null), DURACION_ULTIMO_AGREGADO_MS);
+  // Notificación breve arriba a la derecha ("Coca Cola · Cantidad: 3 · $6300") para que el
+  // vendedor sepa qué cargó sin tener que abrir el carrito. Se apilan si se agregan varias
+  // seguidas (la más nueva arriba) y cada una desaparece sola a los DURACION_NOTIFICACION_MS,
+  // sin afectar a las demás.
+  private mostrarNotificacion(nombre: string, cantidad: number, subtotal: number): void {
+    const id = ++this.contadorNotificacion;
+    this.notificaciones.update((actual) => [...actual, { id, nombre, cantidad, subtotal, saliendo: false }]);
+
+    setTimeout(() => {
+      this.notificaciones.update((actual) => actual.map((n) => (n.id === id ? { ...n, saliendo: true } : n)));
+    }, DURACION_NOTIFICACION_MS - DURACION_SALIDA_NOTIFICACION_MS);
+
+    setTimeout(() => {
+      this.notificaciones.update((actual) => actual.filter((n) => n.id !== id));
+    }, DURACION_NOTIFICACION_MS);
   }
 
   cambiarCantidad(item: ItemCarrito, delta: number): void {

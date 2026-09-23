@@ -30,6 +30,20 @@
     <button mat-flat-button color="primary" routerLink="/caja">Ir a Caja</button>
   </mat-card>
 } @else {
+  <div class="notificaciones-agregado" aria-live="polite">
+    @for (n of notificaciones(); track n.id) {
+      <div class="notificacion-agregado" [class.saliendo]="n.saliendo">
+        <div class="notificacion-icono">
+          <mat-icon>check</mat-icon>
+        </div>
+        <div class="notificacion-texto">
+          <div class="notificacion-nombre">{{ n.nombre }}</div>
+          <div class="notificacion-detalle">Cantidad: {{ n.cantidad }} · ${{ n.subtotal }}</div>
+        </div>
+      </div>
+    }
+  </div>
+
   <div class="venta-layout">
     <div class="venta-columna-productos">
       <div class="buscador-fila">
@@ -113,16 +127,8 @@
 
         @if (!carritoExpandido()) {
           <button type="button" class="carrito-flotante" (click)="toggleCarrito()">
-            @if (ultimoAgregado(); as ua) {
-              <span class="agregado-texto">
-                <mat-icon class="icono-agregado">check_circle</mat-icon>
-                <span class="agregado-nombre">+1 {{ ua.nombre }}</span>
-              </span>
-              <span class="agregado-detalle">{{ ua.cantidad }} · ${{ ua.subtotal }}</span>
-            } @else {
-              <span>{{ cantidadItems() }} producto{{ cantidadItems() === 1 ? '' : 's' }} · ${{ total() }}</span>
-              <mat-icon>keyboard_arrow_up</mat-icon>
-            }
+            <span>{{ cantidadItems() }} producto{{ cantidadItems() === 1 ? '' : 's' }} · ${{ total() }}</span>
+            <mat-icon>keyboard_arrow_up</mat-icon>
           </button>
         } @else {
           <mat-card class="carrito-sheet">
