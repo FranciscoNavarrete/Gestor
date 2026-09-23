@@ -41,6 +41,14 @@
       display: inline;
     }
   }
+
+  // Con el menú lateral activo, a partir de 900px toda esta información (nombre del negocio,
+  // usuario, Clientes/Configuración/Cerrar sesión) ya vive en la columna de la izquierda.
+  &.toolbar-con-lateral {
+    @media (min-width: 900px) {
+      display: none;
+    }
+  }
 }
 
 .contenido {
@@ -49,6 +57,104 @@
   max-width: 960px;
   margin: 0 auto;
   box-sizing: border-box;
+
+  // Con menú lateral activo, a partir de 900px el contenido se corre para dejar lugar a la columna
+  // fija de la izquierda y ya no necesita el padding inferior reservado para la barra de abajo
+  // (queda oculta en ese ancho — ver .bottom-nav-con-lateral).
+  &.contenido-con-lateral {
+    @media (min-width: 900px) {
+      margin-left: 240px;
+      padding-bottom: 20px;
+    }
+  }
+}
+
+// --- Menú lateral (desktop, opt-in por negocio vía feature flag) ---
+// Por debajo de 900px queda oculto a propósito: en mobile la navegación sigue siendo siempre la
+// barra de abajo, tenga o no el negocio este feature activado.
+.side-nav {
+  display: none;
+
+  @media (min-width: 900px) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    padding: 20px 12px;
+    background: var(--surface-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid var(--border-subtle);
+    z-index: 10;
+    overflow-y: auto;
+  }
+
+  .side-nav-marca {
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0 10px 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .side-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--mat-sys-on-surface-variant, #5f6368);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+      flex-shrink: 0;
+    }
+
+    &.active {
+      color: var(--color-accent-on);
+      background-image: var(--gradient-brand);
+    }
+
+    &:not(.active):hover {
+      background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    }
+  }
+
+  .side-nav-separador {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 8px 10px;
+  }
+
+  .side-nav-spacer {
+    flex: 1;
+  }
+
+  .side-nav-usuario {
+    padding: 0 10px 4px;
+    font-size: 0.78rem;
+    opacity: 0.6;
+  }
 }
 
 .bottom-nav {
@@ -96,6 +202,14 @@
       color: var(--color-accent-on);
       background-image: var(--gradient-brand);
       box-shadow: 0 8px 18px -8px var(--glow-primary);
+    }
+  }
+
+  // Con el menú lateral activo, la barra de abajo queda reemplazada por la columna de la izquierda
+  // a partir de 900px — por debajo de eso (mobile) sigue siendo la navegación de siempre.
+  &.bottom-nav-con-lateral {
+    @media (min-width: 900px) {
+      display: none;
     }
   }
 }

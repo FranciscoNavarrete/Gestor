@@ -1,4 +1,36 @@
-<mat-toolbar class="toolbar">
+@if (tieneMenuLateral) {
+  <aside class="side-nav">
+    <div class="side-nav-marca font-display">{{ nombreNegocio() }}</div>
+
+    @for (item of navItems; track item.path) {
+      <a class="side-nav-item" [routerLink]="item.path" routerLinkActive="active">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+
+    <div class="side-nav-separador"></div>
+
+    <a class="side-nav-item" routerLink="/clientes" routerLinkActive="active">
+      <mat-icon>people</mat-icon>
+      <span>Clientes</span>
+    </a>
+    <a class="side-nav-item" routerLink="/configuracion" routerLinkActive="active">
+      <mat-icon>settings</mat-icon>
+      <span>Configuración</span>
+    </a>
+
+    <div class="side-nav-spacer"></div>
+
+    <span class="side-nav-usuario">{{ nombreUsuario() }}</span>
+    <button type="button" class="side-nav-item side-nav-salir" (click)="cerrarSesion()">
+      <mat-icon>logout</mat-icon>
+      <span>Cerrar sesión</span>
+    </button>
+  </aside>
+}
+
+<mat-toolbar class="toolbar" [class.toolbar-con-lateral]="tieneMenuLateral">
   <span class="negocio-nombre font-display">{{ nombreNegocio() }}</span>
   <span class="spacer"></span>
   <span class="usuario-nombre">{{ nombreUsuario() }}</span>
@@ -13,11 +45,11 @@
   </button>
 </mat-toolbar>
 
-<main class="contenido">
+<main class="contenido" [class.contenido-con-lateral]="tieneMenuLateral">
   <router-outlet></router-outlet>
 </main>
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" [class.bottom-nav-con-lateral]="tieneMenuLateral">
   @for (item of navItems; track item.path) {
     <a
       class="nav-item"

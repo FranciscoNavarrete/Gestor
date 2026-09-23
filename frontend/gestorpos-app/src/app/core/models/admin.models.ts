@@ -1,4 +1,5 @@
 import { FEATURE_CUENTA_CORRIENTE } from './cuenta-corriente';
+import { FEATURE_MENU_LATERAL } from './menu-lateral';
 
 export interface CrearNegocioRequest {
   nombreNegocio: string;
@@ -34,5 +35,10 @@ export const CATALOGO_FEATURES: FeatureCatalogoItem[] = [
     clave: FEATURE_CUENTA_CORRIENTE,
     nombre: 'Cuenta corriente (A cuenta)',
     descripcion: 'Vender fiado y llevar la deuda de cada cliente',
+  },
+  {
+    clave: FEATURE_MENU_LATERAL,
+    nombre: 'Menú lateral (desktop)',
+    descripcion: 'En pantallas grandes, navegación fija al costado en vez de la barra de abajo',
   },
 ];
