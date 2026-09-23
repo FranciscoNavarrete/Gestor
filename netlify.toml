@@ -3,6 +3,11 @@
   command = "npm run build"
   publish = "dist/gestorpos-app/browser"
 
+# Rama qas: build apuntando al backend de QAS (Railway, ambiente "qas") en vez de al de
+# producción — ver frontend/gestorpos-app/src/environments/environment.qas.ts.
+[context.qas]
+  command = "npm run build:qas"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

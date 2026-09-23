@@ -16,3 +16,6 @@ frontend/**/.angular/
 # Entornos
 .env
 .env.local
+
+# Local Netlify folder
+.netlify
