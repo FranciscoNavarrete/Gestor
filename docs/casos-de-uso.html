@@ -167,6 +167,7 @@
       <li><a href="#uc15">Vender a cuenta</a></li>
       <li><a href="#uc16">Registrar un pago de cuenta corriente</a></li>
       <li><a href="#uc17">Activar una funcionalidad para un negocio (administrador)</a></li>
+      <li><a href="#uc18">Ver reporte de deudas</a></li>
     </ol>
   </nav>
 
@@ -475,8 +476,10 @@
       <ol class="steps">
         <li>El usuario arma la venta como cualquier otra, agregando productos al carrito.</li>
         <li>En medio de pago, elige "A cuenta".</li>
-        <li>Carga el teléfono del cliente (obligatorio en este caso, a diferencia de los demás medios
-          de pago) — si ya compró antes, lo busca por nombre o teléfono y se autocompleta el resto.</li>
+        <li>Toca el chip "Cliente" junto al buscador y carga el teléfono (obligatorio en este caso, a
+          diferencia de los demás medios de pago) — si ya compró antes, lo busca por nombre o teléfono y
+          se autocompleta el resto. Si todavía no lo cargó, un aviso en el carrito se lo recuerda y abre
+          el mismo diálogo con un toque.</li>
         <li>Confirma "Vender a cuenta".</li>
         <li>El sistema registra la venta, descuenta el stock igual que cualquier venta, y suma el total
           a la deuda del cliente — sin pedir cobro en el momento.</li>
@@ -533,6 +536,28 @@
       </ol>
     </div>
     <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>Ese negocio ve (o deja de ver) la funcionalidad la próxima vez que inicie sesión — el resto de los negocios no se entera del cambio.</p></div></div>
+  </div>
+
+  <div class="uc" id="uc18">
+    <div class="uc-head">
+      <div><div class="uc-code">CU-18</div><div class="uc-title">Ver reporte de deudas</div></div>
+      <div class="uc-actor">Usuario de negocio</div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Precondiciones</div><p>El negocio tiene activada la funcionalidad de cuenta corriente.</p></div>
+    <div class="uc-row"><div class="uc-label">Flujo principal</div>
+      <ol class="steps">
+        <li>El usuario entra a Reportes y elige la pestaña "Deudas" (solo visible con la funcionalidad activada).</li>
+        <li>Ve el total adeudado y la cantidad de clientes con saldo pendiente, y debajo el listado
+          ordenado de mayor a menor deuda, con teléfono y cantidad de ventas "A cuenta" de cada uno.</li>
+        <li>Toca un cliente de la lista para ir directo a su ficha y, si corresponde, registrar un pago.</li>
+      </ol>
+    </div>
+    <div class="uc-row"><div class="uc-label">Flujos alternativos</div>
+      <div class="alt-box">
+        <div class="alt-item"><strong>Ningún cliente tiene saldo pendiente:</strong> se muestra un mensaje en vez del listado.</div>
+      </div>
+    </div>
+    <div class="uc-row"><div class="uc-label">Resultado</div><div class="result-box"><p>El usuario sabe cuánto le deben en total y quién le debe, sin tener que revisar cliente por cliente; puede exportarlo a PDF para llamar a cobrar.</p></div></div>
   </div>
 
   <footer>GestorPOS — Casos de uso</footer>

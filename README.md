@@ -122,6 +122,8 @@ el puerto).
 - `GET /api/reportes/dashboard` — resumen: ventas/ganancia de hoy, ventas del mes, productos en alerta de stock, producto más vendido del día
 - `GET /api/reportes/ventas/pdf?desde=&hasta=` — descarga un PDF con el resumen (total vendido, ganancia neta) y el listado de ventas del rango de fechas
 - `GET /api/reportes/stock/pdf?busqueda=&bajoStock=` — descarga un PDF con el stock actual (filtrable por búsqueda y/o solo bajo stock) y su valorizado
+- `GET /api/reportes/deudas` — lista los clientes con saldo de cuenta corriente pendiente (`saldo > 0`), ordenados de mayor a menor deuda, más el total adeudado y la cantidad de clientes; no está gateado por feature flag en el backend (misma decisión que el resto de la info de saldo), la pestaña "Deudas" de Reportes solo se muestra en el frontend si el negocio tiene `cuenta-corriente` activo
+- `GET /api/reportes/deudas/pdf` — descarga un PDF con el mismo listado de deudas
 - `GET /api/notificaciones/clave-publica` — clave pública VAPID para que el frontend pida la suscripción push del navegador (vacía si el ambiente no tiene las claves configuradas)
 - `POST /api/notificaciones/suscribirse` — guarda la suscripción push del navegador actual (endpoint + claves de cifrado)
 - `POST /api/notificaciones/desuscribirse` — borra esa suscripción (POST y no DELETE a propósito, para evitar el manejo incómodo de DELETE-con-body en Angular `HttpClient`)
@@ -182,20 +184,27 @@ los negocios (sin el feature), esto no existe en ningún lado de la UI ni de la 
   resumen — para saber qué se cargó sin tener que abrir el carrito. Cada tarjeta de producto también
   muestra su stock actual ("Stock: N", o "Quedan N" resaltado en rojo si está en el mínimo) — para
   consultar stock sin salir de la pantalla y sin perder la venta en curso (el carrito vive solo en
-  memoria del componente, así que navegar a otra pantalla lo vacía). Si el negocio tiene el feature
-  `cuenta-corriente`, el selector de medio de pago suma la opción "A cuenta": exige cliente cargado
-  (nombre y teléfono dejan de decir "opcional"), muestra un aviso si falta, y el botón de cobro pasa a
-  decir "Vender a cuenta $X" en vez de "Cobrar"
+  memoria del componente, así que navegar a otra pantalla lo vacía). El cliente de la venta (opcional,
+  salvo vendiendo "A cuenta") se carga desde un chip junto al buscador — no ocupa lugar en el carrito
+  salvo que lo uses — que abre un diálogo con búsqueda por nombre/teléfono (autocompleta contra
+  clientes existentes) o alta de uno nuevo; una vez cargado, el chip queda relleno con el nombre y una
+  cruz para quitarlo. Si el negocio tiene el feature `cuenta-corriente`, el selector de medio de pago
+  suma la opción "A cuenta": exige cliente cargado y, si falta, un botón "Necesitás cargar el cliente
+  para vender a cuenta" abre el mismo diálogo sin salir del carrito; el botón de cobro pasa a decir
+  "Vender a cuenta $X" en vez de "Cobrar"
 - **Caja**: abrir/cerrar con el resumen de diferencia
-- **Reportes**: cuatro vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
+- **Reportes**: vistas con toggle — Ventas (filtro por rango de fechas, resumen de total vendido/
   ganancia neta y listado de ventas del período), Stock (búsqueda + filtro "solo stock bajo" +
   valorizado por producto, paginado), Movimientos (historial de ajustes manuales y ventas, filtrable
-  por producto y rango de fechas, con el motivo y quién lo hizo) y Clientes (ranking de mejores
-  clientes por total gastado en un rango de fechas, con cantidad de compras) — Ventas y Stock
-  exportables a PDF. Los tres filtros de rango de fechas (Ventas, Movimientos, Clientes) comparten la
-  misma regla: "Hasta" no puede ser posterior a hoy, "Desde" no puede ser posterior a "Hasta", y el
-  rango entre ambos no puede superar los 2 meses — se aplica directamente en el calendario (los días
-  inválidos aparecen apagados, no seleccionables) en vez de validar después con un error
+  por producto y rango de fechas, con el motivo y quién lo hizo), Clientes (ranking de mejores
+  clientes por total gastado en un rango de fechas, con cantidad de compras) y, solo si el negocio
+  tiene el feature `cuenta-corriente`, Deudas (total adeudado y listado de clientes con saldo
+  pendiente ordenado de mayor a menor, cada uno con su cantidad de ventas "A cuenta"; tocar una fila
+  lleva directo al detalle del cliente) — Ventas, Stock y Deudas exportables a PDF. Los tres filtros de
+  rango de fechas (Ventas, Movimientos, Clientes) comparten la misma regla: "Hasta" no puede ser
+  posterior a hoy, "Desde" no puede ser posterior a "Hasta", y el rango entre ambos no puede superar
+  los 2 meses — se aplica directamente en el calendario (los días inválidos aparecen apagados, no
+  seleccionables) en vez de validar después con un error
 - **Configuración** (ícono de engranaje en el toolbar): tres pestañas — Categorías (CRUD completo),
   Métodos de pago (CRUD; "Efectivo" queda protegido) y Negocio (nombre, WhatsApp de contacto, logo —
   este último aparece en el encabezado de los reportes PDF — y un toggle de notificaciones push de
@@ -207,10 +216,11 @@ los negocios (sin el feature), esto no existe en ningún lado de la UI ni de la 
   (total o parcial, con vista previa de cuánto queda debiendo) y el historial de movimientos de cuenta
   (fiados y pagos). Los clientes se dan de alta solos la primera vez que alguien compra dejando su
   teléfono — cargar el teléfono en la venta sigue siendo opcional, se puede vender sin él sin ningún
-  problema. En Venta hay dos campos independientes, Nombre y Teléfono, y cualquiera de los dos busca
-  contra clientes existentes (por nombre o teléfono) — elegís una sugerencia por el que te acuerdes y
-  el otro se completa solo, sin tener que re-tipear nada de un cliente que ya compró antes. Si es la
-  primera vez que compra, el nombre que cargues ahí queda guardado en el cliente nuevo
+  problema. El diálogo de cliente de Venta tiene dos campos independientes, Nombre y Teléfono, y
+  cualquiera de los dos busca contra clientes existentes (por nombre o teléfono) — elegís una sugerencia
+  por el que te acuerdes y el otro se completa solo, sin tener que re-tipear nada de un cliente que ya
+  compró antes. Si es la primera vez que compra, el nombre que cargues ahí queda guardado en el cliente
+  nuevo
 
 Y la pantalla interna `/admin/crear-negocio` (no vinculada desde la UI pública) para que vos des de alta
 los negocios de tus clientes con el usuario y contraseña que vos definís. Ahí mismo, cada negocio de la
