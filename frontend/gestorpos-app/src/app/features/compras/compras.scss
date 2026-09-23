@@ -111,6 +111,10 @@
   font: inherit;
   background: var(--mat-sys-surface, transparent);
   color: inherit;
+
+  &.invalido {
+    border-color: var(--mat-sys-error, #b3261e);
+  }
 }
 
 .fila-total {

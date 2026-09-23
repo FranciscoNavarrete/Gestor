@@ -54,6 +54,7 @@
           <span class="item-nombre">{{ item.producto.nombre }}</span>
           <input
             class="input-cantidad"
+            [class.invalido]="(item.cantidad ?? 0) < 1"
             type="number"
             min="1"
             [ngModel]="item.cantidad"
@@ -61,6 +62,7 @@
           />
           <input
             class="input-costo"
+            [class.invalido]="(item.costoUnitario ?? -1) < 0"
             type="number"
             min="0"
             step="0.01"
@@ -85,7 +87,7 @@
     mat-flat-button
     color="primary"
     class="boton-registrar"
-    [disabled]="!proveedorId() || items().length === 0 || registrando()"
+    [disabled]="!proveedorId() || items().length === 0 || !itemsValidos() || registrando()"
     (click)="registrarCompra()"
   >
     @if (registrando()) {

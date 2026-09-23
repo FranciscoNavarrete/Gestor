@@ -20,8 +20,8 @@ import { ReciboCompraDialog } from './recibo-compra-dialog/recibo-compra-dialog'
 
 interface ItemCompra {
   producto: Producto;
-  cantidad: number;
-  costoUnitario: number;
+  cantidad: number | null;
+  costoUnitario: number | null;
 }
 
 @Component({
@@ -66,8 +66,10 @@ export class Compras implements OnInit {
       .slice(0, 8);
   });
 
-  readonly total = computed(() =>
-    this.items().reduce((acc, item) => acc + item.cantidad * item.costoUnitario, 0),
+  readonly total = computed(() => this.items().reduce((acc, item) => acc + this.subtotal(item), 0));
+
+  readonly itemsValidos = computed(() =>
+    this.items().every((i) => (i.cantidad ?? 0) >= 1 && (i.costoUnitario ?? -1) >= 0),
   );
 
   ngOnInit(): void {
@@ -107,30 +109,30 @@ export class Compras implements OnInit {
     this.items.update((actual) => actual.filter((i) => i.producto.id !== producto.id));
   }
 
-  actualizarCantidad(producto: Producto, cantidad: number): void {
+  actualizarCantidad(producto: Producto, cantidad: number | null): void {
     this.items.update((actual) =>
-      actual.map((i) => (i.producto.id === producto.id ? { ...i, cantidad: Math.max(1, cantidad || 1) } : i)),
+      actual.map((i) => (i.producto.id === producto.id ? { ...i, cantidad } : i)),
     );
   }
 
-  actualizarCosto(producto: Producto, costo: number): void {
+  actualizarCosto(producto: Producto, costo: number | null): void {
     this.items.update((actual) =>
-      actual.map((i) => (i.producto.id === producto.id ? { ...i, costoUnitario: Math.max(0, costo || 0) } : i)),
+      actual.map((i) => (i.producto.id === producto.id ? { ...i, costoUnitario: costo } : i)),
     );
   }
 
   subtotal(item: ItemCompra): number {
-    return item.cantidad * item.costoUnitario;
+    return (item.cantidad ?? 0) * (item.costoUnitario ?? 0);
   }
 
   registrarCompra(): void {
-    if (!this.proveedorId() || this.items().length === 0 || this.registrando()) return;
+    if (!this.proveedorId() || this.items().length === 0 || !this.itemsValidos() || this.registrando()) return;
 
     this.registrando.set(true);
     const items: ItemCompraRequest[] = this.items().map((i) => ({
       productoId: i.producto.id,
-      cantidad: i.cantidad,
-      costoUnitario: i.costoUnitario,
+      cantidad: i.cantidad!,
+      costoUnitario: i.costoUnitario!,
     }));
 
     this.compraService.crearCompra({ proveedorId: this.proveedorId(), items }).subscribe({
