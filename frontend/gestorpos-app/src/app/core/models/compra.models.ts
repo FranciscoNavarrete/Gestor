@@ -1,6 +1,7 @@
 export interface Proveedor {
   id: string;
   nombre: string;
+  cuit: string | null;
   telefono: string | null;
   email: string | null;
   activo: boolean;
@@ -8,12 +9,14 @@ export interface Proveedor {
 
 export interface CrearProveedorRequest {
   nombre: string;
+  cuit: string | null;
   telefono: string | null;
   email: string | null;
 }
 
 export interface EditarProveedorRequest {
   nombre: string;
+  cuit: string | null;
   telefono: string | null;
   email: string | null;
 }

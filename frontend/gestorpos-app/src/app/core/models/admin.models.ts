@@ -1,5 +1,6 @@
 import { FEATURE_COMPRAS } from './compras-feature';
 import { FEATURE_CUENTA_CORRIENTE } from './cuenta-corriente';
+import { FEATURE_FACTURAS_PROVEEDOR } from './facturas-proveedor-feature';
 import { FEATURE_MENU_LATERAL } from './menu-lateral';
 
 export interface CrearNegocioRequest {
@@ -46,5 +47,10 @@ export const CATALOGO_FEATURES: FeatureCatalogoItem[] = [
     clave: FEATURE_COMPRAS,
     nombre: 'Proveedores y compras',
     descripcion: 'Registrar compras a proveedores — suma stock y actualiza costos automáticamente',
+  },
+  {
+    clave: FEATURE_FACTURAS_PROVEEDOR,
+    nombre: 'Facturas a proveedores',
+    descripcion: 'Cargar facturas recibidas y llevar el control de qué le debés a cada proveedor',
   },
 ];

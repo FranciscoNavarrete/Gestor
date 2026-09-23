@@ -14,6 +14,7 @@ import { Categoria } from '../../core/models/catalog.models';
 import { Proveedor } from '../../core/models/compra.models';
 import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { MedioPagoDto, NegocioDto } from '../../core/models/configuracion.models';
+import { FEATURE_FACTURAS_PROVEEDOR } from '../../core/models/facturas-proveedor-feature';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { CompraService } from '../../core/services/compra.service';
@@ -57,6 +58,8 @@ export class Configuracion implements OnInit, OnDestroy {
 
   readonly vista = signal<Vista>('categorias');
   readonly tieneCompras = this.authService.tieneFeature(FEATURE_COMPRAS);
+  readonly tieneFacturasProveedor = this.authService.tieneFeature(FEATURE_FACTURAS_PROVEEDOR);
+  readonly tieneProveedores = this.tieneCompras || this.tieneFacturasProveedor;
 
   readonly cargandoCategorias = signal(true);
   readonly categorias = signal<Categoria[]>([]);
@@ -81,7 +84,7 @@ export class Configuracion implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarCategorias();
-    if (this.tieneCompras) this.cargarProveedores();
+    if (this.tieneProveedores) this.cargarProveedores();
     this.cargarMediosPago();
     this.cargarNegocio();
     this.cargarEstadoNotificaciones();

@@ -10,7 +10,7 @@ namespace GestorPOS.WebAPI.Controllers;
 [ApiController]
 [Route("api/proveedores")]
 [Authorize]
-[RequireFeature(ComprasFeature.Clave)]
+[RequireFeature(ComprasFeature.Clave, FacturasProveedorFeature.Clave)]
 public class ProveedoresController : ControllerBase
 {
     private readonly IProveedorService _proveedorService;

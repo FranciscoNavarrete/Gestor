@@ -5,13 +5,14 @@ namespace GestorPOS.Domain.Entities;
 public class Proveedor : TenantEntity
 {
     public string Nombre { get; private set; } = string.Empty;
+    public string? Cuit { get; private set; }
     public string? Telefono { get; private set; }
     public string? Email { get; private set; }
     public bool Activo { get; private set; } = true;
 
     private Proveedor() { }
 
-    public static Proveedor Crear(Guid tenantId, string nombre, string? telefono, string? email)
+    public static Proveedor Crear(Guid tenantId, string nombre, string? cuit, string? telefono, string? email)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del proveedor es obligatorio.", nameof(nombre));
@@ -20,17 +21,19 @@ public class Proveedor : TenantEntity
         {
             TenantId = tenantId,
             Nombre = nombre.Trim(),
+            Cuit = string.IsNullOrWhiteSpace(cuit) ? null : cuit.Trim(),
             Telefono = string.IsNullOrWhiteSpace(telefono) ? null : telefono.Trim(),
             Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim()
         };
     }
 
-    public void Editar(string nombre, string? telefono, string? email)
+    public void Editar(string nombre, string? cuit, string? telefono, string? email)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del proveedor es obligatorio.", nameof(nombre));
 
         Nombre = nombre.Trim();
+        Cuit = string.IsNullOrWhiteSpace(cuit) ? null : cuit.Trim();
         Telefono = string.IsNullOrWhiteSpace(telefono) ? null : telefono.Trim();
         Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
     }

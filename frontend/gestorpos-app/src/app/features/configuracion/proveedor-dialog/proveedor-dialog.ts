@@ -30,6 +30,7 @@ export class ProveedorDialog {
 
   readonly form = this.fb.nonNullable.group({
     nombre: [this.data?.proveedor?.nombre ?? '', [Validators.required]],
+    cuit: [this.data?.proveedor?.cuit ?? ''],
     telefono: [this.data?.proveedor?.telefono ?? ''],
     email: [this.data?.proveedor?.email ?? ''],
   });
@@ -43,6 +44,7 @@ export class ProveedorDialog {
     const valores = this.form.getRawValue();
     const request = {
       nombre: valores.nombre,
+      cuit: valores.cuit.trim() || null,
       telefono: valores.telefono.trim() || null,
       email: valores.email.trim() || null,
     };

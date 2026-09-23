@@ -345,6 +345,118 @@ public class ReportePdfService : IReportePdfService
         return documento.GeneratePdf();
     }
 
+    public async Task<byte[]> GenerarFacturasProveedorPdfAsync(
+        Guid? proveedorId, DateOnly? desde, DateOnly? hasta, bool incluirPagadas, CancellationToken ct = default)
+    {
+        var (nombreNegocio, logo) = await ObtenerDatosNegocioAsync(ct);
+
+        var query = _db.FacturasProveedor.AsQueryable();
+        if (proveedorId is not null)
+            query = query.Where(f => f.ProveedorId == proveedorId);
+        if (desde is not null)
+            query = query.Where(f => f.FechaEmision >= desde.Value);
+        if (hasta is not null)
+            query = query.Where(f => f.FechaEmision <= hasta.Value);
+
+        var facturas = await query
+            .Select(f => new
+            {
+                f.ProveedorNombre,
+                f.NumeroFactura,
+                f.FechaEmision,
+                f.FechaVencimiento,
+                f.Monto,
+                Saldo = f.Monto - (_db.PagosFacturaProveedor.Where(p => p.FacturaProveedorId == f.Id).Sum(p => (decimal?)p.Monto) ?? 0m),
+            })
+            .OrderByDescending(f => f.FechaEmision)
+            .ToListAsync(ct);
+
+        var filas = facturas.Where(f => incluirPagadas || f.Saldo > 0).ToList();
+        var totalPendiente = filas.Sum(f => Math.Max(f.Saldo, 0));
+
+        var documento = Document.Create(contenedor =>
+        {
+            contenedor.Page(pagina =>
+            {
+                pagina.Size(PageSizes.A4);
+                pagina.Margin(30);
+                pagina.DefaultTextStyle(x => x.FontSize(10));
+
+                pagina.Header().Row(fila =>
+                {
+                    if (logo is not null)
+                    {
+                        fila.ConstantItem(40).Height(40).Image(logo).FitArea();
+                        fila.ConstantItem(10);
+                    }
+                    fila.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(nombreNegocio).FontSize(18).Bold();
+                        col.Item().PaddingTop(2).Text("Reporte de facturas de proveedores").FontSize(13).SemiBold();
+                        col.Item().PaddingTop(2).Text(ConstruirSubtituloRango(desde, hasta))
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+                    });
+                });
+
+                pagina.Content().PaddingTop(16).Column(col =>
+                {
+                    col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(c =>
+                    {
+                        c.Item().Text($"${totalPendiente.ToString("N2", Ci)}").FontSize(16).Bold().FontColor(Colors.Red.Darken1);
+                        c.Item().Text("Total pendiente en este listado").FontSize(8).FontColor(Colors.Grey.Darken1);
+                    });
+
+                    col.Item().PaddingTop(16).Table(tabla =>
+                    {
+                        tabla.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2);
+                            c.RelativeColumn(2);
+                            c.RelativeColumn(1);
+                            c.RelativeColumn(1);
+                            c.RelativeColumn(1);
+                            c.RelativeColumn(1);
+                        });
+
+                        tabla.Header(header =>
+                        {
+                            header.Cell().Element(CeldaEncabezado).Text("Proveedor");
+                            header.Cell().Element(CeldaEncabezado).Text("N° Factura");
+                            header.Cell().Element(CeldaEncabezado).Text("Emisión");
+                            header.Cell().Element(CeldaEncabezado).Text("Vencimiento");
+                            header.Cell().Element(CeldaEncabezado).AlignRight().Text("Monto");
+                            header.Cell().Element(CeldaEncabezado).AlignRight().Text("Saldo");
+                        });
+
+                        foreach (var f in filas)
+                        {
+                            tabla.Cell().Element(CeldaCuerpo).Text(f.ProveedorNombre);
+                            tabla.Cell().Element(CeldaCuerpo).Text(f.NumeroFactura);
+                            tabla.Cell().Element(CeldaCuerpo).Text(f.FechaEmision.ToString("dd/MM/yyyy", Ci));
+                            tabla.Cell().Element(CeldaCuerpo).Text(f.FechaVencimiento?.ToString("dd/MM/yyyy", Ci) ?? "-");
+                            tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"${f.Monto.ToString("N2", Ci)}");
+                            tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"${Math.Max(f.Saldo, 0).ToString("N2", Ci)}")
+                                .FontColor(f.Saldo > 0 ? Colors.Red.Darken1 : Colors.Green.Darken1);
+                        }
+                    });
+
+                    if (filas.Count == 0)
+                        col.Item().PaddingTop(20).AlignCenter().Text("No hay facturas en el período seleccionado.").FontColor(Colors.Grey.Darken1);
+                });
+
+                pagina.Footer().AlignCenter().Text(x =>
+                {
+                    x.Span("Página ");
+                    x.CurrentPageNumber();
+                    x.Span(" de ");
+                    x.TotalPages();
+                });
+            });
+        });
+
+        return documento.GeneratePdf();
+    }
+
     private async Task<(string Nombre, byte[]? Logo)> ObtenerDatosNegocioAsync(CancellationToken ct)
     {
         var tenant = await _db.Tenants

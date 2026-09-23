@@ -16,27 +16,35 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
-import { CompraResumenDto, ResumenComprasDto } from '../../core/models/compra.models';
+import { CompraResumenDto, Proveedor, ResumenComprasDto } from '../../core/models/compra.models';
 import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { FEATURE_CUENTA_CORRIENTE } from '../../core/models/cuenta-corriente';
+import { FacturaProveedorDto, ResumenFacturasProveedorDto } from '../../core/models/factura-proveedor.models';
+import { FEATURE_FACTURAS_PROVEEDOR } from '../../core/models/facturas-proveedor-feature';
 import { MovimientoStock } from '../../core/models/movimiento-stock.models';
 import { DeudaClienteDto, DeudasDto, GananciasDto, RankingClienteDto } from '../../core/models/reportes.models';
 import { VentaResumenDto } from '../../core/models/venta.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { CompraService } from '../../core/services/compra.service';
+import { FacturaProveedorService } from '../../core/services/factura-proveedor.service';
 import { MovimientoStockService } from '../../core/services/movimiento-stock.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { fechaAIso, hoy, isoAFecha, restarMeses } from '../../core/utils/fecha.util';
 import { ReciboCompraDialog } from '../compras/recibo-compra-dialog/recibo-compra-dialog';
+import { NuevaFacturaDialog, NuevaFacturaDialogData } from '../facturas-proveedor/nueva-factura-dialog/nueva-factura-dialog';
+import {
+  RegistrarPagoFacturaDialog,
+  RegistrarPagoFacturaDialogData,
+} from '../facturas-proveedor/registrar-pago-factura-dialog/registrar-pago-factura-dialog';
 
 const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
 const MAX_MESES_RANGO_FECHAS = 2;
 
-type Vista = 'ventas' | 'stock' | 'compras' | 'movimientos' | 'clientes' | 'deudas';
+type Vista = 'ventas' | 'stock' | 'compras' | 'facturas' | 'movimientos' | 'clientes' | 'deudas';
 
 @Component({
   selector: 'app-reportes',
@@ -63,6 +71,7 @@ export class Reportes implements OnInit {
   private readonly reportesService = inject(ReportesService);
   private readonly catalogoService = inject(CatalogoService);
   private readonly compraService = inject(CompraService);
+  private readonly facturaProveedorService = inject(FacturaProveedorService);
   private readonly movimientoStockService = inject(MovimientoStockService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -71,6 +80,7 @@ export class Reportes implements OnInit {
 
   readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
   readonly tieneCompras = this.authService.tieneFeature(FEATURE_COMPRAS);
+  readonly tieneFacturasProveedor = this.authService.tieneFeature(FEATURE_FACTURAS_PROVEEDOR);
 
   readonly vista = signal<Vista>('ventas');
   readonly exportando = signal(false);
@@ -108,6 +118,30 @@ export class Reportes implements OnInit {
   readonly resumenCompras = signal<ResumenComprasDto | null>(null);
   readonly compras = signal<CompraResumenDto[]>([]);
 
+  // --- Facturas a proveedores ---
+  readonly proveedoresFacturas = signal<Proveedor[]>([]);
+  readonly busquedaProveedorFacturas = signal('');
+  readonly proveedorFacturaSeleccionado = signal<Proveedor | null>(null);
+  readonly desdeFacturas = signal('');
+  readonly hastaFacturas = signal('');
+  readonly desdeFacturasFecha = computed(() => isoAFecha(this.desdeFacturas()));
+  readonly hastaFacturasFecha = computed(() => isoAFecha(this.hastaFacturas()));
+  readonly maxDesdeFacturasFecha = computed(() => this.hastaFacturasFecha() ?? this.hoy);
+  readonly minDesdeFacturasFecha = computed(() => restarMeses(this.maxDesdeFacturasFecha(), MAX_MESES_RANGO_FECHAS));
+  readonly incluirPagadas = signal(false);
+  readonly cargandoFacturas = signal(true);
+  readonly resumenFacturas = signal<ResumenFacturasProveedorDto | null>(null);
+  readonly facturas = signal<FacturaProveedorDto[]>([]);
+
+  readonly sugerenciasProveedorFacturas = computed(() => {
+    const termino = this.busquedaProveedorFacturas().trim().toLowerCase();
+    if (!termino) return [];
+    return this.proveedoresFacturas()
+      .filter((p) => p.activo)
+      .filter((p) => p.nombre.toLowerCase().includes(termino) || (p.cuit?.toLowerCase().includes(termino) ?? false))
+      .slice(0, 8);
+  });
+
   // --- Movimientos de stock ---
   readonly productosParaFiltro = signal<Producto[]>([]);
   readonly filtroProductoId = signal('');
@@ -141,6 +175,10 @@ export class Reportes implements OnInit {
     this.cargarVentas();
     this.cargarStock();
     if (this.tieneCompras) this.cargarCompras();
+    if (this.tieneFacturasProveedor) {
+      this.cargarFacturas();
+      this.compraService.listarProveedores().subscribe((proveedores) => this.proveedoresFacturas.set(proveedores));
+    }
     this.cargarMovimientos();
     this.cargarClientes();
     if (this.tieneCuentaCorriente) this.cargarDeudas();
@@ -274,6 +312,103 @@ export class Reportes implements OnInit {
       },
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
     });
+  }
+
+  // --- Facturas a proveedores ---
+
+  onBusquedaProveedorFacturasChange(valor: string): void {
+    this.busquedaProveedorFacturas.set(valor);
+  }
+
+  seleccionarProveedorFactura(proveedor: Proveedor): void {
+    this.proveedorFacturaSeleccionado.set(proveedor);
+    this.busquedaProveedorFacturas.set('');
+    this.cargarFacturas();
+  }
+
+  quitarProveedorFacturaFiltro(): void {
+    this.proveedorFacturaSeleccionado.set(null);
+    this.cargarFacturas();
+  }
+
+  onDesdeFacturasChange(fecha: Date | null): void {
+    this.desdeFacturas.set(fechaAIso(fecha));
+    this.cargarFacturas();
+  }
+
+  onHastaFacturasChange(fecha: Date | null): void {
+    this.hastaFacturas.set(fechaAIso(fecha));
+    this.desdeFacturas.set(this.ajustarDesde(this.desdeFacturas(), this.hastaFacturas()));
+    this.cargarFacturas();
+  }
+
+  toggleIncluirPagadas(): void {
+    this.incluirPagadas.set(!this.incluirPagadas());
+    this.cargarFacturas();
+  }
+
+  limpiarFiltroFacturas(): void {
+    this.proveedorFacturaSeleccionado.set(null);
+    this.desdeFacturas.set('');
+    this.hastaFacturas.set('');
+    this.cargarFacturas();
+  }
+
+  cargarFacturas(): void {
+    this.cargandoFacturas.set(true);
+    const proveedorId = this.proveedorFacturaSeleccionado()?.id;
+    const desde = this.desdeFacturas() || undefined;
+    const hasta = this.hastaFacturas() || undefined;
+
+    this.facturaProveedorService.resumen().subscribe((r) => this.resumenFacturas.set(r));
+    this.facturaProveedorService.listar(proveedorId, desde, hasta, this.incluirPagadas()).subscribe({
+      next: (facturas) => {
+        this.facturas.set(facturas);
+        this.cargandoFacturas.set(false);
+      },
+      error: () => this.cargandoFacturas.set(false),
+    });
+  }
+
+  nuevaFactura(): void {
+    const data: NuevaFacturaDialogData = {
+      proveedores: this.proveedoresFacturas(),
+      proveedorIdPreseleccionado: this.proveedorFacturaSeleccionado()?.id ?? null,
+    };
+    this.dialog
+      .open(NuevaFacturaDialog, { data, width: '480px', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((factura: FacturaProveedorDto | undefined) => {
+        if (!factura) return;
+        this.cargarFacturas();
+        this.snackBar.open('Factura registrada', 'Cerrar', { duration: 3000 });
+      });
+  }
+
+  abrirPagoFactura(factura: FacturaProveedorDto): void {
+    if (factura.saldo <= 0) return;
+
+    const data: RegistrarPagoFacturaDialogData = { factura };
+    this.dialog
+      .open(RegistrarPagoFacturaDialog, { data, width: '420px', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((actualizada: FacturaProveedorDto | undefined) => {
+        if (!actualizada) return;
+        this.cargarFacturas();
+        this.snackBar.open('Pago registrado', 'Cerrar', { duration: 3000 });
+      });
+  }
+
+  exportarFacturasPdf(): void {
+    this.descargarPdf(
+      this.facturaProveedorService.exportarPdf(
+        this.proveedorFacturaSeleccionado()?.id,
+        this.desdeFacturas() || undefined,
+        this.hastaFacturas() || undefined,
+        this.incluirPagadas(),
+      ),
+      'reporte-facturas-proveedor.pdf',
+    );
   }
 
   // --- Movimientos de stock ---

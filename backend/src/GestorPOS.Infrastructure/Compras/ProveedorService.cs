@@ -23,16 +23,16 @@ public class ProveedorService : IProveedorService
     {
         return await _db.Proveedores
             .OrderBy(p => p.Nombre)
-            .Select(p => new ProveedorDto(p.Id, p.Nombre, p.Telefono, p.Email, p.Activo))
+            .Select(p => new ProveedorDto(p.Id, p.Nombre, p.Cuit, p.Telefono, p.Email, p.Activo))
             .ToListAsync(ct);
     }
 
     public async Task<ProveedorDto> CrearAsync(CrearProveedorRequest request, CancellationToken ct = default)
     {
-        var proveedor = Proveedor.Crear(_tenantContext.TenantId, request.Nombre, request.Telefono, request.Email);
+        var proveedor = Proveedor.Crear(_tenantContext.TenantId, request.Nombre, request.Cuit, request.Telefono, request.Email);
         _db.Proveedores.Add(proveedor);
         await _db.SaveChangesAsync(ct);
-        return new ProveedorDto(proveedor.Id, proveedor.Nombre, proveedor.Telefono, proveedor.Email, proveedor.Activo);
+        return new ProveedorDto(proveedor.Id, proveedor.Nombre, proveedor.Cuit, proveedor.Telefono, proveedor.Email, proveedor.Activo);
     }
 
     public async Task<ProveedorDto> EditarAsync(Guid id, EditarProveedorRequest request, CancellationToken ct = default)
@@ -40,9 +40,9 @@ public class ProveedorService : IProveedorService
         var proveedor = await _db.Proveedores.FirstOrDefaultAsync(p => p.Id == id, ct)
             ?? throw new AppException("El proveedor no existe.");
 
-        proveedor.Editar(request.Nombre, request.Telefono, request.Email);
+        proveedor.Editar(request.Nombre, request.Cuit, request.Telefono, request.Email);
         await _db.SaveChangesAsync(ct);
-        return new ProveedorDto(proveedor.Id, proveedor.Nombre, proveedor.Telefono, proveedor.Email, proveedor.Activo);
+        return new ProveedorDto(proveedor.Id, proveedor.Nombre, proveedor.Cuit, proveedor.Telefono, proveedor.Email, proveedor.Activo);
     }
 
     public async Task DesactivarAsync(Guid id, CancellationToken ct = default)
@@ -61,6 +61,6 @@ public class ProveedorService : IProveedorService
 
         proveedor.Activar();
         await _db.SaveChangesAsync(ct);
-        return new ProveedorDto(proveedor.Id, proveedor.Nombre, proveedor.Telefono, proveedor.Email, proveedor.Activo);
+        return new ProveedorDto(proveedor.Id, proveedor.Nombre, proveedor.Cuit, proveedor.Telefono, proveedor.Email, proveedor.Activo);
     }
 }

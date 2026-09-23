@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>Nueva factura</h2>
+
+<form [formGroup]="form" (ngSubmit)="guardar()">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Proveedor</mat-label>
+      <mat-select formControlName="proveedorId">
+        @for (proveedor of proveedoresActivos; track proveedor.id) {
+          <mat-option [value]="proveedor.id">
+            {{ proveedor.nombre }}{{ proveedor.cuit ? ' · CUIT ' + proveedor.cuit : '' }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <div class="fila-doble">
+      <mat-form-field appearance="outline">
+        <mat-label>Número de factura</mat-label>
+        <input matInput formControlName="numeroFactura" placeholder="0001-00001234" cdkFocusInitial />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Monto</mat-label>
+        <input matInput type="number" min="0.01" step="0.01" formControlName="monto" />
+      </mat-form-field>
+    </div>
+
+    <div class="fila-doble">
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de emisión</mat-label>
+        <input matInput [matDatepicker]="pickerEmision" formControlName="fechaEmision" [max]="hoy" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerEmision"></mat-datepicker-toggle>
+        <mat-datepicker #pickerEmision></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Vencimiento (opcional)</mat-label>
+        <input matInput [matDatepicker]="pickerVencimiento" formControlName="fechaVencimiento" />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerVencimiento"></mat-datepicker-toggle>
+        <mat-datepicker #pickerVencimiento></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+      @if (guardando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        Registrar factura
+      }
+    </button>
+  </mat-dialog-actions>
+</form>

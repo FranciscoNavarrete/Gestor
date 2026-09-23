@@ -13,6 +13,12 @@
       <span class="etiqueta">Compras</span>
     </mat-button-toggle>
   }
+  @if (tieneFacturasProveedor) {
+    <mat-button-toggle value="facturas" aria-label="Facturas">
+      <mat-icon>request_quote</mat-icon>
+      <span class="etiqueta">Facturas</span>
+    </mat-button-toggle>
+  }
   <mat-button-toggle value="movimientos" aria-label="Movimientos">
     <mat-icon>history</mat-icon>
     <span class="etiqueta">Movimientos</span>
@@ -246,6 +252,148 @@
           <div class="venta-medio">{{ c.proveedorNombre }} · {{ c.cantidadItems }} producto{{ c.cantidadItems === 1 ? '' : 's' }}</div>
           <div class="venta-total">${{ c.total | number: '1.0-2' }}</div>
           <mat-icon class="chevron">chevron_right</mat-icon>
+        </mat-card>
+      }
+    </div>
+  }
+} @else if (vista() === 'facturas') {
+  <div class="acciones-facturas">
+    <button mat-flat-button color="primary" (click)="nuevaFactura()">
+      <mat-icon>add</mat-icon>
+      Nueva factura
+    </button>
+  </div>
+
+  @if (resumenFacturas(); as r) {
+    <div class="grid-resumen">
+      <mat-card class="stat">
+        <div class="icono-chip acento-alerta"><mat-icon>request_quote</mat-icon></div>
+        <div class="valor font-display">${{ r.totalAPagar | number: '1.0-2' }}</div>
+        <div class="etiqueta">Total a pagar ahora</div>
+      </mat-card>
+
+      <mat-card class="stat">
+        <div class="icono-chip"><mat-icon>receipt_long</mat-icon></div>
+        <div class="valor font-display">{{ r.cantidadPendientes }}</div>
+        <div class="etiqueta">Factura{{ r.cantidadPendientes === 1 ? '' : 's' }} pendiente{{ r.cantidadPendientes === 1 ? '' : 's' }}</div>
+      </mat-card>
+    </div>
+  }
+
+  <div class="buscador-proveedor-facturas">
+    @if (proveedorFacturaSeleccionado(); as p) {
+      <div class="chip-proveedor-filtro">
+        <mat-icon>local_shipping</mat-icon>
+        <span>{{ p.nombre }}</span>
+        <button mat-icon-button (click)="quitarProveedorFacturaFiltro()" aria-label="Quitar filtro de proveedor">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    } @else {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Buscar por proveedor o CUIT</mat-label>
+        <input
+          matInput
+          [ngModel]="busquedaProveedorFacturas()"
+          (ngModelChange)="onBusquedaProveedorFacturasChange($event)"
+        />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      @if (sugerenciasProveedorFacturas().length > 0) {
+        <div class="lista-sugerencias-proveedor">
+          @for (proveedor of sugerenciasProveedorFacturas(); track proveedor.id) {
+            <button type="button" class="sugerencia-proveedor" (click)="seleccionarProveedorFactura(proveedor)">
+              <mat-icon>local_shipping</mat-icon>
+              <div class="sugerencia-proveedor-texto">
+                <span class="nombre">{{ proveedor.nombre }}</span>
+                @if (proveedor.cuit) {
+                  <span class="cuit">CUIT {{ proveedor.cuit }}</span>
+                }
+              </div>
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <div class="filtro-fechas">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerDesdeFacturas"
+        [ngModel]="desdeFacturasFecha()"
+        (ngModelChange)="onDesdeFacturasChange($event)"
+        [min]="minDesdeFacturasFecha()"
+        [max]="maxDesdeFacturasFecha()"
+      />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerDesdeFacturas"></mat-datepicker-toggle>
+      <mat-datepicker #pickerDesdeFacturas></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerHastaFacturas"
+        [ngModel]="hastaFacturasFecha()"
+        (ngModelChange)="onHastaFacturasChange($event)"
+        [min]="desdeFacturasFecha()"
+        [max]="hoy"
+      />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerHastaFacturas"></mat-datepicker-toggle>
+      <mat-datepicker #pickerHastaFacturas></mat-datepicker>
+    </mat-form-field>
+    @if (desdeFacturas() || hastaFacturas() || proveedorFacturaSeleccionado()) {
+      <button mat-icon-button (click)="limpiarFiltroFacturas()" aria-label="Limpiar filtros">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+    <button mat-icon-button (click)="exportarFacturasPdf()" [disabled]="exportando()" aria-label="Exportar a PDF">
+      @if (exportando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <mat-icon>picture_as_pdf</mat-icon>
+      }
+    </button>
+  </div>
+
+  <mat-slide-toggle class="toggle-pagadas" [checked]="incluirPagadas()" (change)="toggleIncluirPagadas()">
+    Ver pagadas
+  </mat-slide-toggle>
+
+  @if (cargandoFacturas()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (facturas().length === 0) {
+    <p class="vacio">No hay facturas en el período seleccionado.</p>
+  } @else {
+    <div class="lista-facturas">
+      @for (f of facturas(); track f.id) {
+        <mat-card class="factura-item" [class.clickeable]="f.saldo > 0" (click)="abrirPagoFactura(f)">
+          <div class="factura-info">
+            <span class="factura-proveedor">{{ f.proveedorNombre }}</span>
+            <span class="factura-detalle">
+              Fact. {{ f.numeroFactura }} · emitida {{ f.fechaEmision | date: 'dd/MM/yyyy' }}
+              @if (f.fechaVencimiento) {
+                · vence {{ f.fechaVencimiento | date: 'dd/MM/yyyy' }}
+              }
+              @if (f.estado === 'Pago parcial') {
+                · saldo ${{ f.saldo | number: '1.0-2' }}
+              }
+            </span>
+          </div>
+          <span
+            class="pill-estado"
+            [class.estado-pendiente]="f.estado === 'Pendiente'"
+            [class.estado-parcial]="f.estado === 'Pago parcial'"
+            [class.estado-pagada]="f.estado === 'Pagada'"
+          >
+            {{ f.estado }}
+          </span>
+          <span class="factura-monto">${{ f.monto | number: '1.0-2' }}</span>
         </mat-card>
       }
     </div>

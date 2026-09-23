@@ -1,5 +1,7 @@
 using GestorPOS.Application.Reportes;
 using GestorPOS.Application.Reportes.Dtos;
+using GestorPOS.Domain.Common;
+using GestorPOS.WebAPI.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -61,5 +63,15 @@ public class ReportesController : ControllerBase
     {
         var bytes = await _reportePdfService.GenerarStockPdfAsync(busqueda, bajoStock, ct);
         return File(bytes, "application/pdf", "reporte-stock.pdf");
+    }
+
+    [HttpGet("facturas-proveedor/pdf")]
+    [RequireFeature(FacturasProveedorFeature.Clave)]
+    public async Task<IActionResult> FacturasProveedorPdf(
+        [FromQuery] Guid? proveedorId, [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta,
+        [FromQuery] bool incluirPagadas, CancellationToken ct)
+    {
+        var bytes = await _reportePdfService.GenerarFacturasProveedorPdfAsync(proveedorId, desde, hasta, incluirPagadas, ct);
+        return File(bytes, "application/pdf", "reporte-facturas-proveedor.pdf");
     }
 }

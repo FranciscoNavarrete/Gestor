@@ -7,4 +7,7 @@ public interface IReportePdfService
     Task<byte[]> GenerarStockPdfAsync(string? busqueda, bool soloBajoStock, CancellationToken ct = default);
 
     Task<byte[]> GenerarDeudasPdfAsync(CancellationToken ct = default);
+
+    Task<byte[]> GenerarFacturasProveedorPdfAsync(
+        Guid? proveedorId, DateOnly? desde, DateOnly? hasta, bool incluirPagadas, CancellationToken ct = default);
 }

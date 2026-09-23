@@ -75,6 +75,13 @@
       color: #1ea672;
     }
   }
+
+  &.acento-alerta {
+    background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+    mat-icon {
+      color: var(--mat-sys-error);
+    }
+  }
 }
 
 .stat {
@@ -394,6 +401,181 @@
 .titulo-deudas {
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.acciones-facturas {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.buscador-proveedor-facturas {
+  position: relative;
+  margin-bottom: 12px;
+
+  .full {
+    width: 100%;
+  }
+}
+
+.chip-proveedor-filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle, #2c3049);
+  width: fit-content;
+
+  mat-icon:first-child {
+    color: var(--color-accent);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  button {
+    margin-left: 4px;
+  }
+}
+
+.lista-sugerencias-proveedor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58px;
+  z-index: 5;
+  background: var(--mat-sys-surface-container-high, var(--surface-card, #fff));
+  border: 1px solid var(--border-subtle, #2c3049);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.sugerencia-proveedor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-top: 1px solid var(--border-subtle, #2c3049);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:first-child {
+    border-top: none;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+
+  mat-icon {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .sugerencia-proveedor-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .nombre {
+    font-size: 0.88rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cuit {
+    font-size: 0.72rem;
+    opacity: 0.6;
+  }
+}
+
+.toggle-pagadas {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.lista-facturas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.factura-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+
+  &.clickeable {
+    cursor: pointer;
+  }
+
+  .factura-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .factura-proveedor {
+    font-weight: 600;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .factura-detalle {
+    font-size: 0.76rem;
+    opacity: 0.65;
+    margin-top: 1px;
+  }
+
+  .factura-monto {
+    flex-shrink: 0;
+    font-weight: 600;
+    min-width: 70px;
+    text-align: right;
+  }
+}
+
+.pill-estado {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &.estado-pendiente {
+    background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+    color: var(--mat-sys-error);
+  }
+
+  &.estado-parcial {
+    background: color-mix(in srgb, #e0a552 20%, transparent);
+    color: #b5780e;
+  }
+
+  &.estado-pagada {
+    background: color-mix(in srgb, #1ea672 16%, transparent);
+    color: #1ea672;
+  }
 }
 
 .resumen-deudas {
