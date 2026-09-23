@@ -1,0 +1,38 @@
+<h2 mat-dialog-title>Recibo de compra</h2>
+
+<mat-dialog-content>
+  <div class="proveedor-fila">
+    <mat-icon>local_shipping</mat-icon>
+    <div>
+      <span class="proveedor-nombre">{{ compra.proveedorNombre }}</span>
+      <span class="fecha">{{ compra.fecha | date: 'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+  </div>
+
+  <div class="cabecera-items">
+    <span>Producto</span>
+    <span class="col-cant">Cant.</span>
+    <span class="col-costo">Costo u.</span>
+    <span class="col-subtotal">Subtotal</span>
+  </div>
+
+  <div class="lista-items">
+    @for (item of compra.items; track item.productoId) {
+      <div class="item">
+        <span class="item-nombre">{{ item.productoNombre }}</span>
+        <span class="col-cant">{{ item.cantidad }}</span>
+        <span class="col-costo">${{ item.costoUnitario | number: '1.0-2' }}</span>
+        <span class="col-subtotal">${{ item.subtotal | number: '1.0-2' }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="fila-total">
+    <span>Total de la compra</span>
+    <span class="valor-total font-display">${{ compra.total | number: '1.0-2' }}</span>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button color="primary" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

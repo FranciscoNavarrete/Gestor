@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -28,6 +29,7 @@ import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { fechaAIso, hoy, isoAFecha, restarMeses } from '../../core/utils/fecha.util';
+import { ReciboCompraDialog } from '../compras/recibo-compra-dialog/recibo-compra-dialog';
 
 const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
@@ -64,6 +66,7 @@ export class Reportes implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
 
@@ -260,6 +263,15 @@ export class Reportes implements OnInit {
     this.desdeCompras.set('');
     this.hastaCompras.set('');
     this.cargarCompras();
+  }
+
+  abrirCompra(compra: CompraResumenDto): void {
+    this.compraService.obtenerCompra(compra.id).subscribe({
+      next: (detalle) => {
+        this.dialog.open(ReciboCompraDialog, { data: detalle, width: '480px', maxWidth: '95vw' });
+      },
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
   }
 
   // --- Movimientos de stock ---

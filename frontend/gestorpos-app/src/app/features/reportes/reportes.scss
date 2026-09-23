@@ -172,6 +172,15 @@
     min-width: 70px;
     text-align: right;
   }
+
+  &.clickeable {
+    cursor: pointer;
+  }
+
+  .chevron {
+    color: var(--mat-sys-on-surface-variant, #999);
+    flex-shrink: 0;
+  }
 }
 
 .lista-stock {

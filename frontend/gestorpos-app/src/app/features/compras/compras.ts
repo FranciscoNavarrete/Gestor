@@ -16,6 +16,7 @@ import { CatalogoService } from '../../core/services/catalogo.service';
 import { CompraService } from '../../core/services/compra.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { ProveedorDialog, ProveedorDialogData } from '../configuracion/proveedor-dialog/proveedor-dialog';
+import { ReciboCompraDialog } from './recibo-compra-dialog/recibo-compra-dialog';
 
 interface ItemCompra {
   producto: Producto;
@@ -133,10 +134,10 @@ export class Compras implements OnInit {
     }));
 
     this.compraService.crearCompra({ proveedorId: this.proveedorId(), items }).subscribe({
-      next: () => {
+      next: (compra) => {
         this.registrando.set(false);
         this.items.set([]);
-        this.snackBar.open('Compra registrada — stock actualizado', 'Cerrar', { duration: 3000 });
+        this.dialog.open(ReciboCompraDialog, { data: compra, width: '480px', maxWidth: '95vw' });
       },
       error: (err) => {
         this.registrando.set(false);

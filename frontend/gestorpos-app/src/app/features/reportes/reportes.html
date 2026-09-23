@@ -239,10 +239,11 @@
   } @else {
     <div class="lista-ventas">
       @for (c of compras(); track c.id) {
-        <mat-card class="venta-item">
+        <mat-card class="venta-item clickeable" (click)="abrirCompra(c)">
           <div class="venta-fecha">{{ c.fecha | date: 'dd/MM/yyyy HH:mm' }}</div>
           <div class="venta-medio">{{ c.proveedorNombre }} · {{ c.cantidadItems }} producto{{ c.cantidadItems === 1 ? '' : 's' }}</div>
           <div class="venta-total">${{ c.total | number: '1.0-2' }}</div>
+          <mat-icon class="chevron">chevron_right</mat-icon>
         </mat-card>
       }
     </div>
