@@ -374,6 +374,10 @@ public class ReportePdfService : IReportePdfService
         var filas = facturas.Where(f => incluirPagadas || f.Saldo > 0).ToList();
         var totalPendiente = filas.Sum(f => Math.Max(f.Saldo, 0));
 
+        var subtituloRango = ConstruirSubtituloRango(desde, hasta, "Todas las facturas");
+        var nombreProveedorFiltro = proveedorId is not null ? facturas.FirstOrDefault()?.ProveedorNombre : null;
+        var subtitulo = nombreProveedorFiltro is not null ? $"{nombreProveedorFiltro} · {subtituloRango}" : subtituloRango;
+
         var documento = Document.Create(contenedor =>
         {
             contenedor.Page(pagina =>
@@ -393,7 +397,7 @@ public class ReportePdfService : IReportePdfService
                     {
                         col.Item().Text(nombreNegocio).FontSize(18).Bold();
                         col.Item().PaddingTop(2).Text("Reporte de facturas de proveedores").FontSize(13).SemiBold();
-                        col.Item().PaddingTop(2).Text(ConstruirSubtituloRango(desde, hasta))
+                        col.Item().PaddingTop(2).Text(subtitulo)
                             .FontSize(9).FontColor(Colors.Grey.Darken1);
                     });
                 });
@@ -410,12 +414,12 @@ public class ReportePdfService : IReportePdfService
                     {
                         tabla.ColumnsDefinition(c =>
                         {
-                            c.RelativeColumn(2);
-                            c.RelativeColumn(2);
-                            c.RelativeColumn(1);
-                            c.RelativeColumn(1);
-                            c.RelativeColumn(1);
-                            c.RelativeColumn(1);
+                            c.RelativeColumn(2.2f);
+                            c.RelativeColumn(1.6f);
+                            c.RelativeColumn(1.3f);
+                            c.RelativeColumn(1.3f);
+                            c.RelativeColumn(1.4f);
+                            c.RelativeColumn(1.4f);
                         });
 
                         tabla.Header(header =>
@@ -423,7 +427,7 @@ public class ReportePdfService : IReportePdfService
                             header.Cell().Element(CeldaEncabezado).Text("Proveedor");
                             header.Cell().Element(CeldaEncabezado).Text("N° Factura");
                             header.Cell().Element(CeldaEncabezado).Text("Emisión");
-                            header.Cell().Element(CeldaEncabezado).Text("Vencimiento");
+                            header.Cell().Element(CeldaEncabezado).Text("Vence");
                             header.Cell().Element(CeldaEncabezado).AlignRight().Text("Monto");
                             header.Cell().Element(CeldaEncabezado).AlignRight().Text("Saldo");
                         });
@@ -467,9 +471,9 @@ public class ReportePdfService : IReportePdfService
         return (tenant?.Nombre ?? "", tenant?.LogoData);
     }
 
-    private static string ConstruirSubtituloRango(DateOnly? desde, DateOnly? hasta)
+    private static string ConstruirSubtituloRango(DateOnly? desde, DateOnly? hasta, string sinFiltro = "Todas las ventas")
     {
-        if (desde is null && hasta is null) return "Todas las ventas";
+        if (desde is null && hasta is null) return sinFiltro;
         if (desde is not null && hasta is not null) return $"Del {desde:dd/MM/yyyy} al {hasta:dd/MM/yyyy}";
         if (desde is not null) return $"Desde el {desde:dd/MM/yyyy}";
         return $"Hasta el {hasta:dd/MM/yyyy}";
