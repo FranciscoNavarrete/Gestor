@@ -15,6 +15,9 @@
   </div>
 
   <div class="acciones-encabezado">
+    <button mat-icon-button routerLink="/compras" aria-label="Registrar compra a proveedor">
+      <mat-icon>local_shipping</mat-icon>
+    </button>
     <button mat-icon-button [matMenuTriggerFor]="menuImportar" aria-label="Importar desde Excel" [disabled]="importando()">
       @if (importando()) {
         <mat-spinner diameter="20"></mat-spinner>

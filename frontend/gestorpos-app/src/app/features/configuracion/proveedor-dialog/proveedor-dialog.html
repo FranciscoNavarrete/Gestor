@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>{{ esEdicion ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="guardar()">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" cdkFocusInitial />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Teléfono (opcional)</mat-label>
+      <input matInput formControlName="telefono" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Email (opcional)</mat-label>
+      <input matInput formControlName="email" />
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+      {{ esEdicion ? 'Guardar' : 'Crear' }}
+    </button>
+  </mat-dialog-actions>
+</form>

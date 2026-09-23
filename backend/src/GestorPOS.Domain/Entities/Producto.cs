@@ -72,6 +72,15 @@ public class Producto : TenantEntity
         Precio = nuevoPrecio;
     }
 
+    /// <summary>Actualiza el costo vigente del producto — se llama al registrar una compra, con el
+    /// costo unitario de esa compra (método "último costo", no promedio ponderado).</summary>
+    public void ActualizarCosto(decimal nuevoCosto)
+    {
+        if (nuevoCosto < 0)
+            throw new ArgumentException("El costo no puede ser negativo.", nameof(nuevoCosto));
+        Costo = nuevoCosto;
+    }
+
     public void AjustarStock(int cantidad)
     {
         var nuevoStock = StockActual + cantidad;

@@ -11,17 +11,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria } from '../../core/models/catalog.models';
+import { Proveedor } from '../../core/models/compra.models';
 import { MedioPagoDto, NegocioDto } from '../../core/models/configuracion.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { CompraService } from '../../core/services/compra.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { NotificacionPushService } from '../../core/services/notificacion-push.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { comprimirImagen } from '../../core/utils/imagen.util';
 import { CategoriaDialog, CategoriaDialogData } from '../productos/categoria-dialog/categoria-dialog';
 import { MedioPagoDialog, MedioPagoDialogData } from './medio-pago-dialog/medio-pago-dialog';
+import { ProveedorDialog, ProveedorDialogData } from './proveedor-dialog/proveedor-dialog';
 
-type Vista = 'categorias' | 'medios-pago' | 'negocio';
+type Vista = 'categorias' | 'proveedores' | 'medios-pago' | 'negocio';
 
 @Component({
   selector: 'app-configuracion',
@@ -41,6 +44,7 @@ type Vista = 'categorias' | 'medios-pago' | 'negocio';
 })
 export class Configuracion implements OnInit, OnDestroy {
   private readonly catalogoService = inject(CatalogoService);
+  private readonly compraService = inject(CompraService);
   private readonly configuracionService = inject(ConfiguracionService);
   private readonly authService = inject(AuthService);
   private readonly notificacionPushService = inject(NotificacionPushService);
@@ -54,6 +58,9 @@ export class Configuracion implements OnInit, OnDestroy {
 
   readonly cargandoCategorias = signal(true);
   readonly categorias = signal<Categoria[]>([]);
+
+  readonly cargandoProveedores = signal(true);
+  readonly proveedores = signal<Proveedor[]>([]);
 
   readonly cargandoMediosPago = signal(true);
   readonly mediosPago = signal<MedioPagoDto[]>([]);
@@ -72,6 +79,7 @@ export class Configuracion implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarCategorias();
+    this.cargarProveedores();
     this.cargarMediosPago();
     this.cargarNegocio();
     this.cargarEstadoNotificaciones();
@@ -141,6 +149,53 @@ export class Configuracion implements OnInit, OnDestroy {
         this.snackBar.open('Categoría eliminada', 'Cerrar', { duration: 3000 });
       },
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 5000 }),
+    });
+  }
+
+  // --- Proveedores ---
+
+  private cargarProveedores(): void {
+    this.cargandoProveedores.set(true);
+    this.compraService.listarProveedores().subscribe({
+      next: (proveedores) => {
+        this.proveedores.set(proveedores);
+        this.cargandoProveedores.set(false);
+      },
+      error: () => this.cargandoProveedores.set(false),
+    });
+  }
+
+  nuevoProveedor(): void {
+    this.abrirDialogoProveedor(null);
+  }
+
+  editarProveedor(proveedor: Proveedor): void {
+    this.abrirDialogoProveedor(proveedor);
+  }
+
+  private abrirDialogoProveedor(proveedor: Proveedor | null): void {
+    const data: ProveedorDialogData = { proveedor };
+    this.dialog
+      .open(ProveedorDialog, { data, width: '420px', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((resultado) => {
+        if (resultado) this.cargarProveedores();
+      });
+  }
+
+  desactivarProveedor(proveedor: Proveedor): void {
+    if (!confirm(`¿Dar de baja el proveedor "${proveedor.nombre}"?`)) return;
+
+    this.compraService.desactivarProveedor(proveedor.id).subscribe({
+      next: () => this.cargarProveedores(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  activarProveedor(proveedor: Proveedor): void {
+    this.compraService.activarProveedor(proveedor.id).subscribe({
+      next: () => this.cargarProveedores(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
     });
   }
 

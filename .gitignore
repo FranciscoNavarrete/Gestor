@@ -19,3 +19,6 @@ frontend/**/.angular/
 
 # Local Netlify folder
 .netlify
+
+# Notas/borradores locales — puede tener secrets (claves de QAS, etc.), nunca al repo
+scratch/

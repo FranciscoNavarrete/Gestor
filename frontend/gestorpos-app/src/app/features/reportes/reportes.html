@@ -7,6 +7,10 @@
     <mat-icon>inventory_2</mat-icon>
     <span class="etiqueta">Stock</span>
   </mat-button-toggle>
+  <mat-button-toggle value="compras" aria-label="Compras">
+    <mat-icon>local_shipping</mat-icon>
+    <span class="etiqueta">Compras</span>
+  </mat-button-toggle>
   <mat-button-toggle value="movimientos" aria-label="Movimientos">
     <mat-icon>history</mat-icon>
     <span class="etiqueta">Movimientos</span>
@@ -174,6 +178,74 @@
     } @else if (totalItemsStock() > 0) {
       <p class="paginado-info centrado-texto">{{ totalItemsStock() }} producto{{ totalItemsStock() === 1 ? '' : 's' }}</p>
     }
+  }
+} @else if (vista() === 'compras') {
+  <div class="filtro-fechas">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerDesdeCompras"
+        [ngModel]="desdeComprasFecha()"
+        (ngModelChange)="onDesdeComprasChange($event)"
+        [min]="minDesdeComprasFecha()"
+        [max]="maxDesdeComprasFecha()"
+      />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerDesdeCompras"></mat-datepicker-toggle>
+      <mat-datepicker #pickerDesdeCompras></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input
+        matInput
+        [matDatepicker]="pickerHastaCompras"
+        [ngModel]="hastaComprasFecha()"
+        (ngModelChange)="onHastaComprasChange($event)"
+        [min]="desdeComprasFecha()"
+        [max]="hoy"
+      />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerHastaCompras"></mat-datepicker-toggle>
+      <mat-datepicker #pickerHastaCompras></mat-datepicker>
+    </mat-form-field>
+    @if (desdeCompras() || hastaCompras()) {
+      <button mat-icon-button (click)="limpiarFiltroCompras()" aria-label="Limpiar filtro de fechas">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+
+  @if (resumenCompras(); as r) {
+    <div class="grid-resumen">
+      <mat-card class="stat">
+        <div class="icono-chip"><mat-icon>local_shipping</mat-icon></div>
+        <div class="valor font-display">${{ r.totalComprado | number: '1.0-2' }}</div>
+        <div class="etiqueta">Total comprado · {{ r.cantidadCompras }} compra{{ r.cantidadCompras === 1 ? '' : 's' }}</div>
+      </mat-card>
+
+      <mat-card class="stat">
+        <div class="icono-chip"><mat-icon>store</mat-icon></div>
+        <div class="valor font-display">{{ r.cantidadProveedores }}</div>
+        <div class="etiqueta">Proveedor{{ r.cantidadProveedores === 1 ? '' : 'es' }} distinto{{ r.cantidadProveedores === 1 ? '' : 's' }}</div>
+      </mat-card>
+    </div>
+  }
+
+  @if (cargandoCompras()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (compras().length === 0) {
+    <p class="vacio">No hay compras en el período seleccionado.</p>
+  } @else {
+    <div class="lista-ventas">
+      @for (c of compras(); track c.id) {
+        <mat-card class="venta-item">
+          <div class="venta-fecha">{{ c.fecha | date: 'dd/MM/yyyy HH:mm' }}</div>
+          <div class="venta-medio">{{ c.proveedorNombre }} · {{ c.cantidadItems }} producto{{ c.cantidadItems === 1 ? '' : 's' }}</div>
+          <div class="venta-total">${{ c.total | number: '1.0-2' }}</div>
+        </mat-card>
+      }
+    </div>
   }
 } @else if (vista() === 'movimientos') {
   <div class="filtro-movimientos">

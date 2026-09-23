@@ -3,6 +3,10 @@
     <mat-icon>sell</mat-icon>
     <span class="etiqueta">Categorías</span>
   </mat-button-toggle>
+  <mat-button-toggle value="proveedores" aria-label="Proveedores">
+    <mat-icon>local_shipping</mat-icon>
+    <span class="etiqueta">Proveedores</span>
+  </mat-button-toggle>
   <mat-button-toggle value="medios-pago" aria-label="Métodos de pago">
     <mat-icon>payments</mat-icon>
     <span class="etiqueta">Métodos de pago</span>
@@ -49,6 +53,44 @@
             <button mat-icon-button (click)="eliminarCategoria(categoria)" aria-label="Eliminar">
               <mat-icon>delete</mat-icon>
             </button>
+          </div>
+        </mat-card>
+      }
+    </div>
+  }
+} @else if (vista() === 'proveedores') {
+  <button mat-flat-button color="primary" class="boton-nuevo" (click)="nuevoProveedor()">
+    <mat-icon>add</mat-icon>
+    Nuevo proveedor
+  </button>
+
+  @if (cargandoProveedores()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (proveedores().length === 0) {
+    <p class="vacio">No hay proveedores todavía.</p>
+  } @else {
+    <div class="lista">
+      @for (proveedor of proveedores(); track proveedor.id) {
+        <mat-card class="item-card" [class.inactivo]="!proveedor.activo">
+          <span class="nombre">{{ proveedor.nombre }}</span>
+          @if (!proveedor.activo) {
+            <span class="pill">Inactivo</span>
+          }
+          <div class="acciones">
+            <button mat-icon-button (click)="editarProveedor(proveedor)" aria-label="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            @if (proveedor.activo) {
+              <button mat-icon-button (click)="desactivarProveedor(proveedor)" aria-label="Desactivar">
+                <mat-icon>archive</mat-icon>
+              </button>
+            } @else {
+              <button mat-icon-button (click)="activarProveedor(proveedor)" aria-label="Reactivar">
+                <mat-icon>restore</mat-icon>
+              </button>
+            }
           </div>
         </mat-card>
       }

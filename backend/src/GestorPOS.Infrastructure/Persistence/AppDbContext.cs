@@ -28,6 +28,9 @@ public class AppDbContext : DbContext
     public DbSet<MovimientoStock> MovimientosStock => Set<MovimientoStock>();
     public DbSet<SuscripcionPush> SuscripcionesPush => Set<SuscripcionPush>();
     public DbSet<PagoCuenta> PagosCuenta => Set<PagoCuenta>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<Compra> Compras => Set<Compra>();
+    public DbSet<CompraItem> CompraItems => Set<CompraItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -32,6 +33,7 @@ const DEBOUNCE_BUSQUEDA_MS = 350;
     MatMenuModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
+    RouterLink,
   ],
   templateUrl: './productos.html',
   styleUrl: './productos.scss',

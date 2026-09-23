@@ -15,12 +15,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
+import { CompraResumenDto, ResumenComprasDto } from '../../core/models/compra.models';
 import { FEATURE_CUENTA_CORRIENTE } from '../../core/models/cuenta-corriente';
 import { MovimientoStock } from '../../core/models/movimiento-stock.models';
 import { DeudaClienteDto, DeudasDto, GananciasDto, RankingClienteDto } from '../../core/models/reportes.models';
 import { VentaResumenDto } from '../../core/models/venta.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { CompraService } from '../../core/services/compra.service';
 import { MovimientoStockService } from '../../core/services/movimiento-stock.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
@@ -31,7 +33,7 @@ const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
 const MAX_MESES_RANGO_FECHAS = 2;
 
-type Vista = 'ventas' | 'stock' | 'movimientos' | 'clientes' | 'deudas';
+type Vista = 'ventas' | 'stock' | 'compras' | 'movimientos' | 'clientes' | 'deudas';
 
 @Component({
   selector: 'app-reportes',
@@ -57,6 +59,7 @@ export class Reportes implements OnInit {
   private readonly ventasService = inject(VentasService);
   private readonly reportesService = inject(ReportesService);
   private readonly catalogoService = inject(CatalogoService);
+  private readonly compraService = inject(CompraService);
   private readonly movimientoStockService = inject(MovimientoStockService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -88,6 +91,17 @@ export class Reportes implements OnInit {
   readonly totalPaginasStock = signal(1);
   readonly totalItemsStock = signal(0);
   private debounceStock?: ReturnType<typeof setTimeout>;
+
+  // --- Reporte de compras ---
+  readonly desdeCompras = signal('');
+  readonly hastaCompras = signal('');
+  readonly desdeComprasFecha = computed(() => isoAFecha(this.desdeCompras()));
+  readonly hastaComprasFecha = computed(() => isoAFecha(this.hastaCompras()));
+  readonly maxDesdeComprasFecha = computed(() => this.hastaComprasFecha() ?? this.hoy);
+  readonly minDesdeComprasFecha = computed(() => restarMeses(this.maxDesdeComprasFecha(), MAX_MESES_RANGO_FECHAS));
+  readonly cargandoCompras = signal(true);
+  readonly resumenCompras = signal<ResumenComprasDto | null>(null);
+  readonly compras = signal<CompraResumenDto[]>([]);
 
   // --- Movimientos de stock ---
   readonly productosParaFiltro = signal<Producto[]>([]);
@@ -121,6 +135,7 @@ export class Reportes implements OnInit {
   ngOnInit(): void {
     this.cargarVentas();
     this.cargarStock();
+    this.cargarCompras();
     this.cargarMovimientos();
     this.cargarClientes();
     if (this.tieneCuentaCorriente) this.cargarDeudas();
@@ -211,6 +226,40 @@ export class Reportes implements OnInit {
 
   valorizado(producto: Producto): number {
     return producto.stockActual * producto.costo;
+  }
+
+  // --- Compras ---
+
+  onDesdeComprasChange(fecha: Date | null): void {
+    this.desdeCompras.set(fechaAIso(fecha));
+    this.cargarCompras();
+  }
+
+  onHastaComprasChange(fecha: Date | null): void {
+    this.hastaCompras.set(fechaAIso(fecha));
+    this.desdeCompras.set(this.ajustarDesde(this.desdeCompras(), this.hastaCompras()));
+    this.cargarCompras();
+  }
+
+  cargarCompras(): void {
+    this.cargandoCompras.set(true);
+    const desde = this.desdeCompras() || undefined;
+    const hasta = this.hastaCompras() || undefined;
+
+    this.compraService.resumenCompras(desde, hasta).subscribe((r) => this.resumenCompras.set(r));
+    this.compraService.listarCompras(desde, hasta).subscribe({
+      next: (compras) => {
+        this.compras.set(compras);
+        this.cargandoCompras.set(false);
+      },
+      error: () => this.cargandoCompras.set(false),
+    });
+  }
+
+  limpiarFiltroCompras(): void {
+    this.desdeCompras.set('');
+    this.hastaCompras.set('');
+    this.cargarCompras();
   }
 
   // --- Movimientos de stock ---
