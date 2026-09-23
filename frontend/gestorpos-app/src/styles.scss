@@ -102,6 +102,15 @@ h1, h2, h3, .font-display, .mat-mdc-card-title {
   background: var(--surface-card) !important;
 }
 
+// El label flotante de los campos outline (ej. "Nombre" en los diálogos, "Buscar producto")
+// se recortaba arriba: el wrapper de Material (.mdc-floating-label) le pone overflow:hidden a
+// una caja apenas más baja que el alto real del texto ya escalado — no es un problema de
+// tamaño de fuente ni de un override nuestro (medido con getBoundingClientRect: mismo resultado
+// en todos los campos, con o sin diálogo de por medio), es el propio clip de Material.
+.mdc-floating-label {
+  overflow: visible !important;
+}
+
 // --- Botones primarios: azul sólido de marca, con texto siempre blanco para contraste ---
 .mat-mdc-unelevated-button.mat-primary,
 .mat-mdc-raised-button.mat-primary,
