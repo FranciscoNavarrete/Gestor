@@ -15,6 +15,12 @@
     <mat-icon>leaderboard</mat-icon>
     <span class="etiqueta">Clientes</span>
   </mat-button-toggle>
+  @if (tieneCuentaCorriente) {
+    <mat-button-toggle value="deudas" aria-label="Deudas">
+      <mat-icon>account_balance_wallet</mat-icon>
+      <span class="etiqueta">Deudas</span>
+    </mat-button-toggle>
+  }
 </mat-button-toggle-group>
 
 @if (vista() === 'ventas') {
@@ -266,7 +272,7 @@
       </p>
     }
   }
-} @else {
+} @else if (vista() === 'clientes') {
   <div class="filtro-fechas">
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
@@ -320,5 +326,49 @@
         </mat-card>
       }
     </div>
+  }
+} @else {
+  <div class="encabezado">
+    <span class="titulo-deudas">Clientes con saldo "A cuenta"</span>
+    <button mat-icon-button (click)="exportarDeudasPdf()" [disabled]="exportando()" aria-label="Exportar a PDF">
+      @if (exportando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <mat-icon>picture_as_pdf</mat-icon>
+      }
+    </button>
+  </div>
+
+  @if (cargandoDeudas()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (deudas(); as d) {
+    @if (d.clientes.length === 0) {
+      <p class="vacio">No hay clientes con saldo pendiente.</p>
+    } @else {
+      <mat-card class="resumen-deudas">
+        <span class="etiqueta">Total adeudado</span>
+        <span class="valor">${{ d.totalAdeudado | number: '1.0-2' }}</span>
+        <span class="detalle">
+          {{ d.cantidadClientes }} cliente{{ d.cantidadClientes === 1 ? '' : 's' }} con saldo pendiente
+        </span>
+      </mat-card>
+
+      <div class="lista-clientes">
+        @for (c of d.clientes; track c.clienteId) {
+          <mat-card class="cliente-item clickeable" (click)="abrirClienteDeuda(c)">
+            <div class="info">
+              <div class="nombre">{{ c.nombre || c.telefono }}</div>
+              <div class="detalle">
+                {{ c.telefono }} · {{ c.cantidadVentasACuenta }} venta{{ c.cantidadVentasACuenta === 1 ? '' : 's' }} a cuenta
+              </div>
+            </div>
+            <div class="cliente-total deuda">${{ c.saldo | number: '1.0-2' }}</div>
+            <mat-icon class="chevron">chevron_right</mat-icon>
+          </mat-card>
+        }
+      </div>
+    }
   }
 }

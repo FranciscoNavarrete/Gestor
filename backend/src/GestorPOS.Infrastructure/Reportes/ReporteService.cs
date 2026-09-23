@@ -1,5 +1,6 @@
 using GestorPOS.Application.Reportes;
 using GestorPOS.Application.Reportes.Dtos;
+using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
@@ -94,6 +95,29 @@ public class ReporteService : IReporteService
             VentasMes: ventasMes.TotalVentas,
             ProductosBajoStockMinimo: productosBajoStock,
             ProductoMasVendidoHoy: rankingHoy.FirstOrDefault());
+    }
+
+    public async Task<DeudasDto> DeudasAsync(CancellationToken ct = default)
+    {
+        var deudas = await _db.Clientes
+            .Select(c => new
+            {
+                c.Id,
+                c.Nombre,
+                c.Telefono,
+                CantidadVentasACuenta = _db.Ventas.Count(v => v.ClienteId == c.Id && v.MedioPago == CuentaCorriente.MedioPago),
+                Saldo = (_db.Ventas.Where(v => v.ClienteId == c.Id && v.MedioPago == CuentaCorriente.MedioPago).Sum(v => (decimal?)v.Total) ?? 0m)
+                    - (_db.PagosCuenta.Where(p => p.ClienteId == c.Id).Sum(p => (decimal?)p.Monto) ?? 0m),
+            })
+            .Where(x => x.Saldo > 0)
+            .OrderByDescending(x => x.Saldo)
+            .ToListAsync(ct);
+
+        var clientes = deudas
+            .Select(d => new DeudaClienteDto(d.Id, d.Nombre, d.Telefono, d.CantidadVentasACuenta, d.Saldo))
+            .ToList();
+
+        return new DeudasDto(clientes.Sum(c => c.Saldo), clientes.Count, clientes);
     }
 
     private IQueryable<Venta> VentasEnRango(DateOnly? desde, DateOnly? hasta)

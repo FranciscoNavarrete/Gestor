@@ -38,6 +38,17 @@ public class ReportesController : ControllerBase
     public async Task<ActionResult<DashboardDto>> Dashboard(CancellationToken ct)
         => Ok(await _reporteService.DashboardAsync(ct));
 
+    [HttpGet("deudas")]
+    public async Task<ActionResult<DeudasDto>> Deudas(CancellationToken ct)
+        => Ok(await _reporteService.DeudasAsync(ct));
+
+    [HttpGet("deudas/pdf")]
+    public async Task<IActionResult> DeudasPdf(CancellationToken ct)
+    {
+        var bytes = await _reportePdfService.GenerarDeudasPdfAsync(ct);
+        return File(bytes, "application/pdf", "reporte-deudas.pdf");
+    }
+
     [HttpGet("ventas/pdf")]
     public async Task<IActionResult> VentasPdf([FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, CancellationToken ct)
     {

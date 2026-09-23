@@ -8,4 +8,5 @@ public interface IReporteService
     Task<IReadOnlyList<RankingClienteDto>> RankingClientesAsync(DateOnly? desde, DateOnly? hasta, int top, CancellationToken ct = default);
     Task<GananciasDto> GananciasAsync(DateOnly? desde, DateOnly? hasta, CancellationToken ct = default);
     Task<DashboardDto> DashboardAsync(CancellationToken ct = default);
+    Task<DeudasDto> DeudasAsync(CancellationToken ct = default);
 }

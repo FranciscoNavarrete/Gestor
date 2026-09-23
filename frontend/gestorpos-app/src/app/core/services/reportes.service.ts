@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DashboardDto, GananciasDto, RankingClienteDto, RankingProductoDto } from '../models/reportes.models';
+import { DashboardDto, DeudasDto, GananciasDto, RankingClienteDto, RankingProductoDto } from '../models/reportes.models';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
@@ -28,6 +28,14 @@ export class ReportesService {
     return this.http.get<GananciasDto>(`${environment.apiUrl}/reportes/ganancias`, {
       params: { ...(desde && { desde }), ...(hasta && { hasta }) },
     });
+  }
+
+  deudas(): Observable<DeudasDto> {
+    return this.http.get<DeudasDto>(`${environment.apiUrl}/reportes/deudas`);
+  }
+
+  exportarDeudasPdf(): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/reportes/deudas/pdf`, { responseType: 'blob' });
   }
 
   exportarVentasPdf(desde?: string, hasta?: string): Observable<Blob> {

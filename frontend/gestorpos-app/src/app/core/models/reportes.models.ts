@@ -20,6 +20,20 @@ export interface GananciasDto {
   gananciaNeta: number;
 }
 
+export interface DeudaClienteDto {
+  clienteId: string;
+  nombre: string | null;
+  telefono: string;
+  cantidadVentasACuenta: number;
+  saldo: number;
+}
+
+export interface DeudasDto {
+  totalAdeudado: number;
+  cantidadClientes: number;
+  clientes: DeudaClienteDto[];
+}
+
 export interface DashboardDto {
   ventasHoy: number;
   cantidadVentasHoy: number;

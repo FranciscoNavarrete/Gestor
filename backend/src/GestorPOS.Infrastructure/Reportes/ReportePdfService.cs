@@ -1,6 +1,7 @@
 using System.Globalization;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Reportes;
+using GestorPOS.Domain.Common;
 using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -234,6 +235,101 @@ public class ReportePdfService : IReportePdfService
                         tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"{p.StockMinimo} u.").FontColor(colorTexto);
                         tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"${(p.StockActual * p.Costo).ToString("N2", Ci)}").FontColor(colorTexto);
                     }
+                });
+
+                pagina.Footer().AlignCenter().Text(x =>
+                {
+                    x.Span("Página ");
+                    x.CurrentPageNumber();
+                    x.Span(" de ");
+                    x.TotalPages();
+                });
+            });
+        });
+
+        return documento.GeneratePdf();
+    }
+
+    public async Task<byte[]> GenerarDeudasPdfAsync(CancellationToken ct = default)
+    {
+        var (nombreNegocio, logo) = await ObtenerDatosNegocioAsync(ct);
+
+        var deudas = await _db.Clientes
+            .Select(c => new
+            {
+                c.Nombre,
+                c.Telefono,
+                CantidadVentasACuenta = _db.Ventas.Count(v => v.ClienteId == c.Id && v.MedioPago == CuentaCorriente.MedioPago),
+                Saldo = (_db.Ventas.Where(v => v.ClienteId == c.Id && v.MedioPago == CuentaCorriente.MedioPago).Sum(v => (decimal?)v.Total) ?? 0m)
+                    - (_db.PagosCuenta.Where(p => p.ClienteId == c.Id).Sum(p => (decimal?)p.Monto) ?? 0m),
+            })
+            .Where(x => x.Saldo > 0)
+            .OrderByDescending(x => x.Saldo)
+            .ToListAsync(ct);
+
+        var totalAdeudado = deudas.Sum(d => d.Saldo);
+
+        var documento = Document.Create(contenedor =>
+        {
+            contenedor.Page(pagina =>
+            {
+                pagina.Size(PageSizes.A4);
+                pagina.Margin(30);
+                pagina.DefaultTextStyle(x => x.FontSize(10));
+
+                pagina.Header().Row(fila =>
+                {
+                    if (logo is not null)
+                    {
+                        fila.ConstantItem(40).Height(40).Image(logo).FitArea();
+                        fila.ConstantItem(10);
+                    }
+                    fila.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(nombreNegocio).FontSize(18).Bold();
+                        col.Item().PaddingTop(2).Text("Reporte de deudas").FontSize(13).SemiBold();
+                        col.Item().PaddingTop(2).Text($"{deudas.Count} cliente{(deudas.Count == 1 ? "" : "s")} con saldo pendiente")
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+                    });
+                });
+
+                pagina.Content().PaddingTop(16).Column(col =>
+                {
+                    col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(c =>
+                    {
+                        c.Item().Text($"${totalAdeudado.ToString("N2", Ci)}").FontSize(16).Bold().FontColor(Colors.Red.Darken1);
+                        c.Item().Text("Total adeudado").FontSize(8).FontColor(Colors.Grey.Darken1);
+                    });
+
+                    col.Item().PaddingTop(16).Table(tabla =>
+                    {
+                        tabla.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2);
+                            c.RelativeColumn(2);
+                            c.RelativeColumn(1);
+                            c.RelativeColumn(1);
+                        });
+
+                        tabla.Header(header =>
+                        {
+                            header.Cell().Element(CeldaEncabezado).Text("Cliente");
+                            header.Cell().Element(CeldaEncabezado).Text("Teléfono");
+                            header.Cell().Element(CeldaEncabezado).AlignRight().Text("Ventas a cuenta");
+                            header.Cell().Element(CeldaEncabezado).AlignRight().Text("Saldo");
+                        });
+
+                        foreach (var d in deudas)
+                        {
+                            tabla.Cell().Element(CeldaCuerpo).Text(d.Nombre ?? "Sin nombre");
+                            tabla.Cell().Element(CeldaCuerpo).Text(d.Telefono);
+                            tabla.Cell().Element(CeldaCuerpo).AlignRight().Text(d.CantidadVentasACuenta.ToString());
+                            tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"${d.Saldo.ToString("N2", Ci)}").FontColor(Colors.Red.Darken1);
+                        }
+                    });
+
+                    if (deudas.Count == 0)
+                        col.Item().PaddingTop(20).AlignCenter().Text("No hay clientes con saldo pendiente.").FontColor(Colors.Grey.Darken1);
                 });
 
                 pagina.Footer().AlignCenter().Text(x =>

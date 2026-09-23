@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -14,9 +15,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
+import { FEATURE_CUENTA_CORRIENTE } from '../../core/models/cuenta-corriente';
 import { MovimientoStock } from '../../core/models/movimiento-stock.models';
-import { GananciasDto, RankingClienteDto } from '../../core/models/reportes.models';
+import { DeudaClienteDto, DeudasDto, GananciasDto, RankingClienteDto } from '../../core/models/reportes.models';
 import { VentaResumenDto } from '../../core/models/venta.models';
+import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { MovimientoStockService } from '../../core/services/movimiento-stock.service';
 import { ReportesService } from '../../core/services/reportes.service';
@@ -28,7 +31,7 @@ const TAMANO_PAGINA_STOCK = 20;
 const TAMANO_PAGINA_MOVIMIENTOS = 20;
 const MAX_MESES_RANGO_FECHAS = 2;
 
-type Vista = 'ventas' | 'stock' | 'movimientos' | 'clientes';
+type Vista = 'ventas' | 'stock' | 'movimientos' | 'clientes' | 'deudas';
 
 @Component({
   selector: 'app-reportes',
@@ -55,7 +58,11 @@ export class Reportes implements OnInit {
   private readonly reportesService = inject(ReportesService);
   private readonly catalogoService = inject(CatalogoService);
   private readonly movimientoStockService = inject(MovimientoStockService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+
+  readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
 
   readonly vista = signal<Vista>('ventas');
   readonly exportando = signal(false);
@@ -107,11 +114,16 @@ export class Reportes implements OnInit {
   readonly cargandoClientes = signal(true);
   readonly rankingClientes = signal<RankingClienteDto[]>([]);
 
+  // --- Deudas ---
+  readonly cargandoDeudas = signal(true);
+  readonly deudas = signal<DeudasDto | null>(null);
+
   ngOnInit(): void {
     this.cargarVentas();
     this.cargarStock();
     this.cargarMovimientos();
     this.cargarClientes();
+    if (this.tieneCuentaCorriente) this.cargarDeudas();
     this.catalogoService.listarProductos().subscribe((productos) => this.productosParaFiltro.set(productos));
   }
 
@@ -287,6 +299,27 @@ export class Reportes implements OnInit {
     this.desdeClientes.set('');
     this.hastaClientes.set('');
     this.cargarClientes();
+  }
+
+  // --- Deudas ---
+
+  cargarDeudas(): void {
+    this.cargandoDeudas.set(true);
+    this.reportesService.deudas().subscribe({
+      next: (deudas) => {
+        this.deudas.set(deudas);
+        this.cargandoDeudas.set(false);
+      },
+      error: () => this.cargandoDeudas.set(false),
+    });
+  }
+
+  exportarDeudasPdf(): void {
+    this.descargarPdf(this.reportesService.exportarDeudasPdf(), 'reporte-deudas.pdf');
+  }
+
+  abrirClienteDeuda(deuda: DeudaClienteDto): void {
+    this.router.navigate(['/clientes', deuda.clienteId]);
   }
 
   exportarVentasPdf(): void {
