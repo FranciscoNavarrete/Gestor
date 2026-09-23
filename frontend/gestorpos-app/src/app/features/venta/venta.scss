@@ -46,6 +46,14 @@
     max-height: calc(100vh - 84px - env(safe-area-inset-top, 0px) - 96px - env(safe-area-inset-bottom, 0px));
     overflow: hidden;
 
+    // Por default flexbox deja encoger CUALQUIER hijo (flex-shrink:1 es el valor inicial) —
+    // sin esto, cuando el carrito no entra, en vez de scrollear la lista, el que se achica es
+    // "Cobrar" (y cualquier otro hijo con contenido chico) porque flex-basis:0% de
+    // .carrito-items lo deja casi afuera del reparto proporcional de encogimiento.
+    > * {
+      flex-shrink: 0;
+    }
+
     // Clave para que la lista de items sea la única parte que scrollea: sin flex:1 el
     // contenedor no se "encoge" dentro del max-height del panel y todo el carrito termina
     // empujando la página entera hacia abajo en vez de scrollear internamente.
