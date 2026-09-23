@@ -7,10 +7,12 @@
     <mat-icon>inventory_2</mat-icon>
     <span class="etiqueta">Stock</span>
   </mat-button-toggle>
-  <mat-button-toggle value="compras" aria-label="Compras">
-    <mat-icon>local_shipping</mat-icon>
-    <span class="etiqueta">Compras</span>
-  </mat-button-toggle>
+  @if (tieneCompras) {
+    <mat-button-toggle value="compras" aria-label="Compras">
+      <mat-icon>local_shipping</mat-icon>
+      <span class="etiqueta">Compras</span>
+    </mat-button-toggle>
+  }
   <mat-button-toggle value="movimientos" aria-label="Movimientos">
     <mat-icon>history</mat-icon>
     <span class="etiqueta">Movimientos</span>

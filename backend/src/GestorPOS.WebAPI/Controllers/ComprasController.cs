@@ -1,5 +1,7 @@
 using GestorPOS.Application.Compras;
 using GestorPOS.Application.Compras.Dtos;
+using GestorPOS.Domain.Common;
+using GestorPOS.WebAPI.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +10,7 @@ namespace GestorPOS.WebAPI.Controllers;
 [ApiController]
 [Route("api/compras")]
 [Authorize]
+[RequireFeature(ComprasFeature.Clave)]
 public class ComprasController : ControllerBase
 {
     private readonly ICompraService _compraService;

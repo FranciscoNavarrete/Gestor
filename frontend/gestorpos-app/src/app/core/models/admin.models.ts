@@ -1,3 +1,4 @@
+import { FEATURE_COMPRAS } from './compras-feature';
 import { FEATURE_CUENTA_CORRIENTE } from './cuenta-corriente';
 import { FEATURE_MENU_LATERAL } from './menu-lateral';
 
@@ -40,5 +41,10 @@ export const CATALOGO_FEATURES: FeatureCatalogoItem[] = [
     clave: FEATURE_MENU_LATERAL,
     nombre: 'Menú lateral (desktop)',
     descripcion: 'En pantallas grandes, navegación fija al costado en vez de la barra de abajo',
+  },
+  {
+    clave: FEATURE_COMPRAS,
+    nombre: 'Proveedores y compras',
+    descripcion: 'Registrar compras a proveedores — suma stock y actualiza costos automáticamente',
   },
 ];

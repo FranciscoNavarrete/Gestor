@@ -12,6 +12,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria } from '../../core/models/catalog.models';
 import { Proveedor } from '../../core/models/compra.models';
+import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { MedioPagoDto, NegocioDto } from '../../core/models/configuracion.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -55,6 +56,7 @@ export class Configuracion implements OnInit, OnDestroy {
   private logoObjectUrl: string | null = null;
 
   readonly vista = signal<Vista>('categorias');
+  readonly tieneCompras = this.authService.tieneFeature(FEATURE_COMPRAS);
 
   readonly cargandoCategorias = signal(true);
   readonly categorias = signal<Categoria[]>([]);
@@ -79,7 +81,7 @@ export class Configuracion implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarCategorias();
-    this.cargarProveedores();
+    if (this.tieneCompras) this.cargarProveedores();
     this.cargarMediosPago();
     this.cargarNegocio();
     this.cargarEstadoNotificaciones();

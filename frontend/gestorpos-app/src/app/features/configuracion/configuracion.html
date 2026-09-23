@@ -3,10 +3,12 @@
     <mat-icon>sell</mat-icon>
     <span class="etiqueta">Categorías</span>
   </mat-button-toggle>
-  <mat-button-toggle value="proveedores" aria-label="Proveedores">
-    <mat-icon>local_shipping</mat-icon>
-    <span class="etiqueta">Proveedores</span>
-  </mat-button-toggle>
+  @if (tieneCompras) {
+    <mat-button-toggle value="proveedores" aria-label="Proveedores">
+      <mat-icon>local_shipping</mat-icon>
+      <span class="etiqueta">Proveedores</span>
+    </mat-button-toggle>
+  }
   <mat-button-toggle value="medios-pago" aria-label="Métodos de pago">
     <mat-icon>payments</mat-icon>
     <span class="etiqueta">Métodos de pago</span>

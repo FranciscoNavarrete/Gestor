@@ -12,6 +12,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria, Producto } from '../../core/models/catalog.models';
+import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
+import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { AjustarStockDialog } from './ajustar-stock-dialog/ajustar-stock-dialog';
@@ -39,6 +41,7 @@ const DEBOUNCE_BUSQUEDA_MS = 350;
   styleUrl: './productos.scss',
 })
 export class Productos implements OnInit, OnDestroy {
+  private readonly authService = inject(AuthService);
   private readonly catalogoService = inject(CatalogoService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -46,6 +49,7 @@ export class Productos implements OnInit, OnDestroy {
   @ViewChild('inputArchivo') private inputArchivo?: ElementRef<HTMLInputElement>;
   private debounceTimer?: ReturnType<typeof setTimeout>;
 
+  readonly tieneCompras = this.authService.tieneFeature(FEATURE_COMPRAS);
   readonly cargando = signal(true);
   readonly importando = signal(false);
   readonly productos = signal<Producto[]>([]);

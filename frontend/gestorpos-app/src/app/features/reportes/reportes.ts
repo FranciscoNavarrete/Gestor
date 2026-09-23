@@ -17,6 +17,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from '../../core/models/catalog.models';
 import { CompraResumenDto, ResumenComprasDto } from '../../core/models/compra.models';
+import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { FEATURE_CUENTA_CORRIENTE } from '../../core/models/cuenta-corriente';
 import { MovimientoStock } from '../../core/models/movimiento-stock.models';
 import { DeudaClienteDto, DeudasDto, GananciasDto, RankingClienteDto } from '../../core/models/reportes.models';
@@ -69,6 +70,7 @@ export class Reportes implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
+  readonly tieneCompras = this.authService.tieneFeature(FEATURE_COMPRAS);
 
   readonly vista = signal<Vista>('ventas');
   readonly exportando = signal(false);
@@ -138,7 +140,7 @@ export class Reportes implements OnInit {
   ngOnInit(): void {
     this.cargarVentas();
     this.cargarStock();
-    this.cargarCompras();
+    if (this.tieneCompras) this.cargarCompras();
     this.cargarMovimientos();
     this.cargarClientes();
     if (this.tieneCuentaCorriente) this.cargarDeudas();
