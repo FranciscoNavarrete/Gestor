@@ -19,11 +19,10 @@
   align-items: center;
   justify-content: center;
 
-  mat-icon {
+  .brand-mark-icon {
     color: var(--color-accent-on);
-    font-size: 30px;
-    height: 30px;
     width: 30px;
+    height: 30px;
   }
 }
 
