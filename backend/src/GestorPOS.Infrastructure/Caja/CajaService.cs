@@ -21,7 +21,10 @@ public class CajaService : ICajaService
     public async Task<CajaDto?> ObtenerActualAsync(CancellationToken ct = default)
     {
         var caja = await _db.CajasDiarias.FirstOrDefaultAsync(c => c.Abierta, ct);
-        return caja is null ? null : ToDto(caja, []);
+        if (caja is null) return null;
+
+        var movimientos = await ObtenerMovimientosAsync(caja.Id, ct);
+        return ToDto(caja, [], movimientos);
     }
 
     public async Task<CajaDto> AbrirAsync(AbrirCajaRequest request, CancellationToken ct = default)
@@ -34,7 +37,21 @@ public class CajaService : ICajaService
         _db.CajasDiarias.Add(caja);
         await _db.SaveChangesAsync(ct);
 
-        return ToDto(caja, []);
+        return ToDto(caja, [], []);
+    }
+
+    public async Task<CajaDto> AgregarMovimientoAsync(CrearMovimientoCajaRequest request, CancellationToken ct = default)
+    {
+        var caja = await _db.CajasDiarias.FirstOrDefaultAsync(c => c.Abierta, ct)
+            ?? throw new AppException("No hay ninguna caja abierta.");
+
+        var movimiento = Domain.Entities.MovimientoCaja.Crear(
+            _tenantContext.TenantId, caja.Id, request.Tipo, request.Monto, request.Motivo, _tenantContext.UsuarioId);
+        _db.MovimientosCaja.Add(movimiento);
+        await _db.SaveChangesAsync(ct);
+
+        var movimientos = await ObtenerMovimientosAsync(caja.Id, ct);
+        return ToDto(caja, [], movimientos);
     }
 
     public async Task<CajaDto> CerrarAsync(CerrarCajaRequest request, CancellationToken ct = default)
@@ -60,15 +77,27 @@ public class CajaService : ICajaService
 
         var ventasEfectivo = ventasPorMedioPago.GetValueOrDefault("Efectivo");
 
-        caja.Cerrar(ventasEfectivo, request.MontoCierreReal);
+        var movimientos = await ObtenerMovimientosAsync(caja.Id, ct);
+        var netoMovimientos = movimientos.Sum(m => m.Tipo == "Ingreso" ? m.Monto : -m.Monto);
+
+        caja.Cerrar(ventasEfectivo, netoMovimientos, request.MontoCierreReal);
         await _db.SaveChangesAsync(ct);
 
         var desglose = ventasPorMedioPago.Select(kv => new VentaPorMedioPagoDto(kv.Key, kv.Value)).ToList();
-        return ToDto(caja, desglose);
+        return ToDto(caja, desglose, movimientos);
     }
 
-    private static CajaDto ToDto(Domain.Entities.CajaDiaria caja, IReadOnlyList<VentaPorMedioPagoDto> ventasPorMedioPago) => new(
+    private async Task<IReadOnlyList<MovimientoCajaDto>> ObtenerMovimientosAsync(Guid cajaDiariaId, CancellationToken ct) =>
+        await _db.MovimientosCaja
+            .Where(m => m.CajaDiariaId == cajaDiariaId)
+            .OrderBy(m => m.FechaCreacion)
+            .Select(m => new MovimientoCajaDto(m.Id, m.Tipo, m.Monto, m.Motivo, m.FechaCreacion))
+            .ToListAsync(ct);
+
+    private static CajaDto ToDto(
+        Domain.Entities.CajaDiaria caja, IReadOnlyList<VentaPorMedioPagoDto> ventasPorMedioPago,
+        IReadOnlyList<MovimientoCajaDto> movimientos) => new(
         caja.Id, caja.FechaCreacion, caja.MontoApertura, caja.Abierta,
         caja.MontoCierreEsperado, caja.MontoCierreReal, caja.Diferencia, caja.FechaCierre,
-        ventasPorMedioPago);
+        ventasPorMedioPago, movimientos, movimientos.Sum(m => m.Tipo == "Ingreso" ? m.Monto : -m.Monto));
 }

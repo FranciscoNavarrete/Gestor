@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>Nuevo movimiento</h2>
+
+<mat-dialog-content>
+  <div class="tipo-toggle">
+    <button
+      type="button"
+      class="chip-tipo egreso"
+      [class.activo]="tipo() === 'Egreso'"
+      (click)="tipo.set('Egreso')"
+    >
+      Egreso
+    </button>
+    <button
+      type="button"
+      class="chip-tipo ingreso"
+      [class.activo]="tipo() === 'Ingreso'"
+      (click)="tipo.set('Ingreso')"
+    >
+      Ingreso
+    </button>
+  </div>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Monto</mat-label>
+    <input
+      matInput
+      type="number"
+      [ngModel]="monto()"
+      (ngModelChange)="monto.set($event)"
+      min="0"
+      step="0.01"
+      placeholder="0"
+      cdkFocusInitial
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Motivo</mat-label>
+    <input
+      matInput
+      type="text"
+      [ngModel]="motivo()"
+      (ngModelChange)="motivo.set($event)"
+      placeholder="Aporte extra del dueño"
+      maxlength="200"
+    />
+  </mat-form-field>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()" [disabled]="invalido() || guardando()">
+    @if (guardando()) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      Guardar
+    }
+  </button>
+</mat-dialog-actions>

@@ -48,6 +48,14 @@ export interface VentaPorMedioPagoDto {
   total: number;
 }
 
+export interface MovimientoCajaDto {
+  id: string;
+  tipo: 'Ingreso' | 'Egreso';
+  monto: number;
+  motivo: string;
+  fecha: string;
+}
+
 export interface CajaDto {
   id: string;
   fechaApertura: string;
@@ -58,6 +66,8 @@ export interface CajaDto {
   diferencia: number | null;
   fechaCierre: string | null;
   ventasPorMedioPago: VentaPorMedioPagoDto[];
+  movimientos: MovimientoCajaDto[];
+  netoMovimientos: number;
 }
 
 export interface AbrirCajaRequest {
@@ -66,4 +76,10 @@ export interface AbrirCajaRequest {
 
 export interface CerrarCajaRequest {
   montoCierreReal: number;
+}
+
+export interface CrearMovimientoCajaRequest {
+  tipo: 'Ingreso' | 'Egreso';
+  monto: number;
+  motivo: string;
 }

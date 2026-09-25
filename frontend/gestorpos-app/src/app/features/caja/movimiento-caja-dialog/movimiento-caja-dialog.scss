@@ -1,0 +1,39 @@
+.full {
+  width: 100%;
+}
+
+.tipo-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip-tipo {
+  flex: 1;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle, #2c3049);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &.egreso.activo {
+    background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+    border-color: var(--mat-sys-error);
+    color: var(--mat-sys-error);
+  }
+
+  &.ingreso.activo {
+    background: color-mix(in srgb, #1ea672 16%, transparent);
+    border-color: #1ea672;
+    color: #1ea672;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}

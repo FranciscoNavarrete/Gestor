@@ -2,21 +2,34 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CajaDto } from '../../core/models/reportes.models';
 import { CajaService } from '../../core/services/caja.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
+import { MovimientoCajaDialog } from './movimiento-caja-dialog/movimiento-caja-dialog';
 
 @Component({
   selector: 'app-caja',
-  imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule],
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './caja.html',
   styleUrl: './caja.scss',
 })
 export class Caja implements OnInit {
   private readonly cajaService = inject(CajaService);
+  private readonly dialog = inject(MatDialog);
 
   readonly cargando = signal(true);
   readonly cajaActual = signal<CajaDto | null>(null);
@@ -83,5 +96,14 @@ export class Caja implements OnInit {
 
   volverAAbrir(): void {
     this.cajaRecienCerrada.set(null);
+  }
+
+  abrirMovimiento(): void {
+    this.dialog
+      .open(MovimientoCajaDialog, { width: '360px' })
+      .afterClosed()
+      .subscribe((caja: CajaDto | undefined) => {
+        if (caja) this.cajaActual.set(caja);
+      });
   }
 }

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AbrirCajaRequest, CajaDto, CerrarCajaRequest } from '../models/reportes.models';
+import { AbrirCajaRequest, CajaDto, CerrarCajaRequest, CrearMovimientoCajaRequest } from '../models/reportes.models';
 
 @Injectable({ providedIn: 'root' })
 export class CajaService {
@@ -18,5 +18,9 @@ export class CajaService {
 
   cerrar(request: CerrarCajaRequest): Observable<CajaDto> {
     return this.http.post<CajaDto>(`${environment.apiUrl}/caja/cerrar`, request);
+  }
+
+  agregarMovimiento(request: CrearMovimientoCajaRequest): Observable<CajaDto> {
+    return this.http.post<CajaDto>(`${environment.apiUrl}/caja/movimientos`, request);
   }
 }

@@ -28,4 +28,8 @@ public class CajaController : ControllerBase
     [HttpPost("cerrar")]
     public async Task<ActionResult<CajaDto>> Cerrar(CerrarCajaRequest request, CancellationToken ct)
         => Ok(await _cajaService.CerrarAsync(request, ct));
+
+    [HttpPost("movimientos")]
+    public async Task<ActionResult<CajaDto>> AgregarMovimiento(CrearMovimientoCajaRequest request, CancellationToken ct)
+        => Ok(await _cajaService.AgregarMovimientoAsync(request, ct));
 }

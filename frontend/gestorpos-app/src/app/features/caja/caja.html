@@ -19,12 +19,51 @@
       }
     }
 
+    @if (cerrada.movimientos.length > 0) {
+      <h3>Movimientos manuales</h3>
+      @for (mov of cerrada.movimientos; track mov.id) {
+        <div class="fila movimiento" [class.negativo]="mov.tipo === 'Egreso'">
+          <span>{{ mov.motivo }}</span>
+          <span>{{ mov.tipo === 'Egreso' ? '-' : '+' }}${{ mov.monto }}</span>
+        </div>
+      }
+      <div class="fila"><span>Neto de movimientos</span><span>${{ cerrada.netoMovimientos }}</span></div>
+    }
+
     <button mat-flat-button color="primary" (click)="volverAAbrir()">Abrir nueva caja</button>
   </mat-card>
 } @else if (cajaActual(); as caja) {
   <mat-card class="caja-abierta">
     <h2>Caja abierta</h2>
     <p class="apertura">Apertura: ${{ caja.montoApertura }}</p>
+
+    <div class="movimientos-header">
+      <span>Movimientos manuales</span>
+      <button mat-stroked-button type="button" (click)="abrirMovimiento()">
+        <mat-icon>add</mat-icon>
+        Movimiento
+      </button>
+    </div>
+
+    @if (caja.movimientos.length > 0) {
+      <div class="movimientos-lista">
+        @for (mov of caja.movimientos; track mov.id) {
+          <div class="movimiento-item">
+            <mat-icon [class.egreso]="mov.tipo === 'Egreso'" [class.ingreso]="mov.tipo === 'Ingreso'">
+              {{ mov.tipo === 'Egreso' ? 'arrow_downward' : 'arrow_upward' }}
+            </mat-icon>
+            <span class="motivo">{{ mov.motivo }}</span>
+            <span class="monto" [class.negativo]="mov.tipo === 'Egreso'">
+              {{ mov.tipo === 'Egreso' ? '-' : '+' }}${{ mov.monto }}
+            </span>
+          </div>
+        }
+      </div>
+      <div class="movimientos-neto">
+        <span>Neto de movimientos</span>
+        <span>${{ caja.netoMovimientos }}</span>
+      </div>
+    }
 
     <mat-form-field appearance="outline" class="full">
       <mat-label>Monto real contado para cerrar</mat-label>

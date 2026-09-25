@@ -30,14 +30,14 @@ public class CajaDiaria : TenantEntity
         };
     }
 
-    public void Cerrar(decimal ventasEfectivoDelPeriodo, decimal montoCierreReal)
+    public void Cerrar(decimal ventasEfectivoDelPeriodo, decimal netoMovimientosManuales, decimal montoCierreReal)
     {
         if (!Abierta)
             throw new InvalidOperationException("Esta caja ya está cerrada.");
         if (montoCierreReal < 0)
             throw new ArgumentException("El monto de cierre no puede ser negativo.", nameof(montoCierreReal));
 
-        MontoCierreEsperado = MontoApertura + ventasEfectivoDelPeriodo;
+        MontoCierreEsperado = MontoApertura + ventasEfectivoDelPeriodo + netoMovimientosManuales;
         MontoCierreReal = montoCierreReal;
         FechaCierre = DateTime.UtcNow;
         Abierta = false;

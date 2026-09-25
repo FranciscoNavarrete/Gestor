@@ -26,6 +26,78 @@ mat-card {
   opacity: 0.7;
 }
 
+.movimientos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+
+  span {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.6;
+  }
+
+  button {
+    font-size: 0.8rem;
+  }
+}
+
+.movimientos-lista {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.movimiento-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+
+    &.egreso {
+      color: var(--mat-sys-error, #b3261e);
+    }
+
+    &.ingreso {
+      color: #1ea672;
+    }
+  }
+
+  .motivo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .monto {
+    font-weight: 600;
+    color: #1ea672;
+
+    &.negativo {
+      color: var(--mat-sys-error, #b3261e);
+    }
+  }
+}
+
+.movimientos-neto {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0 4px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
 .error {
   color: var(--mat-sys-error, #b3261e);
   font-size: 0.875rem;
@@ -46,6 +118,14 @@ mat-card {
   }
 
   &.negativa span:last-child {
+    color: var(--mat-sys-error, #b3261e);
+  }
+
+  &.movimiento span:last-child {
+    color: #1ea672;
+  }
+
+  &.movimiento.negativo span:last-child {
     color: var(--mat-sys-error, #b3261e);
   }
 }
