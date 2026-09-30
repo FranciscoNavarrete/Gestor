@@ -9,6 +9,7 @@ export interface CrearNegocioRequest {
   nombreAdmin: string;
   email: string;
   password: string;
+  vendedorId?: string | null;
 }
 
 export interface TenantResumen {
@@ -17,6 +18,26 @@ export interface TenantResumen {
   slug: string;
   activo: boolean;
   fechaCreacion: string;
+  vendedorId: string | null;
+  vendedorNombre: string | null;
+}
+
+export type AdminRol = 'Operador' | 'Vendedor';
+
+export interface AdminUsuario {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: AdminRol;
+  activo: boolean;
+  creadoUtc: string;
+}
+
+export interface CrearAdminUsuarioRequest {
+  email: string;
+  password: string;
+  nombre: string;
+  rol: AdminRol;
 }
 
 export interface TenantFeature {

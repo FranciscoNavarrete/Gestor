@@ -9,7 +9,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = authService.token();
 
-  const request = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  // No pisar un Authorization que el caller ya haya puesto a mano (p.ej. AdminService, que arma
+  // requests con el JWT admin, separado del de tenant que maneja este interceptor).
+  const request =
+    token && !req.headers.has('Authorization') ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
   return next(request).pipe(
     catchError((error) => {

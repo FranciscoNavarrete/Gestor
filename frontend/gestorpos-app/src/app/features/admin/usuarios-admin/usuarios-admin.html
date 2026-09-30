@@ -1,0 +1,95 @@
+<div class="pagina">
+  @if (!adminAuth.estaLogueado()) {
+    <mat-card class="card">
+      <mat-card-content>
+        <p>Iniciá sesión primero en el <a routerLink="/admin/crear-negocio">panel interno</a>.</p>
+      </mat-card-content>
+    </mat-card>
+  } @else if (!adminAuth.esOperador()) {
+    <mat-card class="card">
+      <mat-card-content>
+        <p>Solo un Operador puede administrar usuarios admin.</p>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title>Nuevo usuario admin</mat-card-title>
+        <mat-card-subtitle>Operador (acceso total) o Vendedor (solo sus negocios)</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="crear()" class="form">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Contraseña</mat-label>
+            <input matInput type="text" formControlName="password" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Rol</mat-label>
+            <mat-select formControlName="rol">
+              <mat-option value="Vendedor">Vendedor</mat-option>
+              <mat-option value="Operador">Operador</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          @if (error()) {
+            <p class="error">{{ error() }}</p>
+          }
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+            @if (guardando()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Crear usuario
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title>Usuarios admin</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (cargando()) {
+          <mat-spinner diameter="24"></mat-spinner>
+        } @else if (usuarios().length === 0) {
+          <p class="vacio">Todavía no hay usuarios admin.</p>
+        } @else {
+          <div class="lista-usuarios">
+            @for (usuario of usuarios(); track usuario.id) {
+              <div class="usuario-fila">
+                <div class="usuario-info">
+                  <span class="usuario-nombre">{{ usuario.nombre }} · {{ usuario.rol }}</span>
+                  <span class="usuario-detalle">{{ usuario.email }} · {{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
+                </div>
+                <button
+                  mat-button
+                  type="button"
+                  [disabled]="cambiandoEstadoId() === usuario.id"
+                  (click)="toggleEstado(usuario)"
+                >
+                  {{ usuario.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <a mat-button routerLink="/admin/crear-negocio" class="volver">Volver al panel</a>
+  }
+</div>

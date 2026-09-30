@@ -1,14 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
+import { AdminUsuario, CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
@@ -17,12 +19,14 @@ import { extraerMensajeError } from '../../../core/utils/error.util';
   selector: 'app-crear-negocio',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
     MatSlideToggleModule,
   ],
   templateUrl: './crear-negocio.html',
@@ -45,7 +49,10 @@ export class CrearNegocio implements OnInit {
     nombreAdmin: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    vendedorId: this.fb.control<string | null>(null),
   });
+
+  readonly vendedores = signal<AdminUsuario[]>([]);
 
   @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
 
@@ -63,7 +70,16 @@ export class CrearNegocio implements OnInit {
   readonly guardandoFeature = signal<string | null>(null);
 
   ngOnInit(): void {
-    if (this.adminAuth.estaLogueado()) this.cargarNegocios();
+    if (!this.adminAuth.estaLogueado()) return;
+    this.cargarNegocios();
+    if (this.adminAuth.esOperador()) this.cargarVendedores();
+  }
+
+  private cargarVendedores(): void {
+    this.adminService.listarUsuarios().subscribe({
+      next: (usuarios) => this.vendedores.set(usuarios.filter((u) => u.rol === 'Vendedor' && u.activo)),
+      error: () => {},
+    });
   }
 
   login(): void {
@@ -76,6 +92,7 @@ export class CrearNegocio implements OnInit {
       next: () => {
         this.iniciandoSesion.set(false);
         this.cargarNegocios();
+        if (this.adminAuth.esOperador()) this.cargarVendedores();
       },
       error: () => {
         this.iniciandoSesion.set(false);
@@ -99,6 +116,7 @@ export class CrearNegocio implements OnInit {
   }
 
   toggleExpandido(negocio: TenantResumen): void {
+    if (!this.adminAuth.esOperador()) return;
     if (this.negocioExpandidoId() === negocio.id) {
       this.negocioExpandidoId.set(null);
       return;
@@ -166,6 +184,7 @@ export class CrearNegocio implements OnInit {
   logout(): void {
     this.adminAuth.logout();
     this.negocios.set([]);
+    this.vendedores.set([]);
     this.loginForm.reset();
   }
 

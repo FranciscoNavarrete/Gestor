@@ -8,10 +8,16 @@ export const routes: Routes = [
   },
   {
     // Ruta interna, no vinculada desde ningún lado de la UI pública: el operador de GestorPOS
-    // la usa para dar de alta negocios de clientes. Gate propio por API key (no JWT de tenant).
+    // la usa para dar de alta negocios de clientes. Login propio con JWT admin (no el de tenant).
     path: 'admin/crear-negocio',
     loadComponent: () =>
       import('./features/admin/crear-negocio/crear-negocio').then((m) => m.CrearNegocio),
+  },
+  {
+    // También interna, solo para Operador — gestión de usuarios admin (Operador/Vendedor).
+    path: 'admin/usuarios',
+    loadComponent: () =>
+      import('./features/admin/usuarios-admin/usuarios-admin').then((m) => m.UsuariosAdmin),
   },
   {
     path: '',

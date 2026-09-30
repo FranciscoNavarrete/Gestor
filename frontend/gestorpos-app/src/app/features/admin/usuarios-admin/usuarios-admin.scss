@@ -1,0 +1,72 @@
+.pagina {
+  max-width: 480px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  padding: 8px;
+}
+
+.full {
+  width: 100%;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}
+
+.vacio {
+  opacity: 0.6;
+  margin: 0;
+}
+
+.lista-usuarios {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.usuario-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.usuario-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.usuario-nombre {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.usuario-detalle {
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+.volver {
+  align-self: center;
+  opacity: 0.7;
+}

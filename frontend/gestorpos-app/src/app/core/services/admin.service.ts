@@ -2,7 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CrearNegocioRequest, TenantFeature, TenantResumen } from '../models/admin.models';
+import {
+  AdminUsuario,
+  CrearAdminUsuarioRequest,
+  CrearNegocioRequest,
+  TenantFeature,
+  TenantResumen,
+} from '../models/admin.models';
 import { AdminAuthService } from './admin-auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +46,22 @@ export class AdminService {
     return this.http.delete<TenantFeature>(`${environment.apiUrl}/admin/tenants/${tenantId}/features/${clave}`, {
       headers: this.headers(),
     });
+  }
+
+  listarUsuarios(): Observable<AdminUsuario[]> {
+    return this.http.get<AdminUsuario[]>(`${environment.apiUrl}/admin/usuarios`, { headers: this.headers() });
+  }
+
+  crearUsuario(request: CrearAdminUsuarioRequest): Observable<AdminUsuario> {
+    return this.http.post<AdminUsuario>(`${environment.apiUrl}/admin/usuarios`, request, { headers: this.headers() });
+  }
+
+  activarUsuario(id: string): Observable<AdminUsuario> {
+    return this.http.post<AdminUsuario>(`${environment.apiUrl}/admin/usuarios/${id}/activar`, {}, { headers: this.headers() });
+  }
+
+  desactivarUsuario(id: string): Observable<AdminUsuario> {
+    return this.http.post<AdminUsuario>(`${environment.apiUrl}/admin/usuarios/${id}/desactivar`, {}, { headers: this.headers() });
   }
 
   private headers(): HttpHeaders {

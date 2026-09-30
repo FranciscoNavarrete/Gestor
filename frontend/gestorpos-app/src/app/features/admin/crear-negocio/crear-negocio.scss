@@ -50,6 +50,20 @@
   opacity: 0.7;
 }
 
+.pie-sesion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sesion-info {
+  font-size: 0.78rem;
+  opacity: 0.6;
+  margin-right: 4px;
+}
+
 .lista-negocios {
   display: flex;
   flex-direction: column;
