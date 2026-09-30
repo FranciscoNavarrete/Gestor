@@ -43,12 +43,14 @@ public class ProductoService : IProductoService
     }
 
     public async Task<PaginaDto<ProductoDto>> BuscarAsync(
-        string? busqueda, bool soloBajoStock, bool incluirInactivos, int pagina, int tamanoPagina, CancellationToken ct = default)
+        string? busqueda, bool soloBajoStock, bool soloInactivos, int pagina, int tamanoPagina, CancellationToken ct = default)
     {
         pagina = Math.Max(1, pagina);
         tamanoPagina = Math.Clamp(tamanoPagina, 1, 100);
 
-        var query = incluirInactivos ? _db.Productos.AsQueryable() : _db.Productos.Where(p => p.Activo);
+        // Mismo criterio que "Solo stock bajo": el filtro aísla, no suma — activos por defecto,
+        // o solo los inactivos cuando está prendido, nunca los dos grupos mezclados.
+        var query = _db.Productos.Where(p => p.Activo == !soloInactivos);
         if (soloBajoStock)
             query = query.Where(p => p.StockActual <= p.StockMinimo);
 

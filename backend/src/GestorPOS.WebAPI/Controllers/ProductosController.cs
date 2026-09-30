@@ -29,11 +29,11 @@ public class ProductosController : ControllerBase
     public async Task<ActionResult<PaginaDto<ProductoDto>>> Buscar(
         [FromQuery] string? busqueda,
         [FromQuery] bool bajoStock,
-        [FromQuery] bool incluirInactivos,
+        [FromQuery] bool soloInactivos,
         [FromQuery] int pagina = 1,
         [FromQuery] int tamanoPagina = 20,
         CancellationToken ct = default)
-        => Ok(await _productoService.BuscarAsync(busqueda, bajoStock, incluirInactivos, pagina, tamanoPagina, ct));
+        => Ok(await _productoService.BuscarAsync(busqueda, bajoStock, soloInactivos, pagina, tamanoPagina, ct));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ProductoDto>> Obtener(Guid id, CancellationToken ct)
