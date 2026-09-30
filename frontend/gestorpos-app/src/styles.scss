@@ -126,6 +126,20 @@ h1, h2, h3, .font-display, .mat-mdc-card-title {
   }
 }
 
+// --- Botones de peligro: rojo sólido, mismo criterio que el primario ---
+.mat-mdc-unelevated-button.mat-warn,
+.mat-mdc-raised-button.mat-warn,
+.mat-mdc-fab.mat-warn,
+.mat-mdc-mini-fab.mat-warn {
+  background-color: var(--mat-sys-error, #b3261e) !important;
+  color: #ffffff !important;
+
+  .mat-icon,
+  .mdc-button__label {
+    color: #ffffff;
+  }
+}
+
 .mat-mdc-unelevated-button:not(:disabled),
 .mat-mdc-raised-button:not(:disabled) {
   transition: transform 0.15s ease, box-shadow 0.15s ease;

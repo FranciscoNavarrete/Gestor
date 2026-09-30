@@ -68,25 +68,28 @@
 <mat-menu #menuCarrito="matMenu" class="menu-carrito">
   <div class="carrito-popover" (click)="$event.stopPropagation()">
     <div class="carrito-popover-header">
-      <span>Venta en curso · {{ carritoEnCurso.cantidadItems() }} items</span>
+      <mat-icon>shopping_cart</mat-icon>
+      <span>Venta en curso</span>
+      <span class="chip-cantidad">{{ carritoEnCurso.cantidadItems() }}</span>
     </div>
 
     <div class="carrito-popover-lista">
       @for (item of carritoEnCurso.items(); track item.producto.id) {
         <div class="carrito-popover-item">
-          <span>{{ item.producto.nombre }}</span>
+          <span class="nombre">{{ item.producto.nombre }}</span>
           <span class="cantidad">x{{ item.cantidad }}</span>
         </div>
       }
     </div>
 
     <div class="carrito-popover-total">
-      <span>${{ carritoEnCurso.total() }}</span>
+      <span class="etiqueta">Total</span>
+      <span class="monto">{{ formatMonto(carritoEnCurso.total()) }}</span>
     </div>
 
     <div class="carrito-popover-acciones">
-      <button mat-menu-item type="button" class="btn-cancelar" (click)="cancelarVentaEnCurso()">Cancelar</button>
-      <button mat-menu-item type="button" class="btn-ir" (click)="irAVender()">Ir a vender</button>
+      <button type="button" class="btn-cancelar" (click)="cancelarVentaEnCurso()">Cancelar</button>
+      <button type="button" class="btn-ir" (click)="irAVender()">Ir a vender</button>
     </div>
   </div>
 </mat-menu>
