@@ -11,6 +11,8 @@ public class Tenant : BaseEntity
     public byte[]? LogoData { get; private set; }
     public string? LogoContentType { get; private set; }
     public Guid? VendedorId { get; private set; }
+    public int? FluxoClienteId { get; private set; }
+    public int? FluxoSuscripcionId { get; private set; }
 
     private readonly List<TenantFeature> _features = new();
     public IReadOnlyCollection<TenantFeature> Features => _features.AsReadOnly();
@@ -35,6 +37,12 @@ public class Tenant : BaseEntity
     public void Activar() => Activo = true;
 
     public void AsignarVendedor(Guid? vendedorId) => VendedorId = vendedorId;
+
+    public void AsignarFluxo(int? clienteId, int? suscripcionId)
+    {
+        FluxoClienteId = clienteId;
+        FluxoSuscripcionId = suscripcionId;
+    }
 
     public void ActualizarDatos(string nombre, string? telefono)
     {

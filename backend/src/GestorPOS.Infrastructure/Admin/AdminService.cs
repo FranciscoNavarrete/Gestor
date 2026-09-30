@@ -14,12 +14,14 @@ public class AdminService : IAdminService
     private readonly AppDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ICurrentAdminContext _currentAdmin;
+    private readonly IFluxoService _fluxo;
 
-    public AdminService(AppDbContext db, IPasswordHasher passwordHasher, ICurrentAdminContext currentAdmin)
+    public AdminService(AppDbContext db, IPasswordHasher passwordHasher, ICurrentAdminContext currentAdmin, IFluxoService fluxo)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _currentAdmin = currentAdmin;
+        _fluxo = fluxo;
     }
 
     public async Task<TenantResumenDto> CrearNegocioAsync(CrearNegocioRequest request, CancellationToken ct = default)
@@ -61,7 +63,25 @@ public class AdminService : IAdminService
             ? null
             : await _db.AdminUsuarios.Where(v => v.Id == vendedorId).Select(v => v.Nombre).FirstOrDefaultAsync(ct);
 
-        return new TenantResumenDto(tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, vendedorId, vendedorNombre);
+        // El negocio ya quedó creado en GestorPOS antes de este punto — si Fluxo no responde o
+        // falla, no revertimos nada, solo queda sin suscripción para vincular después a mano.
+        var (nombrePila, apellido) = SepararNombreApellido(request.NombreAdmin);
+        var fluxo = await _fluxo.IniciarSuscripcionAsync(nombrePila, apellido, emailNormalizado, ct);
+        if (fluxo is not null)
+        {
+            tenant.AsignarFluxo(fluxo.ClienteId, fluxo.SuscripcionId);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        return new TenantResumenDto(
+            tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, vendedorId, vendedorNombre,
+            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo?.InitPoint);
+    }
+
+    private static (string Nombre, string Apellido) SepararNombreApellido(string nombreCompleto)
+    {
+        var partes = nombreCompleto.Trim().Split(' ', 2);
+        return partes.Length == 2 ? (partes[0], partes[1]) : (partes[0], string.Empty);
     }
 
     public async Task<IReadOnlyList<TenantResumenDto>> ListarTenantsAsync(CancellationToken ct = default)
@@ -83,7 +103,8 @@ public class AdminService : IAdminService
         return tenants
             .Select(t => new TenantResumenDto(
                 t.Id, t.Nombre, t.Slug, t.Activo, t.FechaCreacion,
-                t.VendedorId, t.VendedorId is null ? null : nombresPorVendedor.GetValueOrDefault(t.VendedorId.Value)))
+                t.VendedorId, t.VendedorId is null ? null : nombresPorVendedor.GetValueOrDefault(t.VendedorId.Value),
+                t.FluxoClienteId, t.FluxoSuscripcionId))
             .ToList();
     }
 
