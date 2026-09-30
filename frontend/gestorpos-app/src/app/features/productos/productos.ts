@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -45,6 +45,7 @@ export class Productos implements OnInit, OnDestroy {
   private readonly catalogoService = inject(CatalogoService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChild('inputArchivo') private inputArchivo?: ElementRef<HTMLInputElement>;
   private debounceTimer?: ReturnType<typeof setTimeout>;
@@ -63,6 +64,9 @@ export class Productos implements OnInit, OnDestroy {
   readonly totalItems = signal(0);
 
   ngOnInit(): void {
+    // Llega desde la card "Productos con stock bajo" del dashboard, con el filtro ya prendido.
+    if (this.route.snapshot.queryParamMap.get('soloBajoStock') === 'true') this.soloBajoStock.set(true);
+
     this.catalogoService.listarCategorias().subscribe((categorias) => this.categorias.set(categorias));
     this.cargar();
   }

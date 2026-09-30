@@ -1,7 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -75,6 +75,7 @@ export class Reportes implements OnInit {
   private readonly movimientoStockService = inject(MovimientoStockService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
 
@@ -172,6 +173,15 @@ export class Reportes implements OnInit {
   readonly deudas = signal<DeudasDto | null>(null);
 
   ngOnInit(): void {
+    // Llega desde una card del dashboard con la vista y el rango de fechas ya elegidos.
+    const params = this.route.snapshot.queryParamMap;
+    const vistaParam = params.get('vista');
+    if (this.esVista(vistaParam)) this.vista.set(vistaParam);
+    const desdeParam = params.get('desde');
+    const hastaParam = params.get('hasta');
+    if (desdeParam) this.desde.set(desdeParam);
+    if (hastaParam) this.hasta.set(hastaParam);
+
     this.cargarVentas();
     this.cargarStock();
     if (this.tieneCompras) this.cargarCompras();
@@ -531,6 +541,10 @@ export class Reportes implements OnInit {
       this.reportesService.exportarStockPdf(this.busquedaStock(), this.soloBajoStock()),
       'reporte-stock.pdf',
     );
+  }
+
+  private esVista(valor: string | null): valor is Vista {
+    return !!valor && ['ventas', 'stock', 'compras', 'facturas', 'movimientos', 'clientes', 'deudas'].includes(valor);
   }
 
   // Si "hasta" cambia y deja a "desde" fuera del rango permitido (después de "hasta", o a más de

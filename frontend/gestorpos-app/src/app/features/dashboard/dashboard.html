@@ -4,25 +4,32 @@
   </div>
 } @else if (datos(); as d) {
   <div class="grid">
-    <mat-card class="stat">
+    <mat-card class="stat clickable" tabindex="0" role="button" (click)="irAVentasDeHoy()" (keydown.enter)="irAVentasDeHoy()">
       <div class="icono-chip"><mat-icon>payments</mat-icon></div>
       <div class="valor font-display">${{ d.ventasHoy | number: '1.0-2' }}</div>
       <div class="etiqueta">Ventas de hoy · {{ d.cantidadVentasHoy }}</div>
     </mat-card>
 
-    <mat-card class="stat">
+    <mat-card class="stat clickable" tabindex="0" role="button" (click)="irAVentasDeHoy()" (keydown.enter)="irAVentasDeHoy()">
       <div class="icono-chip acento-ganancia"><mat-icon>trending_up</mat-icon></div>
       <div class="valor font-display">${{ d.gananciaHoy | number: '1.0-2' }}</div>
       <div class="etiqueta">Ganancia de hoy</div>
     </mat-card>
 
-    <mat-card class="stat">
+    <mat-card class="stat clickable" tabindex="0" role="button" (click)="irAVentasDelMes()" (keydown.enter)="irAVentasDelMes()">
       <div class="icono-chip"><mat-icon>calendar_month</mat-icon></div>
       <div class="valor font-display">${{ d.ventasMes | number: '1.0-2' }}</div>
       <div class="etiqueta">Ventas del mes</div>
     </mat-card>
 
-    <mat-card class="stat" [class.alerta]="d.productosBajoStockMinimo > 0">
+    <mat-card
+      class="stat clickable"
+      tabindex="0"
+      role="button"
+      [class.alerta]="d.productosBajoStockMinimo > 0"
+      (click)="irAStockBajo()"
+      (keydown.enter)="irAStockBajo()"
+    >
       <div class="icono-chip" [class.chip-alerta]="d.productosBajoStockMinimo > 0">
         <mat-icon>warning</mat-icon>
       </div>
