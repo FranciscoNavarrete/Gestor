@@ -5,4 +5,5 @@ namespace GestorPOS.Application.Common.Interfaces;
 public interface IJwtService
 {
     (string Token, DateTime ExpiraUtc) GenerarToken(Usuario usuario, IEnumerable<string> featuresHabilitadas);
+    (string Token, DateTime ExpiraUtc) GenerarTokenAdmin(AdminUsuario usuario);
 }

@@ -17,6 +17,33 @@ public class JwtService : IJwtService
         _configuration = configuration;
     }
 
+    public (string Token, DateTime ExpiraUtc) GenerarTokenAdmin(AdminUsuario usuario)
+    {
+        var key = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("Falta configurar Jwt:Key.");
+        var issuer   = _configuration["Jwt:Issuer"];
+        var audience = _configuration["Jwt:Audience"];
+        var expiraMinutos = int.TryParse(_configuration["Jwt:ExpiraMinutos"], out var m) ? m : 60 * 8;
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub,   usuario.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, usuario.Email),
+            new("nombre",    usuario.Nombre),
+            new("admin_rol", usuario.Rol.ToString()),
+        };
+
+        var expiraUtc   = DateTime.UtcNow.AddMinutes(expiraMinutos);
+        var credentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: issuer, audience: audience,
+            claims: claims, expires: expiraUtc, signingCredentials: credentials);
+
+        return (new JwtSecurityTokenHandler().WriteToken(token), expiraUtc);
+    }
+
     public (string Token, DateTime ExpiraUtc) GenerarToken(Usuario usuario, IEnumerable<string> featuresHabilitadas)
     {
         var key = _configuration["Jwt:Key"]

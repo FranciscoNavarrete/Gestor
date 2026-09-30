@@ -1,22 +1,38 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-const STORAGE_KEY = 'gestorpos_admin_key';
+const STORAGE_KEY = 'gestorpos_admin_token';
 
-/// Guarda la API key del panel interno del operador (no confundir con el JWT de un negocio).
+export interface AdminLoginResponse {
+  token: string;
+  expiraUtc: string;
+  nombre: string;
+  rol: 'Operador' | 'Vendedor';
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminAuthService {
-  private readonly keyState = signal<string | null>(localStorage.getItem(STORAGE_KEY));
+  private readonly http = inject(HttpClient);
+  private readonly _token = signal<string | null>(localStorage.getItem(STORAGE_KEY));
 
-  readonly apiKey = this.keyState.asReadonly();
-  readonly tieneClave = computed(() => !!this.keyState());
+  readonly token       = this._token.asReadonly();
+  readonly estaLogueado = computed(() => !!this._token());
 
-  guardarClave(key: string): void {
-    localStorage.setItem(STORAGE_KEY, key);
-    this.keyState.set(key);
+  login(email: string, password: string): Observable<AdminLoginResponse> {
+    return this.http
+      .post<AdminLoginResponse>(`${environment.apiUrl}/admin/auth/login`, { email, password })
+      .pipe(tap(res => this._guardarToken(res.token)));
   }
 
-  olvidarClave(): void {
+  logout(): void {
     localStorage.removeItem(STORAGE_KEY);
-    this.keyState.set(null);
+    this._token.set(null);
+  }
+
+  private _guardarToken(token: string): void {
+    localStorage.setItem(STORAGE_KEY, token);
+    this._token.set(token);
   }
 }

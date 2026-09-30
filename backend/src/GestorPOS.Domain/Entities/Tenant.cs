@@ -10,6 +10,7 @@ public class Tenant : BaseEntity
     public string? Telefono { get; private set; }
     public byte[]? LogoData { get; private set; }
     public string? LogoContentType { get; private set; }
+    public Guid? VendedorId { get; private set; }
 
     private readonly List<TenantFeature> _features = new();
     public IReadOnlyCollection<TenantFeature> Features => _features.AsReadOnly();
@@ -32,6 +33,8 @@ public class Tenant : BaseEntity
 
     public void Desactivar() => Activo = false;
     public void Activar() => Activo = true;
+
+    public void AsignarVendedor(Guid? vendedorId) => VendedorId = vendedorId;
 
     public void ActualizarDatos(string nombre, string? telefono)
     {

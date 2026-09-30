@@ -33,8 +33,12 @@ export class CrearNegocio implements OnInit {
   private readonly adminService = inject(AdminService);
   protected readonly adminAuth = inject(AdminAuthService);
 
-  readonly claveForm = this.fb.nonNullable.group({ clave: ['', [Validators.required]] });
-  readonly claveError = signal<string | null>(null);
+  readonly loginForm = this.fb.nonNullable.group({
+    email:    ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+  });
+  readonly loginError   = signal<string | null>(null);
+  readonly iniciandoSesion = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     nombreNegocio: ['', [Validators.required]],
@@ -59,14 +63,25 @@ export class CrearNegocio implements OnInit {
   readonly guardandoFeature = signal<string | null>(null);
 
   ngOnInit(): void {
-    if (this.adminAuth.tieneClave()) this.cargarNegocios();
+    if (this.adminAuth.estaLogueado()) this.cargarNegocios();
   }
 
-  guardarClave(): void {
-    if (this.claveForm.invalid) return;
-    this.claveError.set(null);
-    this.adminAuth.guardarClave(this.claveForm.getRawValue().clave);
-    this.cargarNegocios();
+  login(): void {
+    if (this.loginForm.invalid || this.iniciandoSesion()) return;
+    this.loginError.set(null);
+    this.iniciandoSesion.set(true);
+
+    const { email, password } = this.loginForm.getRawValue();
+    this.adminAuth.login(email, password).subscribe({
+      next: () => {
+        this.iniciandoSesion.set(false);
+        this.cargarNegocios();
+      },
+      error: () => {
+        this.iniciandoSesion.set(false);
+        this.loginError.set('Email o contraseña incorrectos.');
+      },
+    });
   }
 
   cargarNegocios(): void {
@@ -78,7 +93,7 @@ export class CrearNegocio implements OnInit {
       },
       error: (err) => {
         this.cargandoNegocios.set(false);
-        this.manejarPosibleClaveInvalida(err);
+        this.manejarPosible401(err);
       },
     });
   }
@@ -141,23 +156,22 @@ export class CrearNegocio implements OnInit {
       },
       error: (err) => {
         this.guardando.set(false);
-        if (!this.manejarPosibleClaveInvalida(err)) {
+        if (!this.manejarPosible401(err)) {
           this.error.set(extraerMensajeError(err));
         }
       },
     });
   }
 
-  cambiarClave(): void {
-    this.adminAuth.olvidarClave();
+  logout(): void {
+    this.adminAuth.logout();
     this.negocios.set([]);
-    this.claveForm.reset();
+    this.loginForm.reset();
   }
 
-  private manejarPosibleClaveInvalida(err: unknown): boolean {
+  private manejarPosible401(err: unknown): boolean {
     if (err instanceof HttpErrorResponse && err.status === 401) {
-      this.adminAuth.olvidarClave();
-      this.claveError.set('La clave de administrador es incorrecta.');
+      this.adminAuth.logout();
       return true;
     }
     return false;

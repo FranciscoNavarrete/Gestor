@@ -1,8 +1,8 @@
 using System.Text;
 using GestorPOS.Application.Common.Exceptions;
+using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure;
 using GestorPOS.Infrastructure.Persistence;
-using GestorPOS.WebAPI.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +42,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // El panel admin usa un JWT propio con el claim "admin_rol", separado del JWT de tenant.
+    options.AddPolicy("AdminPanel", policy => policy.RequireClaim("admin_rol"));
+    // Subset de endpoints admin (gestión de usuarios, feature flags) que un Vendedor no puede tocar.
+    options.AddPolicy("AdminOperador", policy => policy.RequireClaim("admin_rol", nameof(AdminRol.Operador)));
+});
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
@@ -55,12 +61,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Aplica migraciones pendientes en cada arranque — evita el paso manual de
-// "dotnet-ef database update" en cada deploy. Es idempotente (no hace nada si ya está al día).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    // Crea el usuario operador inicial si no existe ningún admin todavía.
+    if (!db.AdminUsuarios.Any())
+    {
+        var passwordInicial = app.Configuration["Admin:PasswordInicial"] ?? "Admin123!";
+        db.AdminUsuarios.Add(AdminUsuario.Crear(
+            email:        app.Configuration["Admin:Email"] ?? "admin@gestorpos.com",
+            passwordHash: BCrypt.Net.BCrypt.HashPassword(passwordInicial),
+            nombre:       "Operador",
+            rol:          AdminRol.Operador));
+        db.SaveChanges();
+    }
 }
 
 if (app.Environment.IsDevelopment())
@@ -98,7 +114,6 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
-app.UseMiddleware<AdminApiKeyMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

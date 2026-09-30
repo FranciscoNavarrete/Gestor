@@ -3,6 +3,7 @@ using System;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GestorPOS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930172152_AgregaAdminUsuarios")]
+    partial class AgregaAdminUsuarios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -641,9 +644,6 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                     b.Property<string>("Telefono")
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
-
-                    b.Property<Guid?>("VendedorId")
-                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 

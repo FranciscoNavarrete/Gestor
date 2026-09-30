@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
+    public DbSet<AdminUsuario> AdminUsuarios => Set<AdminUsuario>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();

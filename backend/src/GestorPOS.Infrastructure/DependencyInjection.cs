@@ -42,6 +42,7 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<ICurrentAdminContext, CurrentAdminContext>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
@@ -61,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<IReporteService, ReporteService>();
         services.AddScoped<IReportePdfService, ReportePdfService>();
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<ITareaService, TareaService>();
         services.AddHostedService<TareaRecordatorioBackgroundService>();
 

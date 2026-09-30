@@ -1,24 +1,33 @@
 <div class="pagina">
-  @if (!adminAuth.tieneClave()) {
+  @if (!adminAuth.estaLogueado()) {
     <mat-card class="card">
       <mat-card-header>
         <mat-card-title>Panel interno</mat-card-title>
-        <mat-card-subtitle>Ingresá la clave de administrador</mat-card-subtitle>
+        <mat-card-subtitle>Ingresá con tu usuario administrador</mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content>
-        <form [formGroup]="claveForm" (ngSubmit)="guardarClave()" class="form">
+        <form [formGroup]="loginForm" (ngSubmit)="login()" class="form">
           <mat-form-field appearance="outline" class="full">
-            <mat-label>API key</mat-label>
-            <input matInput type="password" formControlName="clave" cdkFocusInitial />
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" cdkFocusInitial autocomplete="username" />
           </mat-form-field>
 
-          @if (claveError()) {
-            <p class="error">{{ claveError() }}</p>
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Contraseña</mat-label>
+            <input matInput type="password" formControlName="password" autocomplete="current-password" />
+          </mat-form-field>
+
+          @if (loginError()) {
+            <p class="error">{{ loginError() }}</p>
           }
 
-          <button mat-flat-button color="primary" type="submit" [disabled]="claveForm.invalid">
-            Entrar
+          <button mat-flat-button color="primary" type="submit" [disabled]="loginForm.invalid || iniciandoSesion()">
+            @if (iniciandoSesion()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Entrar
+            }
           </button>
         </form>
       </mat-card-content>
@@ -127,6 +136,6 @@
       </mat-card-content>
     </mat-card>
 
-    <button mat-button (click)="cambiarClave()" class="cambiar-clave">Usar otra clave</button>
+    <button mat-button (click)="logout()" class="cambiar-clave">Cerrar sesión</button>
   }
 </div>

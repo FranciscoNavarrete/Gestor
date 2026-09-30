@@ -7,7 +7,7 @@ import { AdminAuthService } from './admin-auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
-  private readonly http = inject(HttpClient);
+  private readonly http      = inject(HttpClient);
   private readonly adminAuth = inject(AdminAuthService);
 
   crearNegocio(request: CrearNegocioRequest): Observable<TenantResumen> {
@@ -43,6 +43,6 @@ export class AdminService {
   }
 
   private headers(): HttpHeaders {
-    return new HttpHeaders({ 'X-Admin-Api-Key': this.adminAuth.apiKey() ?? '' });
+    return new HttpHeaders({ Authorization: `Bearer ${this.adminAuth.token() ?? ''}` });
   }
 }
