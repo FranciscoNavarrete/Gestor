@@ -11,14 +11,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ItemCarrito } from '../../core/models/carrito.models';
 import { Producto } from '../../core/models/catalog.models';
-import { Cliente } from '../../core/models/cliente.models';
 import { MedioPagoDto } from '../../core/models/configuracion.models';
 import { FEATURE_CUENTA_CORRIENTE, MEDIO_PAGO_A_CUENTA } from '../../core/models/cuenta-corriente';
 import { CajaDto, RankingProductoDto } from '../../core/models/reportes.models';
 import { MedioPago, VentaDto } from '../../core/models/venta.models';
 import { AuthService } from '../../core/services/auth.service';
 import { CajaService } from '../../core/services/caja.service';
+import { CarritoEnCursoService } from '../../core/services/carrito-en-curso.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { ReportesService } from '../../core/services/reportes.service';
@@ -27,11 +28,6 @@ import { extraerMensajeError } from '../../core/utils/error.util';
 import { ClientePickerDialog, ClientePickerResultado } from './cliente-picker-dialog/cliente-picker-dialog';
 
 const TOP_MAS_VENDIDOS = 6;
-
-interface ItemCarrito {
-  producto: Producto;
-  cantidad: number;
-}
 
 interface NotificacionAgregado {
   id: number;
@@ -70,6 +66,7 @@ export class Venta implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly carritoEnCursoService = inject(CarritoEnCursoService);
 
   readonly medioPagoACuenta = MEDIO_PAGO_A_CUENTA;
   readonly tieneCuentaCorriente = this.authService.tieneFeature(FEATURE_CUENTA_CORRIENTE);
@@ -83,13 +80,13 @@ export class Venta implements OnInit {
   readonly mediosPago = signal<MedioPagoDto[]>([]);
   readonly rankingTop = signal<RankingProductoDto[]>([]);
   readonly busqueda = signal('');
-  readonly carrito = signal<ItemCarrito[]>([]);
+  readonly carrito = this.carritoEnCursoService.items;
   readonly carritoExpandido = signal(false);
-  readonly medioPago = signal<MedioPago>('Efectivo');
-  readonly nombreCliente = signal('');
-  readonly telefonoCliente = signal('');
-  readonly clienteSeleccionado = signal<Cliente | null>(null);
-  readonly montoRecibido = signal<number | null>(null);
+  readonly medioPago = this.carritoEnCursoService.medioPago;
+  readonly nombreCliente = this.carritoEnCursoService.nombreCliente;
+  readonly telefonoCliente = this.carritoEnCursoService.telefonoCliente;
+  readonly clienteSeleccionado = this.carritoEnCursoService.clienteSeleccionado;
+  readonly montoRecibido = this.carritoEnCursoService.montoRecibido;
   readonly procesando = signal(false);
   readonly ventaResultado = signal<VentaDto | null>(null);
   readonly notificaciones = signal<NotificacionAgregado[]>([]);
@@ -115,11 +112,8 @@ export class Venta implements OnInit {
       .slice(0, 8);
   });
 
-  readonly total = computed(() =>
-    this.carrito().reduce((acc, item) => acc + item.producto.precio * item.cantidad, 0),
-  );
-
-  readonly cantidadItems = computed(() => this.carrito().reduce((acc, item) => acc + item.cantidad, 0));
+  readonly total = this.carritoEnCursoService.total;
+  readonly cantidadItems = this.carritoEnCursoService.cantidadItems;
 
   readonly vuelto = computed(() => {
     const recibido = this.montoRecibido();
@@ -176,6 +170,7 @@ export class Venta implements OnInit {
       this.carrito.set([...actual, { producto, cantidad: 1 }]);
     }
 
+    this.carritoEnCursoService.tocar();
     this.mostrarNotificacion(producto.nombre, nuevaCantidad, producto.precio * nuevaCantidad);
   }
 
@@ -207,16 +202,19 @@ export class Venta implements OnInit {
     this.carrito.set(
       this.carrito().map((i) => (i.producto.id === item.producto.id ? { ...i, cantidad: nuevaCantidad } : i)),
     );
+    this.carritoEnCursoService.tocar();
   }
 
   private quitarDelCarrito(item: ItemCarrito, cantidadPrevia: number): void {
     this.carrito.set(this.carrito().filter((i) => i.producto.id !== item.producto.id));
+    this.carritoEnCursoService.tocar();
 
     this.snackBar
       .open(`Quitaste ${item.producto.nombre} del carrito`, 'Deshacer', { duration: 4000 })
       .onAction()
       .subscribe(() => {
         this.carrito.set([...this.carrito(), { producto: item.producto, cantidad: cantidadPrevia }]);
+        this.carritoEnCursoService.tocar();
       });
   }
 
@@ -241,6 +239,7 @@ export class Venta implements OnInit {
         this.nombreCliente.set(resultado.nombre);
         this.telefonoCliente.set(resultado.telefono);
         this.clienteSeleccionado.set(resultado.cliente);
+        this.carritoEnCursoService.tocar();
       });
   }
 
@@ -248,11 +247,13 @@ export class Venta implements OnInit {
     this.nombreCliente.set('');
     this.telefonoCliente.set('');
     this.clienteSeleccionado.set(null);
+    this.carritoEnCursoService.tocar();
   }
 
   cambiarMedioPago(valor: MedioPago): void {
     this.medioPago.set(valor);
     if (valor !== 'Efectivo') this.montoRecibido.set(null);
+    this.carritoEnCursoService.tocar();
   }
 
   cobrar(): void {
@@ -280,13 +281,8 @@ export class Venta implements OnInit {
   }
 
   nuevaVenta(): void {
-    this.carrito.set([]);
+    this.carritoEnCursoService.cancelar();
     this.carritoExpandido.set(false);
-    this.nombreCliente.set('');
-    this.telefonoCliente.set('');
-    this.clienteSeleccionado.set(null);
-    this.montoRecibido.set(null);
-    this.medioPago.set('Efectivo');
     this.ventaResultado.set(null);
     this.busqueda.set('');
     // Refresca stock local para que la siguiente venta valide contra los números actuales.
