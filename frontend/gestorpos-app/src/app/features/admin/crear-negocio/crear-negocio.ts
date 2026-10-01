@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { toDataURL } from 'qrcode';
 import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -61,6 +62,7 @@ export class CrearNegocio implements OnInit {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly ultimoCreado = signal<TenantResumen | null>(null);
+  readonly qrDataUrl = signal<string | null>(null);
 
   readonly negocios = signal<TenantResumen[]>([]);
   readonly cargandoNegocios = signal(false);
@@ -175,6 +177,7 @@ export class CrearNegocio implements OnInit {
     this.guardando.set(true);
     this.error.set(null);
     this.ultimoCreado.set(null);
+    this.qrDataUrl.set(null);
 
     this.adminService.crearNegocio(this.form.getRawValue()).subscribe({
       next: (negocio) => {
@@ -190,6 +193,18 @@ export class CrearNegocio implements OnInit {
         }
       },
     });
+  }
+
+  toggleQr(): void {
+    if (this.qrDataUrl()) {
+      this.qrDataUrl.set(null);
+      return;
+    }
+    const link = this.ultimoCreado()?.fluxoInitPoint;
+    if (!link) return;
+    toDataURL(link, { width: 240, margin: 1 })
+      .then((dataUrl) => this.qrDataUrl.set(dataUrl))
+      .catch(() => {});
   }
 
   logout(): void {

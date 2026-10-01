@@ -98,6 +98,12 @@
                 Link de pago (Mercado Pago), pasáselo también:
                 <a [href]="creado.fluxoInitPoint" target="_blank" rel="noopener">{{ creado.fluxoInitPoint }}</a>
               </p>
+              <button mat-stroked-button type="button" class="boton-qr" (click)="toggleQr()">
+                {{ qrDataUrl() ? 'Ocultar QR' : 'Mostrar QR' }}
+              </button>
+              @if (qrDataUrl(); as qr) {
+                <img [src]="qr" alt="QR del link de pago" class="qr-pago" />
+              }
             }
           }
 
