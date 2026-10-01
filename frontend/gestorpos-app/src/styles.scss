@@ -140,6 +140,25 @@ h1, h2, h3, .font-display, .mat-mdc-card-title {
   }
 }
 
+// Sin esto, el gradiente/color sólido de arriba (con !important) tapa el estado disabled de
+// Material -- el botón quedaba con el mismo azul vivo estuviera habilitado o no, sin ninguna
+// señal visual de que tocarlo no hace nada.
+.mat-mdc-unelevated-button.mat-primary:disabled,
+.mat-mdc-raised-button.mat-primary:disabled,
+.mat-mdc-unelevated-button.mat-warn:disabled,
+.mat-mdc-raised-button.mat-warn:disabled {
+  background-image: none !important;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent) !important;
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent) !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+
+  .mat-icon,
+  .mdc-button__label {
+    color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+  }
+}
+
 .mat-mdc-unelevated-button:not(:disabled),
 .mat-mdc-raised-button:not(:disabled) {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
