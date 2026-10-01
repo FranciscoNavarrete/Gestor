@@ -1,28 +1,13 @@
 {
-  "name": "GestorPOS",
-  "short_name": "GestorPOS",
-  "description": "Gestión de ventas, stock y caja para tu negocio.",
+  "name": "GestorPOS Admin",
+  "short_name": "GP Admin",
+  "description": "Panel interno de GestorPOS: alta de negocios y gestión.",
   "display": "standalone",
   "orientation": "portrait",
-  "scope": "./",
-  "start_url": "./",
+  "scope": "/admin/",
+  "start_url": "/admin/login",
   "theme_color": "#2f6fed",
   "background_color": "#ffffff",
-  "shortcuts": [
-    {
-      "name": "Panel admin",
-      "short_name": "Admin",
-      "description": "Alta de negocios y gestión interna",
-      "url": "/admin/login",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    }
-  ],
   "icons": [
     {
       "src": "icons/icon-72x72.png",

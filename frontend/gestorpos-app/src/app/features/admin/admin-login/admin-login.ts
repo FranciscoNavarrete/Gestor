@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
+import { activarManifestAdmin, restaurarManifestNegocio } from '../../../core/utils/admin-manifest.util';
 
 @Component({
   selector: 'app-admin-login',
@@ -14,7 +15,7 @@ import { AdminAuthService } from '../../../core/services/admin-auth.service';
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.scss',
 })
-export class AdminLogin {
+export class AdminLogin implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly adminAuth = inject(AdminAuthService);
   private readonly router = inject(Router);
@@ -25,6 +26,14 @@ export class AdminLogin {
   });
   readonly error = signal<string | null>(null);
   readonly iniciandoSesion = signal(false);
+
+  ngOnInit(): void {
+    activarManifestAdmin();
+  }
+
+  ngOnDestroy(): void {
+    restaurarManifestNegocio();
+  }
 
   ingresar(): void {
     if (this.form.invalid || this.iniciandoSesion()) return;
