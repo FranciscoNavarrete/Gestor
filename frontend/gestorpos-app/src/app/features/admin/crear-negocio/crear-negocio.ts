@@ -243,6 +243,7 @@ export class CrearNegocio implements OnInit {
   }
 
   logout(): void {
+    if (!confirm('¿Cerrar sesión?')) return;
     this.adminAuth.logout();
     this.router.navigateByUrl('/admin/login');
   }
