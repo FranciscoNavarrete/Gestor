@@ -83,6 +83,12 @@
               <mat-icon>check_circle</mat-icon>
               Negocio "{{ creado.nombre }}" creado. Pasale el email y la contraseña al cliente.
             </p>
+            @if (creado.fluxoInitPoint) {
+              <p class="link-pago">
+                Link de pago (Mercado Pago), pasáselo también:
+                <a [href]="creado.fluxoInitPoint" target="_blank" rel="noopener">{{ creado.fluxoInitPoint }}</a>
+              </p>
+            }
           }
 
           <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">

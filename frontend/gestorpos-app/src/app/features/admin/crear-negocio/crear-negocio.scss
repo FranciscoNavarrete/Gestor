@@ -40,6 +40,16 @@
   }
 }
 
+.link-pago {
+  font-size: 0.875rem;
+  margin: 0;
+  word-break: break-all;
+
+  a {
+    color: inherit;
+  }
+}
+
 .vacio {
   opacity: 0.6;
   margin: 0;

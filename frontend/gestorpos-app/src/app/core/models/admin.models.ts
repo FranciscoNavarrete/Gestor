@@ -20,6 +20,9 @@ export interface TenantResumen {
   fechaCreacion: string;
   vendedorId: string | null;
   vendedorNombre: string | null;
+  fluxoClienteId?: number | null;
+  fluxoSuscripcionId?: number | null;
+  fluxoInitPoint?: string | null;
 }
 
 export type AdminRol = 'Operador' | 'Vendedor';
