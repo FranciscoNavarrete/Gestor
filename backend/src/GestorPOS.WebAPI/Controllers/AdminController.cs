@@ -44,6 +44,16 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<TenantFeatureDto>> DesactivarFeature(Guid tenantId, string clave, CancellationToken ct)
         => Ok(await _adminService.DesactivarFeatureAsync(tenantId, clave, ct));
 
+    [HttpPost("tenants/{tenantId:guid}/desactivar")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<TenantResumenDto>> DesactivarTenant(Guid tenantId, CancellationToken ct)
+        => Ok(await _adminService.DesactivarTenantAsync(tenantId, ct));
+
+    [HttpPost("tenants/{tenantId:guid}/activar")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<TenantResumenDto>> ActivarTenant(Guid tenantId, CancellationToken ct)
+        => Ok(await _adminService.ActivarTenantAsync(tenantId, ct));
+
     [HttpGet("usuarios")]
     [Authorize(Policy = "AdminOperador")]
     public async Task<ActionResult<IReadOnlyList<AdminUsuarioDto>>> ListarUsuarios(CancellationToken ct)

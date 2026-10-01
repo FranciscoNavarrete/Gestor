@@ -33,4 +33,9 @@ public class Usuario : TenantEntity
     }
 
     public void Desactivar() => Activo = false;
+
+    // Se usa al desactivar el negocio dueño de este usuario: el email original queda libre para
+    // que se pueda dar de alta un negocio nuevo con ese mismo email (el índice único de Email no
+    // distingue si el tenant dueño sigue activo).
+    public void LiberarEmail() => Email = $"baja+{Guid.NewGuid():N}+{Email}";
 }

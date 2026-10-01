@@ -124,6 +124,56 @@ public class AdminService : IAdminService
             .ToList();
     }
 
+    public async Task<TenantResumenDto> DesactivarTenantAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+        tenant.Desactivar();
+
+        // Corta el acceso de todos los usuarios del negocio (no solo el admin) y libera sus
+        // emails, para que se pueda volver a dar de alta un negocio nuevo con el mismo email.
+        var usuarios = await _db.Usuarios.IgnoreQueryFilters()
+            .Where(u => u.TenantId == tenantId)
+            .ToListAsync(ct);
+        foreach (var usuario in usuarios)
+        {
+            usuario.Desactivar();
+            usuario.LiberarEmail();
+        }
+
+        await _db.SaveChangesAsync(ct);
+        return await ArmarResumenAsync(tenant, ct);
+    }
+
+    public async Task<TenantResumenDto> ActivarTenantAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+        tenant.Activar();
+        await _db.SaveChangesAsync(ct);
+        return await ArmarResumenAsync(tenant, ct);
+    }
+
+    private async Task<TenantResumenDto> ArmarResumenAsync(Tenant tenant, CancellationToken ct)
+    {
+        var vendedorNombre = tenant.VendedorId is null
+            ? null
+            : await _db.AdminUsuarios.Where(v => v.Id == tenant.VendedorId).Select(v => v.Nombre).FirstOrDefaultAsync(ct);
+
+        string? fluxoEstado = null;
+        if (tenant.FluxoSuscripcionId is not null)
+        {
+            var estados = await _fluxo.ObtenerEstadosSuscripcionesAsync([tenant.FluxoSuscripcionId.Value], ct);
+            fluxoEstado = estados.GetValueOrDefault(tenant.FluxoSuscripcionId.Value);
+        }
+
+        return new TenantResumenDto(
+            tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, tenant.VendedorId, vendedorNombre,
+            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, null, fluxoEstado);
+    }
+
+    private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>
+        await _db.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == tenantId, ct)
+            ?? throw new AppException("El negocio no existe.");
+
     public async Task<IReadOnlyList<TenantFeatureDto>> ListarFeaturesAsync(Guid tenantId, CancellationToken ct = default)
     {
         await AsegurarTenantExisteAsync(tenantId, ct);

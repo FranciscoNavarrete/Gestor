@@ -136,7 +136,13 @@
           <div class="lista-negocios">
             @for (negocio of negociosFiltrados(); track negocio.id) {
               <div class="negocio-item" [class.expandido]="negocioExpandidoId() === negocio.id">
-                <button type="button" class="negocio-fila" (click)="toggleExpandido(negocio)">
+                <div
+                  class="negocio-fila"
+                  role="button"
+                  tabindex="0"
+                  (click)="toggleExpandido(negocio)"
+                  (keydown.enter)="toggleExpandido(negocio)"
+                >
                   <div class="negocio-info">
                     <span class="negocio-nombre">{{ negocio.nombre }}</span>
                     <span class="negocio-detalle">
@@ -151,10 +157,23 @@
                       <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
                     }
                     @if (adminAuth.esOperador()) {
+                      <button
+                        mat-icon-button
+                        type="button"
+                        [disabled]="cambiandoEstadoNegocioId() === negocio.id"
+                        (click)="toggleEstadoNegocio(negocio, $event)"
+                        [attr.aria-label]="negocio.activo ? 'Desactivar negocio' : 'Activar negocio'"
+                      >
+                        @if (cambiandoEstadoNegocioId() === negocio.id) {
+                          <mat-spinner diameter="18"></mat-spinner>
+                        } @else {
+                          <mat-icon>{{ negocio.activo ? 'block' : 'check_circle' }}</mat-icon>
+                        }
+                      </button>
                       <mat-icon class="chevron">{{ negocioExpandidoId() === negocio.id ? 'expand_less' : 'expand_more' }}</mat-icon>
                     }
                   </div>
-                </button>
+                </div>
 
                 @if (negocioExpandidoId() === negocio.id) {
                   <div class="features-panel">

@@ -78,6 +78,7 @@ export class CrearNegocio implements OnInit {
   readonly cargandoFeatures = signal(false);
   readonly featuresActivos = signal<Set<string>>(new Set());
   readonly guardandoFeature = signal<string | null>(null);
+  readonly cambiandoEstadoNegocioId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.cargarNegocios();
@@ -214,6 +215,31 @@ export class CrearNegocio implements OnInit {
   badgeSuscripcion(negocio: TenantResumen): { texto: string; clase: string } | null {
     if (!negocio.fluxoEstado) return null;
     return CrearNegocio.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;
+  }
+
+  toggleEstadoNegocio(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    if (this.cambiandoEstadoNegocioId()) return;
+
+    if (negocio.activo) {
+      const confirmado = confirm(
+        `¿Desactivar "${negocio.nombre}"? El cliente pierde el acceso y el email queda libre para usarlo en otro negocio.`,
+      );
+      if (!confirmado) return;
+    }
+
+    this.cambiandoEstadoNegocioId.set(negocio.id);
+    const accion$ = negocio.activo
+      ? this.adminService.desactivarNegocio(negocio.id)
+      : this.adminService.activarNegocio(negocio.id);
+
+    accion$.subscribe({
+      next: () => {
+        this.cambiandoEstadoNegocioId.set(null);
+        this.cargarNegocios();
+      },
+      error: () => this.cambiandoEstadoNegocioId.set(null),
+    });
   }
 
   logout(): void {

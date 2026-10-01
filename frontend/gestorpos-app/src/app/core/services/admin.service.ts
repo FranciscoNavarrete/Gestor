@@ -35,6 +35,22 @@ export class AdminService {
     });
   }
 
+  desactivarNegocio(tenantId: string): Observable<TenantResumen> {
+    return this.http.post<TenantResumen>(
+      `${environment.apiUrl}/admin/tenants/${tenantId}/desactivar`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
+  activarNegocio(tenantId: string): Observable<TenantResumen> {
+    return this.http.post<TenantResumen>(
+      `${environment.apiUrl}/admin/tenants/${tenantId}/activar`,
+      {},
+      { headers: this.headers() },
+    );
+  }
+
   listarFeatures(tenantId: string): Observable<TenantFeature[]> {
     return this.http.get<TenantFeature[]>(`${environment.apiUrl}/admin/tenants/${tenantId}/features`, {
       headers: this.headers(),
