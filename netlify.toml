@@ -8,6 +8,13 @@
 [context.qas]
   command = "npm run build:qas"
 
+# iOS lee el manifest/título del HTML estático al "Agregar a inicio", no del DOM ya mutado por
+# JS — por eso /admin/* sirve un HTML aparte (admin.html) con el manifest de admin ya puesto.
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin.html"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
