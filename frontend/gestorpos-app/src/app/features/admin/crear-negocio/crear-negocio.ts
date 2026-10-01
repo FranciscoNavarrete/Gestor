@@ -1,16 +1,19 @@
+import { Clipboard } from '@angular/cdk/clipboard';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { toDataURL } from 'qrcode';
+import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { QrDialog } from '../../../core/dialogs/qr-dialog/qr-dialog';
 import { AdminUsuario, CATALOGO_FEATURES, FluxoPlan, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
@@ -36,6 +39,9 @@ import { extraerMensajeError } from '../../../core/utils/error.util';
 export class CrearNegocio implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly adminService = inject(AdminService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly clipboard = inject(Clipboard);
   protected readonly adminAuth = inject(AdminAuthService);
 
   readonly loginForm = this.fb.nonNullable.group({
@@ -62,10 +68,16 @@ export class CrearNegocio implements OnInit {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly ultimoCreado = signal<TenantResumen | null>(null);
-  readonly qrDataUrl = signal<string | null>(null);
+  readonly ultimoCreadoCredenciales = signal<{ email: string; password: string } | null>(null);
 
   readonly negocios = signal<TenantResumen[]>([]);
   readonly cargandoNegocios = signal(false);
+  readonly busqueda = signal('');
+  readonly negociosFiltrados = computed(() => {
+    const termino = this.busqueda().trim().toLowerCase();
+    if (!termino) return this.negocios();
+    return this.negocios().filter((n) => n.nombre.toLowerCase().includes(termino));
+  });
 
   readonly catalogoFeatures = CATALOGO_FEATURES;
   readonly negocioExpandidoId = signal<string | null>(null);
@@ -177,12 +189,15 @@ export class CrearNegocio implements OnInit {
     this.guardando.set(true);
     this.error.set(null);
     this.ultimoCreado.set(null);
-    this.qrDataUrl.set(null);
+    this.ultimoCreadoCredenciales.set(null);
+
+    const { email, password } = this.form.getRawValue();
 
     this.adminService.crearNegocio(this.form.getRawValue()).subscribe({
       next: (negocio) => {
         this.guardando.set(false);
         this.ultimoCreado.set(negocio);
+        this.ultimoCreadoCredenciales.set({ email, password });
         this.formDirective?.resetForm();
         this.cargarNegocios();
       },
@@ -195,16 +210,23 @@ export class CrearNegocio implements OnInit {
     });
   }
 
-  toggleQr(): void {
-    if (this.qrDataUrl()) {
-      this.qrDataUrl.set(null);
-      return;
-    }
-    const link = this.ultimoCreado()?.fluxoInitPoint;
-    if (!link) return;
-    toDataURL(link, { width: 240, margin: 1 })
-      .then((dataUrl) => this.qrDataUrl.set(dataUrl))
-      .catch(() => {});
+  abrirQr(): void {
+    const creado = this.ultimoCreado();
+    if (!creado?.fluxoInitPoint) return;
+    this.dialog.open(QrDialog, {
+      data: { nombre: creado.nombre, link: creado.fluxoInitPoint },
+      width: '300px',
+    });
+  }
+
+  copiar(texto: string, etiqueta: string): void {
+    this.clipboard.copy(texto);
+    this.snackBar.open(`${etiqueta} copiado`, 'OK', { duration: 2500 });
+  }
+
+  linkWhatsapp(creado: TenantResumen): string {
+    const mensaje = `Hola! Para suscribirte a ${creado.nombre}, entrá acá: ${creado.fluxoInitPoint}`;
+    return `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
   }
 
   logout(): void {
@@ -212,6 +234,9 @@ export class CrearNegocio implements OnInit {
     this.negocios.set([]);
     this.vendedores.set([]);
     this.planes.set([]);
+    this.busqueda.set('');
+    this.ultimoCreado.set(null);
+    this.ultimoCreadoCredenciales.set(null);
     this.loginForm.reset();
   }
 

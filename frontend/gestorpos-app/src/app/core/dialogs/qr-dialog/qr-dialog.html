@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>{{ data.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  <p class="subtitulo">Escaneá para ir directo al link de pago</p>
+  @if (qrDataUrl(); as qr) {
+    <img [src]="qr" alt="QR del link de pago" class="qr" />
+  } @else {
+    <div class="cargando">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

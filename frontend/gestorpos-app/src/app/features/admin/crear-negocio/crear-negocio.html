@@ -33,7 +33,8 @@
       </mat-card-content>
     </mat-card>
   } @else {
-    <mat-card class="card">
+    <div class="grid-principal">
+    <mat-card class="card card-nuevo">
       <mat-card-header>
         <mat-card-title>Nuevo negocio</mat-card-title>
         <mat-card-subtitle>Las credenciales que cargues acá son las que le das al cliente</mat-card-subtitle>
@@ -41,6 +42,7 @@
 
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="crear()" class="form">
+          <p class="seccion">Datos del negocio</p>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Nombre del negocio</mat-label>
             <input matInput formControlName="nombreNegocio" />
@@ -51,6 +53,7 @@
             <input matInput formControlName="nombreAdmin" />
           </mat-form-field>
 
+          <p class="seccion">Acceso del cliente</p>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Email (usuario de acceso)</mat-label>
             <input matInput type="email" formControlName="email" />
@@ -62,6 +65,7 @@
             <mat-hint>La definís vos y se la pasás al cliente</mat-hint>
           </mat-form-field>
 
+          <p class="seccion">Plan y vendedor</p>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Plan</mat-label>
             <mat-select formControlName="mpPlanId">
@@ -89,22 +93,47 @@
           }
 
           @if (ultimoCreado(); as creado) {
-            <p class="exito">
-              <mat-icon>check_circle</mat-icon>
-              Negocio "{{ creado.nombre }}" creado. Pasale el email y la contraseña al cliente.
-            </p>
-            @if (creado.fluxoInitPoint) {
-              <p class="link-pago">
-                Link de pago (Mercado Pago), pasáselo también:
-                <a [href]="creado.fluxoInitPoint" target="_blank" rel="noopener">{{ creado.fluxoInitPoint }}</a>
+            <div class="resultado">
+              <p class="exito">
+                <mat-icon>check_circle</mat-icon>
+                Negocio "{{ creado.nombre }}" creado
               </p>
-              <button mat-stroked-button type="button" class="boton-qr" (click)="toggleQr()">
-                {{ qrDataUrl() ? 'Ocultar QR' : 'Mostrar QR' }}
-              </button>
-              @if (qrDataUrl(); as qr) {
-                <img [src]="qr" alt="QR del link de pago" class="qr-pago" />
+
+              @if (ultimoCreadoCredenciales(); as cred) {
+                <div class="dato-copiable">
+                  <span>{{ cred.email }}</span>
+                  <button mat-icon-button type="button" (click)="copiar(cred.email, 'Email')" aria-label="Copiar email">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+                <div class="dato-copiable">
+                  <span>{{ cred.password }}</span>
+                  <button mat-icon-button type="button" (click)="copiar(cred.password, 'Contraseña')" aria-label="Copiar contraseña">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
               }
-            }
+
+              @if (creado.fluxoInitPoint) {
+                <div class="dato-copiable">
+                  <span class="dato-link">{{ creado.fluxoInitPoint }}</span>
+                  <button mat-icon-button type="button" (click)="copiar(creado.fluxoInitPoint, 'Link')" aria-label="Copiar link">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+
+                <div class="acciones-resultado">
+                  <a mat-stroked-button [href]="linkWhatsapp(creado)" target="_blank" rel="noopener" class="boton-whatsapp">
+                    <mat-icon>chat</mat-icon>
+                    WhatsApp
+                  </a>
+                  <button mat-stroked-button type="button" (click)="abrirQr()">
+                    <mat-icon>qr_code_2</mat-icon>
+                    Ver QR
+                  </button>
+                </div>
+              }
+            </div>
           }
 
           <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
@@ -118,19 +147,28 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="card">
+    <mat-card class="card card-existentes">
       <mat-card-header>
         <mat-card-title>Negocios existentes</mat-card-title>
         <mat-card-subtitle>Tocá un negocio para ver y activar sus funcionalidades</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
+        @if (negocios().length > 0) {
+          <mat-form-field appearance="outline" class="full buscador">
+            <mat-label>Buscar negocio</mat-label>
+            <input matInput [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        }
         @if (cargandoNegocios()) {
           <mat-spinner diameter="24"></mat-spinner>
         } @else if (negocios().length === 0) {
           <p class="vacio">Todavía no hay negocios cargados.</p>
+        } @else if (negociosFiltrados().length === 0) {
+          <p class="vacio">Ningún negocio coincide con "{{ busqueda() }}".</p>
         } @else {
           <div class="lista-negocios">
-            @for (negocio of negocios(); track negocio.id) {
+            @for (negocio of negociosFiltrados(); track negocio.id) {
               <div class="negocio-item" [class.expandido]="negocioExpandidoId() === negocio.id">
                 <button type="button" class="negocio-fila" (click)="toggleExpandido(negocio)">
                   <div class="negocio-info">
@@ -176,6 +214,7 @@
         }
       </mat-card-content>
     </mat-card>
+    </div>
 
     <div class="pie-sesion">
       <span class="sesion-info">{{ adminAuth.nombre() }} · {{ adminAuth.rol() }}</span>

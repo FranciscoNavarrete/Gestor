@@ -7,6 +7,37 @@
   gap: 16px;
 }
 
+.grid-principal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .pagina {
+    max-width: 960px;
+  }
+
+  .grid-principal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+  }
+}
+
+.seccion {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+  margin: 12px 0 2px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
 .card {
   padding: 8px;
 }
@@ -40,31 +71,67 @@
   }
 }
 
-.link-pago {
-  font-size: 0.875rem;
-  margin: 0;
-  word-break: break-all;
+.resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin: 4px 0;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, #2e7d32 10%, transparent);
+}
 
-  a {
-    color: inherit;
+.dato-copiable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface-card);
+  border-radius: var(--radius-sm);
+  padding: 4px 4px 4px 12px;
+  font-size: 0.8rem;
+  font-family: monospace;
+
+  span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
+    flex-shrink: 0;
   }
 }
 
-.boton-qr {
-  margin-top: 8px;
+.dato-link {
+  font-family: monospace;
 }
 
-.qr-pago {
-  display: block;
-  margin-top: 12px;
-  width: 180px;
-  height: 180px;
-  border-radius: 8px;
+.acciones-resultado {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+
+  a,
+  button {
+    flex: 1;
+  }
+}
+
+.boton-whatsapp {
+  color: #25d366;
+  border-color: #25d366 !important;
 }
 
 .vacio {
   opacity: 0.6;
   margin: 0;
+}
+
+.buscador {
+  margin-bottom: 4px;
 }
 
 .cambiar-clave {
