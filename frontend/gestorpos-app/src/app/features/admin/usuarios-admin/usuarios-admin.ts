@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -78,7 +79,11 @@ export class UsuariosAdmin implements OnInit {
       },
       error: (err) => {
         this.guardando.set(false);
-        this.error.set(extraerMensajeError(err));
+        // adminAuthInterceptor ya desloguea + avisa + redirige en un 401 -- no pisarlo acá
+        // con el mensaje de error genérico.
+        if (!(err instanceof HttpErrorResponse && err.status === 401)) {
+          this.error.set(extraerMensajeError(err));
+        }
       },
     });
   }

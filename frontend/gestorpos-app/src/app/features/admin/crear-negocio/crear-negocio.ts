@@ -253,11 +253,9 @@ export class CrearNegocio implements OnInit {
     this.loginForm.reset();
   }
 
+  // El logout + aviso + redirect ya los hace adminAuthInterceptor -- esto solo evita pisar ese
+  // aviso con un mensaje de error genérico abajo del form.
   private manejarPosible401(err: unknown): boolean {
-    if (err instanceof HttpErrorResponse && err.status === 401) {
-      this.adminAuth.logout();
-      return true;
-    }
-    return false;
+    return err instanceof HttpErrorResponse && err.status === 401;
   }
 }
