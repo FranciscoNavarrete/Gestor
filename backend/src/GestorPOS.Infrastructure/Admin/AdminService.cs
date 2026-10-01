@@ -108,11 +108,19 @@ public class AdminService : IAdminService
             .Where(v => vendedorIds.Contains(v.Id))
             .ToDictionaryAsync(v => v.Id, v => v.Nombre, ct);
 
+        // Si Fluxo no responde, estadosPorSuscripcion queda vacío y el negocio se lista igual,
+        // solo sin el estado de suscripción -- nunca debe romper este listado.
+        var suscripcionIds = tenants.Where(t => t.FluxoSuscripcionId != null).Select(t => t.FluxoSuscripcionId!.Value);
+        var estadosPorSuscripcion = await _fluxo.ObtenerEstadosSuscripcionesAsync(suscripcionIds, ct);
+
         return tenants
             .Select(t => new TenantResumenDto(
                 t.Id, t.Nombre, t.Slug, t.Activo, t.FechaCreacion,
                 t.VendedorId, t.VendedorId is null ? null : nombresPorVendedor.GetValueOrDefault(t.VendedorId.Value),
-                t.FluxoClienteId, t.FluxoSuscripcionId))
+                t.FluxoClienteId, t.FluxoSuscripcionId,
+                FluxoEstado: t.FluxoSuscripcionId is null
+                    ? null
+                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)))
             .ToList();
     }
 

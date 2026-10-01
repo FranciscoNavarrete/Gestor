@@ -229,6 +229,19 @@ export class CrearNegocio implements OnInit {
     return `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
   }
 
+  private static readonly ESTADOS_SUSCRIPCION: Record<string, { texto: string; clase: string }> = {
+    pending: { texto: 'Pendiente', clase: 'badge-pendiente' },
+    authorized: { texto: 'Suscripto', clase: 'badge-suscripto' },
+    paused: { texto: 'Pausado', clase: 'badge-pausado' },
+    suspended: { texto: 'Suspendido', clase: 'badge-suspendido' },
+    cancelled: { texto: 'Cancelado', clase: 'badge-cancelado' },
+  };
+
+  badgeSuscripcion(negocio: TenantResumen): { texto: string; clase: string } | null {
+    if (!negocio.fluxoEstado) return null;
+    return CrearNegocio.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;
+  }
+
   logout(): void {
     this.adminAuth.logout();
     this.negocios.set([]);

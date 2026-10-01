@@ -204,6 +204,42 @@
   opacity: 0.5;
 }
 
+.negocio-trailing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.badge-suscripcion {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-pendiente {
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}
+
+.badge-suscripto {
+  background: color-mix(in srgb, #2e7d32 18%, transparent);
+  color: #2e7d32;
+}
+
+.badge-pausado,
+.badge-suspendido {
+  background: color-mix(in srgb, #e53935 18%, transparent);
+  color: #e53935;
+}
+
+.badge-cancelado {
+  background: color-mix(in srgb, #888 20%, transparent);
+  color: #888;
+}
+
 .features-panel {
   padding: 10px 14px 14px;
   border-top: 1px solid var(--border-subtle);

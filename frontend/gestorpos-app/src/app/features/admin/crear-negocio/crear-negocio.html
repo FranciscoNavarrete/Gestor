@@ -180,9 +180,14 @@
                       }
                     </span>
                   </div>
-                  @if (adminAuth.esOperador()) {
-                    <mat-icon class="chevron">{{ negocioExpandidoId() === negocio.id ? 'expand_less' : 'expand_more' }}</mat-icon>
-                  }
+                  <div class="negocio-trailing">
+                    @if (badgeSuscripcion(negocio); as badge) {
+                      <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
+                    }
+                    @if (adminAuth.esOperador()) {
+                      <mat-icon class="chevron">{{ negocioExpandidoId() === negocio.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    }
+                  </div>
                 </button>
 
                 @if (negocioExpandidoId() === negocio.id) {

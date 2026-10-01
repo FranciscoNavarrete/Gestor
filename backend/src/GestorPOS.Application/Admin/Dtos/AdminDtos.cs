@@ -3,7 +3,8 @@ namespace GestorPOS.Application.Admin.Dtos;
 public record TenantResumenDto(
     Guid Id, string Nombre, string Slug, bool Activo, DateTime FechaCreacion,
     Guid? VendedorId, string? VendedorNombre,
-    int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null);
+    int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null,
+    string? FluxoEstado = null);
 
 public record TenantFeatureDto(Guid Id, string Clave, bool Habilitado);
 

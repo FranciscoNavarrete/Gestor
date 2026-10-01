@@ -15,4 +15,10 @@ public interface IFluxoService
         string nombre, string apellido, string email, int? mpPlanId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default);
+
+    /// <summary>Estado (pending/authorized/...) de cada suscripción pedida, por id. Si Fluxo
+    /// falla o no responde, devuelve un diccionario vacío -- el llamador no debe romperse por
+    /// esto, solo mostrar el negocio sin estado de suscripción.</summary>
+    Task<IReadOnlyDictionary<int, string>> ObtenerEstadosSuscripcionesAsync(
+        IEnumerable<int> suscripcionIds, CancellationToken ct = default);
 }

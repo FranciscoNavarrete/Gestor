@@ -105,6 +105,42 @@ public class FluxoService : IFluxoService
         }
     }
 
+    public async Task<IReadOnlyDictionary<int, string>> ObtenerEstadosSuscripcionesAsync(
+        IEnumerable<int> suscripcionIds, CancellationToken ct = default)
+    {
+        var ids = suscripcionIds.Distinct().ToArray();
+        var baseUrl = _config["Fluxo:BaseUrl"];
+        var apiKey = _config["Fluxo:VendedorApiKey"];
+        if (ids.Length == 0 || string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+            return new Dictionary<int, string>();
+
+        try
+        {
+            var idsQuery = string.Join(',', ids);
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/estados?ids={idsQuery}");
+            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Fluxo devolvió {StatusCode} al pedir estados de suscripciones.", response.StatusCode);
+                return new Dictionary<int, string>();
+            }
+
+            var body = await response.Content.ReadFromJsonAsync<FluxoRespuestaEstados>(JsonOptions, ct);
+            if (body is null || !body.Exitoso || body.Contenido is null)
+                return new Dictionary<int, string>();
+
+            return body.Contenido.ToDictionary(e => e.MpSuscripcionId, e => e.Estado);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error llamando a Fluxo para pedir estados de suscripciones.");
+            return new Dictionary<int, string>();
+        }
+    }
+
     private class FluxoRespuesta
     {
         public bool Exitoso { get; set; }
@@ -138,5 +174,18 @@ public class FluxoService : IFluxoService
         public string TipoFrecuencia { get; set; } = string.Empty;
         public int Frecuencia { get; set; }
         public int DiasGratis { get; set; }
+    }
+
+    private class FluxoRespuestaEstados
+    {
+        public bool Exitoso { get; set; }
+        public string? Mensaje { get; set; }
+        public List<FluxoEstadoContenido>? Contenido { get; set; }
+    }
+
+    private class FluxoEstadoContenido
+    {
+        public int MpSuscripcionId { get; set; }
+        public string Estado { get; set; } = string.Empty;
     }
 }

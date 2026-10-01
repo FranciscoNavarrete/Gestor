@@ -34,6 +34,7 @@ export interface TenantResumen {
   fluxoClienteId?: number | null;
   fluxoSuscripcionId?: number | null;
   fluxoInitPoint?: string | null;
+  fluxoEstado?: string | null;
 }
 
 export type AdminRol = 'Operador' | 'Vendedor';
