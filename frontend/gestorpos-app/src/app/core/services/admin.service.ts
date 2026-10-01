@@ -6,6 +6,7 @@ import {
   AdminUsuario,
   CrearAdminUsuarioRequest,
   CrearNegocioRequest,
+  FluxoPlan,
   TenantFeature,
   TenantResumen,
 } from '../models/admin.models';
@@ -18,6 +19,12 @@ export class AdminService {
 
   crearNegocio(request: CrearNegocioRequest): Observable<TenantResumen> {
     return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants`, request, {
+      headers: this.headers(),
+    });
+  }
+
+  listarPlanesFluxo(): Observable<FluxoPlan[]> {
+    return this.http.get<FluxoPlan[]>(`${environment.apiUrl}/admin/fluxo/planes`, {
       headers: this.headers(),
     });
   }

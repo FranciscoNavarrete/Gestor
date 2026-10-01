@@ -25,6 +25,10 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<TenantResumenDto>> CrearNegocio(CrearNegocioRequest request, CancellationToken ct)
         => Ok(await _adminService.CrearNegocioAsync(request, ct));
 
+    [HttpGet("fluxo/planes")]
+    public async Task<ActionResult<IReadOnlyList<FluxoPlanDto>>> ListarPlanesFluxo(CancellationToken ct)
+        => Ok(await _adminService.ListarPlanesFluxoAsync(ct));
+
     [HttpGet("tenants/{tenantId:guid}/features")]
     [Authorize(Policy = "AdminOperador")]
     public async Task<ActionResult<IReadOnlyList<TenantFeatureDto>>> ListarFeatures(Guid tenantId, CancellationToken ct)

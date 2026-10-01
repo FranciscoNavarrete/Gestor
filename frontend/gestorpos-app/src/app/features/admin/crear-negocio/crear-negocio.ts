@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { AdminUsuario, CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
+import { AdminUsuario, CATALOGO_FEATURES, FluxoPlan, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
@@ -50,9 +50,11 @@ export class CrearNegocio implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     vendedorId: this.fb.control<string | null>(null),
+    mpPlanId: this.fb.control<number | null>(null, [Validators.required]),
   });
 
   readonly vendedores = signal<AdminUsuario[]>([]);
+  readonly planes = signal<FluxoPlan[]>([]);
 
   @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
 
@@ -72,12 +74,20 @@ export class CrearNegocio implements OnInit {
   ngOnInit(): void {
     if (!this.adminAuth.estaLogueado()) return;
     this.cargarNegocios();
+    this.cargarPlanes();
     if (this.adminAuth.esOperador()) this.cargarVendedores();
   }
 
   private cargarVendedores(): void {
     this.adminService.listarUsuarios().subscribe({
       next: (usuarios) => this.vendedores.set(usuarios.filter((u) => u.rol === 'Vendedor' && u.activo)),
+      error: () => {},
+    });
+  }
+
+  private cargarPlanes(): void {
+    this.adminService.listarPlanesFluxo().subscribe({
+      next: (planes) => this.planes.set(planes),
       error: () => {},
     });
   }
@@ -92,6 +102,7 @@ export class CrearNegocio implements OnInit {
       next: () => {
         this.iniciandoSesion.set(false);
         this.cargarNegocios();
+        this.cargarPlanes();
         if (this.adminAuth.esOperador()) this.cargarVendedores();
       },
       error: () => {
@@ -185,6 +196,7 @@ export class CrearNegocio implements OnInit {
     this.adminAuth.logout();
     this.negocios.set([]);
     this.vendedores.set([]);
+    this.planes.set([]);
     this.loginForm.reset();
   }
 

@@ -22,7 +22,7 @@ public class FluxoService : IFluxoService
     }
 
     public async Task<FluxoSuscripcionResultado?> IniciarSuscripcionAsync(
-        string nombre, string apellido, string email, CancellationToken ct = default)
+        string nombre, string apellido, string email, int? mpPlanId, CancellationToken ct = default)
     {
         var baseUrl = _config["Fluxo:BaseUrl"];
         var apiKey = _config["Fluxo:VendedorApiKey"];
@@ -32,13 +32,11 @@ public class FluxoService : IFluxoService
             return null;
         }
 
-        var planId = _config.GetValue<int?>("Fluxo:PlanIdSuscripcion");
-
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/iniciar");
             request.Headers.Add("X-Vendedor-Api-Key", apiKey);
-            request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId = planId });
+            request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId });
 
             var response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
@@ -67,6 +65,46 @@ public class FluxoService : IFluxoService
         }
     }
 
+    public async Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default)
+    {
+        var baseUrl = _config["Fluxo:BaseUrl"];
+        var apiKey = _config["Fluxo:VendedorApiKey"];
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+        {
+            _logger.LogWarning("Fluxo:BaseUrl o Fluxo:VendedorApiKey no configurados — no se pueden listar los planes.");
+            return [];
+        }
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/api/vendedor/planes");
+            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Fluxo devolvió {StatusCode} al listar los planes.", response.StatusCode);
+                return [];
+            }
+
+            var body = await response.Content.ReadFromJsonAsync<FluxoRespuestaPlanes>(JsonOptions, ct);
+            if (body is null || !body.Exitoso || body.Contenido is null)
+            {
+                _logger.LogWarning("Fluxo no pudo listar los planes: {Mensaje}", body?.Mensaje);
+                return [];
+            }
+
+            return body.Contenido
+                .Select(p => new FluxoPlan(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error llamando a Fluxo para listar los planes.");
+            return [];
+        }
+    }
+
     private class FluxoRespuesta
     {
         public bool Exitoso { get; set; }
@@ -82,5 +120,23 @@ public class FluxoService : IFluxoService
         public string PasswordTemporal { get; set; } = string.Empty;
         public string? InitPoint { get; set; }
         public int? MpSuscripcionId { get; set; }
+    }
+
+    private class FluxoRespuestaPlanes
+    {
+        public bool Exitoso { get; set; }
+        public string? Mensaje { get; set; }
+        public List<FluxoPlanContenido>? Contenido { get; set; }
+    }
+
+    private class FluxoPlanContenido
+    {
+        public int MpPlanId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string Moneda { get; set; } = string.Empty;
+        public string TipoFrecuencia { get; set; } = string.Empty;
+        public int Frecuencia { get; set; }
+        public int DiasGratis { get; set; }
     }
 }

@@ -8,6 +8,7 @@ public interface IAdminService
 {
     Task<TenantResumenDto> CrearNegocioAsync(CrearNegocioRequest request, CancellationToken ct = default);
     Task<IReadOnlyList<TenantResumenDto>> ListarTenantsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<FluxoPlanDto>> ListarPlanesFluxoAsync(CancellationToken ct = default);
     Task<IReadOnlyList<TenantFeatureDto>> ListarFeaturesAsync(Guid tenantId, CancellationToken ct = default);
     Task<TenantFeatureDto> ActivarFeatureAsync(Guid tenantId, string clave, CancellationToken ct = default);
     Task<TenantFeatureDto> DesactivarFeatureAsync(Guid tenantId, string clave, CancellationToken ct = default);

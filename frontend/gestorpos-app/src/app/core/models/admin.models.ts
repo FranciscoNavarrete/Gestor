@@ -10,6 +10,17 @@ export interface CrearNegocioRequest {
   email: string;
   password: string;
   vendedorId?: string | null;
+  mpPlanId?: number | null;
+}
+
+export interface FluxoPlan {
+  mpPlanId: number;
+  nombre: string;
+  monto: number;
+  moneda: string;
+  tipoFrecuencia: string;
+  frecuencia: number;
+  diasGratis: number;
 }
 
 export interface TenantResumen {

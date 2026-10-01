@@ -66,7 +66,7 @@ public class AdminService : IAdminService
         // El negocio ya quedó creado en GestorPOS antes de este punto — si Fluxo no responde o
         // falla, no revertimos nada, solo queda sin suscripción para vincular después a mano.
         var (nombrePila, apellido) = SepararNombreApellido(request.NombreAdmin);
-        var fluxo = await _fluxo.IniciarSuscripcionAsync(nombrePila, apellido, emailNormalizado, ct);
+        var fluxo = await _fluxo.IniciarSuscripcionAsync(nombrePila, apellido, emailNormalizado, request.MpPlanId, ct);
         if (fluxo is not null)
         {
             tenant.AsignarFluxo(fluxo.ClienteId, fluxo.SuscripcionId);
@@ -76,6 +76,14 @@ public class AdminService : IAdminService
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, vendedorId, vendedorNombre,
             tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo?.InitPoint);
+    }
+
+    public async Task<IReadOnlyList<FluxoPlanDto>> ListarPlanesFluxoAsync(CancellationToken ct = default)
+    {
+        var planes = await _fluxo.ListarPlanesAsync(ct);
+        return planes
+            .Select(p => new FluxoPlanDto(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis))
+            .ToList();
     }
 
     private static (string Nombre, string Apellido) SepararNombreApellido(string nombreCompleto)

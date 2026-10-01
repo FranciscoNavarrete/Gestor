@@ -11,7 +11,11 @@ public record TenantFeatureDto(Guid Id, string Clave, bool Habilitado);
 /// acá son las credenciales que se le entregan al cliente — no hay auto-registro público.
 /// VendedorId es opcional: si quien crea el negocio es un Vendedor, el service lo autoasigna e
 /// ignora lo que venga acá; si es Operador, puede elegir a qué vendedor atribuirlo (o ninguno).</summary>
-public record CrearNegocioRequest(string NombreNegocio, string NombreAdmin, string Email, string Password, Guid? VendedorId = null);
+public record CrearNegocioRequest(
+    string NombreNegocio, string NombreAdmin, string Email, string Password,
+    Guid? VendedorId = null, int? MpPlanId = null);
+
+public record FluxoPlanDto(int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis);
 
 public record AdminUsuarioDto(Guid Id, string Email, string Nombre, string Rol, bool Activo, DateTime CreadoUtc);
 
