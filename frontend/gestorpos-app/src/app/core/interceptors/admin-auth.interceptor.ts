@@ -21,7 +21,7 @@ export const adminAuthInterceptor: HttpInterceptorFn = (req, next) => {
       if (esRequestAdmin && error.status === 401 && adminAuth.estaLogueado()) {
         adminAuth.logout();
         snackBar.open('Tu sesión expiró, iniciá sesión de nuevo', 'OK', { duration: 5000 });
-        router.navigate(['/admin/crear-negocio']);
+        router.navigate(['/admin/login']);
       }
       return throwError(() => error);
     }),

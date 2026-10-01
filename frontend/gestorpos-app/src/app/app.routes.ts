@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminAuthGuard } from './core/guards/admin-auth.guard';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -7,15 +8,23 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
   {
-    // Ruta interna, no vinculada desde ningún lado de la UI pública: el operador de GestorPOS
-    // la usa para dar de alta negocios de clientes. Login propio con JWT admin (no el de tenant).
+    // Ruta interna, no vinculada desde ningún lado de la UI pública: acá entra el equipo de
+    // GestorPOS (Operador/Vendedor), no un negocio. Login propio, separado del de tenant.
+    path: 'admin/login',
+    loadComponent: () =>
+      import('./features/admin/admin-login/admin-login').then((m) => m.AdminLogin),
+  },
+  {
+    // El operador de GestorPOS la usa para dar de alta negocios de clientes.
     path: 'admin/crear-negocio',
+    canActivate: [adminAuthGuard],
     loadComponent: () =>
       import('./features/admin/crear-negocio/crear-negocio').then((m) => m.CrearNegocio),
   },
   {
     // También interna, solo para Operador — gestión de usuarios admin (Operador/Vendedor).
     path: 'admin/usuarios',
+    canActivate: [adminAuthGuard],
     loadComponent: () =>
       import('./features/admin/usuarios-admin/usuarios-admin').then((m) => m.UsuariosAdmin),
   },

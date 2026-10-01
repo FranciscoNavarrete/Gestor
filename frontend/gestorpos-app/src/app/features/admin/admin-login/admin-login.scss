@@ -1,0 +1,24 @@
+.pagina {
+  max-width: 480px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.card {
+  padding: 8px;
+}
+
+.full {
+  width: 100%;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}

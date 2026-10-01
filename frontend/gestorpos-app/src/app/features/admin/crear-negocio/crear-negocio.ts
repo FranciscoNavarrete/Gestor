@@ -2,7 +2,7 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -40,16 +40,10 @@ export class CrearNegocio implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly adminService = inject(AdminService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly clipboard = inject(Clipboard);
   protected readonly adminAuth = inject(AdminAuthService);
-
-  readonly loginForm = this.fb.nonNullable.group({
-    email:    ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
-  });
-  readonly loginError   = signal<string | null>(null);
-  readonly iniciandoSesion = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     nombreNegocio: ['', [Validators.required]],
@@ -86,7 +80,6 @@ export class CrearNegocio implements OnInit {
   readonly guardandoFeature = signal<string | null>(null);
 
   ngOnInit(): void {
-    if (!this.adminAuth.estaLogueado()) return;
     this.cargarNegocios();
     this.cargarPlanes();
     if (this.adminAuth.esOperador()) this.cargarVendedores();
@@ -106,25 +99,6 @@ export class CrearNegocio implements OnInit {
     });
   }
 
-  login(): void {
-    if (this.loginForm.invalid || this.iniciandoSesion()) return;
-    this.loginError.set(null);
-    this.iniciandoSesion.set(true);
-
-    const { email, password } = this.loginForm.getRawValue();
-    this.adminAuth.login(email, password).subscribe({
-      next: () => {
-        this.iniciandoSesion.set(false);
-        this.cargarNegocios();
-        this.cargarPlanes();
-        if (this.adminAuth.esOperador()) this.cargarVendedores();
-      },
-      error: () => {
-        this.iniciandoSesion.set(false);
-        this.loginError.set('Email o contraseña incorrectos.');
-      },
-    });
-  }
 
   cargarNegocios(): void {
     this.cargandoNegocios.set(true);
@@ -244,13 +218,7 @@ export class CrearNegocio implements OnInit {
 
   logout(): void {
     this.adminAuth.logout();
-    this.negocios.set([]);
-    this.vendedores.set([]);
-    this.planes.set([]);
-    this.busqueda.set('');
-    this.ultimoCreado.set(null);
-    this.ultimoCreadoCredenciales.set(null);
-    this.loginForm.reset();
+    this.router.navigateByUrl('/admin/login');
   }
 
   // El logout + aviso + redirect ya los hace adminAuthInterceptor -- esto solo evita pisar ese

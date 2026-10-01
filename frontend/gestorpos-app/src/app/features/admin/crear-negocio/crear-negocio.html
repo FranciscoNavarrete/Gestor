@@ -1,38 +1,4 @@
 <div class="pagina">
-  @if (!adminAuth.estaLogueado()) {
-    <mat-card class="card">
-      <mat-card-header>
-        <mat-card-title>Panel interno</mat-card-title>
-        <mat-card-subtitle>Ingresá con tu usuario administrador</mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        <form [formGroup]="loginForm" (ngSubmit)="login()" class="form">
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Email</mat-label>
-            <input matInput type="email" formControlName="email" cdkFocusInitial autocomplete="username" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Contraseña</mat-label>
-            <input matInput type="password" formControlName="password" autocomplete="current-password" />
-          </mat-form-field>
-
-          @if (loginError()) {
-            <p class="error">{{ loginError() }}</p>
-          }
-
-          <button mat-flat-button color="primary" type="submit" [disabled]="loginForm.invalid || iniciandoSesion()">
-            @if (iniciandoSesion()) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              Entrar
-            }
-          </button>
-        </form>
-      </mat-card-content>
-    </mat-card>
-  } @else {
     <div class="grid-principal">
     <mat-card class="card card-nuevo">
       <mat-card-header>
@@ -228,5 +194,4 @@
       }
       <button mat-button (click)="logout()" class="cambiar-clave">Cerrar sesión</button>
     </div>
-  }
 </div>
