@@ -38,12 +38,20 @@ public class AdminService : IAdminService
         if (slugEnUso)
             slug = $"{slug}-{Guid.NewGuid().ToString()[..6]}";
 
+        // La suscripción en Fluxo se intenta ANTES de tocar la base de GestorPOS: si Fluxo la
+        // rechaza (p. ej. el email no tiene cuenta real en Mercado Pago), no tiene sentido crear
+        // acá un negocio sin ninguna forma de cobrarle — IniciarSuscripcionAsync tira AppException
+        // en ese caso, y no queda nada a medio crear.
+        var (nombrePila, apellido) = SepararNombreApellido(request.NombreAdmin);
+        var fluxo = await _fluxo.IniciarSuscripcionAsync(nombrePila, apellido, emailNormalizado, request.MpPlanId, ct);
+
         var tenant = Tenant.Crear(request.NombreNegocio, slug);
 
         // Un Vendedor solo se atribuye negocios a sí mismo, nunca a otro vendedor (aunque lo mande
         // en el body); el Operador sí puede elegir a quién atribuírselo, o dejarlo sin vendedor.
         var vendedorId = _currentAdmin.EsOperador ? request.VendedorId : _currentAdmin.AdminId;
         tenant.AsignarVendedor(vendedorId);
+        tenant.AsignarFluxo(fluxo.ClienteId, fluxo.SuscripcionId);
 
         _db.Tenants.Add(tenant);
 
@@ -63,19 +71,9 @@ public class AdminService : IAdminService
             ? null
             : await _db.AdminUsuarios.Where(v => v.Id == vendedorId).Select(v => v.Nombre).FirstOrDefaultAsync(ct);
 
-        // El negocio ya quedó creado en GestorPOS antes de este punto — si Fluxo no responde o
-        // falla, no revertimos nada, solo queda sin suscripción para vincular después a mano.
-        var (nombrePila, apellido) = SepararNombreApellido(request.NombreAdmin);
-        var fluxo = await _fluxo.IniciarSuscripcionAsync(nombrePila, apellido, emailNormalizado, request.MpPlanId, ct);
-        if (fluxo is not null)
-        {
-            tenant.AsignarFluxo(fluxo.ClienteId, fluxo.SuscripcionId);
-            await _db.SaveChangesAsync(ct);
-        }
-
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, vendedorId, vendedorNombre,
-            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo?.InitPoint);
+            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo.InitPoint);
     }
 
     public async Task<IReadOnlyList<FluxoPlanDto>> ListarPlanesFluxoAsync(CancellationToken ct = default)

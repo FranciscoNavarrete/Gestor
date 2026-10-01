@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -21,17 +22,18 @@ public class FluxoService : IFluxoService
         _logger = logger;
     }
 
-    public async Task<FluxoSuscripcionResultado?> IniciarSuscripcionAsync(
+    public async Task<FluxoSuscripcionResultado> IniciarSuscripcionAsync(
         string nombre, string apellido, string email, int? mpPlanId, CancellationToken ct = default)
     {
         var baseUrl = _config["Fluxo:BaseUrl"];
         var apiKey = _config["Fluxo:VendedorApiKey"];
         if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
         {
-            _logger.LogWarning("Fluxo:BaseUrl o Fluxo:VendedorApiKey no configurados — se omite el alta de suscripción.");
-            return null;
+            _logger.LogWarning("Fluxo:BaseUrl o Fluxo:VendedorApiKey no configurados.");
+            throw new AppException("La integración con Fluxo no está configurada.");
         }
 
+        FluxoRespuesta? body;
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/iniciar");
@@ -39,30 +41,25 @@ public class FluxoService : IFluxoService
             request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId });
 
             var response = await _http.SendAsync(request, ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning(
-                    "Fluxo devolvió {StatusCode} al iniciar la suscripción de {Email}.", response.StatusCode, email);
-                return null;
-            }
-
-            var body = await response.Content.ReadFromJsonAsync<FluxoRespuesta>(JsonOptions, ct);
-            if (body is null || !body.Exitoso || body.Contenido is null)
-            {
-                _logger.LogWarning("Fluxo no pudo crear la suscripción de {Email}: {Mensaje}", email, body?.Mensaje);
-                return null;
-            }
-
-            var c = body.Contenido;
-            return new FluxoSuscripcionResultado(c.ClienteId, c.UsuarioId, c.Email, c.PasswordTemporal, c.InitPoint, c.MpSuscripcionId);
+            // Fluxo devuelve el mismo cuerpo {exitoso, mensaje, contenido} tanto en 200 como en
+            // 400, así que vale la pena leerlo igual aunque el status no haya sido éxito.
+            body = await response.Content.ReadFromJsonAsync<FluxoRespuesta>(JsonOptions, ct);
         }
         catch (Exception ex)
         {
-            // No revertimos el alta del negocio en GestorPOS por esto — queda sin suscripción
-            // para vincular después a mano (Fluxo caído, timeout, etc.).
             _logger.LogWarning(ex, "Error llamando a Fluxo para iniciar la suscripción de {Email}.", email);
-            return null;
+            throw new AppException("No se pudo conectar con Fluxo para crear la suscripción. Probá de nuevo en un momento.");
         }
+
+        if (body is null || !body.Exitoso || body.Contenido is null || string.IsNullOrWhiteSpace(body.Contenido.InitPoint))
+        {
+            _logger.LogWarning(
+                "Fluxo no devolvió un link de pago válido para {Email}: {Mensaje}", email, body?.Mensaje);
+            throw new AppException(body?.Mensaje ?? "Fluxo no pudo crear la suscripción.");
+        }
+
+        var c = body.Contenido;
+        return new FluxoSuscripcionResultado(c.ClienteId, c.UsuarioId, c.Email, c.PasswordTemporal, c.InitPoint!, c.MpSuscripcionId);
     }
 
     public async Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default)
