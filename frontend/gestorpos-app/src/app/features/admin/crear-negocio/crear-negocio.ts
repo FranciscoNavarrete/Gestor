@@ -20,6 +20,7 @@ import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { MpService } from '../../../core/services/mp.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
+import { RefrescoAutomatico } from '../../../core/utils/refresco-automatico';
 
 @Component({
   selector: 'app-crear-negocio',
@@ -85,9 +86,11 @@ export class CrearNegocio implements OnInit, OnDestroy {
   readonly featuresActivos = signal<Set<string>>(new Set());
   readonly guardandoFeature = signal<string | null>(null);
   readonly cambiandoEstadoNegocioId = signal<string | null>(null);
+  readonly refresco = new RefrescoAutomatico(() => this.cargarNegocios(true));
 
   ngOnDestroy(): void {
     this.mp.unmountBrick();
+    this.refresco.destruir();
   }
 
   ngOnInit(): void {
@@ -111,18 +114,24 @@ export class CrearNegocio implements OnInit, OnDestroy {
   }
 
 
-  cargarNegocios(): void {
-    this.cargandoNegocios.set(true);
+  cargarNegocios(silencioso = false): void {
+    if (!silencioso) this.cargandoNegocios.set(true);
     this.adminService.listarNegocios().subscribe({
       next: (negocios) => {
         this.negocios.set(negocios);
         this.cargandoNegocios.set(false);
+        this.refresco.evaluar(negocios.some((n) => n.fluxoEstado === 'pending'));
       },
       error: (err) => {
         this.cargandoNegocios.set(false);
         this.manejarPosible401(err);
       },
     });
+  }
+
+  actualizarAhora(): void {
+    this.refresco.reanudar();
+    this.cargarNegocios();
   }
 
   toggleExpandido(negocio: TenantResumen): void {

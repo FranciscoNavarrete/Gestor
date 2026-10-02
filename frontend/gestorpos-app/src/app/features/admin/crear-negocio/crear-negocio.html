@@ -150,6 +150,14 @@
         <mat-card-subtitle>Tocá un negocio para ver y activar sus funcionalidades</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
+        @if (refresco.activo()) {
+          <p class="ayuda-cobro">Se actualiza solo mientras haya pagos pendientes.</p>
+        } @else if (refresco.expirado()) {
+          <button mat-stroked-button type="button" class="boton-actualizar" (click)="actualizarAhora()">
+            <mat-icon>refresh</mat-icon>
+            Actualizar
+          </button>
+        }
         @if (negocios().length > 0) {
           <mat-form-field appearance="outline" class="full buscador">
             <mat-label>Buscar negocio</mat-label>
