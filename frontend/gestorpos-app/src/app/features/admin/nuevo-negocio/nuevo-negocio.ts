@@ -76,6 +76,12 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     this.mp.unmountBrick();
   }
 
+  // Los planes se crean en Fluxo: al abrir el desplegable se vuelven a pedir para que uno nuevo
+  // aparezca sin tener que recargar la página.
+  alAbrirPlanes(abierto: boolean): void {
+    if (abierto) this.cargarPlanes();
+  }
+
   private cargarVendedores(): void {
     this.adminService.listarUsuarios().subscribe({
       next: (usuarios) => this.vendedores.set(usuarios.filter((u) => u.rol === 'Vendedor' && u.activo)),

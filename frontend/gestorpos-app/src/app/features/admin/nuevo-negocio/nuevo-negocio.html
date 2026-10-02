@@ -35,7 +35,7 @@
           <p class="seccion">Plan y vendedor</p>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Plan</mat-label>
-            <mat-select formControlName="mpPlanId">
+            <mat-select formControlName="mpPlanId" (openedChange)="alAbrirPlanes($event)">
               @for (plan of planes(); track plan.mpPlanId) {
                 <mat-option [value]="plan.mpPlanId">{{ plan.nombre }} — ${{ plan.monto }}</mat-option>
               }

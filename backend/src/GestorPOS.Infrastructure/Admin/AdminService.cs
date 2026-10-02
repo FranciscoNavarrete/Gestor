@@ -150,7 +150,33 @@ public class AdminService : IAdminService
     public async Task<TenantResumenDto> ActivarTenantAsync(Guid tenantId, CancellationToken ct = default)
     {
         var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        // Al desactivar se liberó el email y se cortó el acceso de los usuarios; al reactivar hay que
+        // devolverles ambas cosas, si no el cliente no podría entrar con su email de siempre. Si otro
+        // negocio ya tomó ese email, no se reactiva (y no se toca nada).
+        var usuarios = await _db.Usuarios.IgnoreQueryFilters()
+            .Where(u => u.TenantId == tenantId)
+            .ToListAsync(ct);
+        var aRestaurar = usuarios
+            .Select(u => (Usuario: u, Original: u.EmailOriginalLiberado()))
+            .Where(x => x.Original is not null)
+            .ToList();
+
+        foreach (var (usuario, original) in aRestaurar)
+        {
+            var enUso = await _db.Usuarios.IgnoreQueryFilters()
+                .AnyAsync(x => x.Email == original && x.Id != usuario.Id, ct);
+            if (enUso)
+                throw new AppException($"No se puede reactivar el negocio: el email {original} ya lo usa otro negocio.");
+        }
+
         tenant.Activar();
+        foreach (var (usuario, original) in aRestaurar)
+        {
+            usuario.RestaurarEmail(original!);
+            usuario.Activar();
+        }
+
         await _db.SaveChangesAsync(ct);
         return await ArmarResumenAsync(tenant, ct);
     }

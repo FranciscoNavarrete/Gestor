@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Enums;
 
@@ -38,4 +39,23 @@ public class Usuario : TenantEntity
     // que se pueda dar de alta un negocio nuevo con ese mismo email (el índice único de Email no
     // distingue si el tenant dueño sigue activo).
     public void LiberarEmail() => Email = $"baja+{Guid.NewGuid():N}+{Email}";
+
+    private static readonly Regex EmailLiberado = new(@"^baja\+[0-9a-f]{32}\+(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>El email que tenía antes de <see cref="LiberarEmail"/>, o null si no está liberado.</summary>
+    public string? EmailOriginalLiberado()
+    {
+        var email = Email;
+        var liberado = false;
+        for (var match = EmailLiberado.Match(email); match.Success; match = EmailLiberado.Match(email))
+        {
+            email = match.Groups[1].Value;
+            liberado = true;
+        }
+        return liberado ? email : null;
+    }
+
+    public void RestaurarEmail(string emailOriginal) => Email = emailOriginal;
+
+    public void Activar() => Activo = true;
 }

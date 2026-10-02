@@ -198,3 +198,60 @@
     filter: brightness(1.15);
   }
 }
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-card);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  .conteo {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.7;
+  }
+
+  &.activo {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    color: var(--color-accent);
+    font-weight: 600;
+
+    .conteo {
+      opacity: 1;
+    }
+  }
+}
+
+.negocio-item.inactivo .negocio-info {
+  opacity: 0.55;
+}
+
+.switch-activo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.switch-etiqueta {
+  min-width: 52px;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.75;
+}

@@ -25,6 +25,17 @@
           <p class="ayuda-cobro">Dejó de actualizarse solo. Tocá Actualizar para seguir.</p>
         }
         @if (negocios().length > 0) {
+          <div class="filtros" role="group" aria-label="Filtrar negocios por estado">
+            <button type="button" class="filtro" [class.activo]="filtroEstado() === 'todos'" [attr.aria-pressed]="filtroEstado() === 'todos'" (click)="elegirFiltro('todos')">
+              Todos <span class="conteo">{{ conteos().todos }}</span>
+            </button>
+            <button type="button" class="filtro" [class.activo]="filtroEstado() === 'activos'" [attr.aria-pressed]="filtroEstado() === 'activos'" (click)="elegirFiltro('activos')">
+              Activos <span class="conteo">{{ conteos().activos }}</span>
+            </button>
+            <button type="button" class="filtro" [class.activo]="filtroEstado() === 'inactivos'" [attr.aria-pressed]="filtroEstado() === 'inactivos'" (click)="elegirFiltro('inactivos')">
+              Inactivos <span class="conteo">{{ conteos().inactivos }}</span>
+            </button>
+          </div>
           <mat-form-field appearance="outline" class="full buscador">
             <mat-label>Buscar negocio</mat-label>
             <input matInput [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
@@ -36,11 +47,21 @@
         } @else if (negocios().length === 0) {
           <p class="vacio">Todavía no hay negocios cargados.</p>
         } @else if (negociosFiltrados().length === 0) {
-          <p class="vacio">Ningún negocio coincide con "{{ busqueda() }}".</p>
+          <p class="vacio">
+            @if (busqueda().trim()) {
+              Ningún negocio coincide con "{{ busqueda() }}" en esta vista.
+            } @else if (filtroEstado() === 'activos') {
+              No hay negocios activos.
+            } @else if (filtroEstado() === 'inactivos') {
+              No hay negocios inactivos.
+            } @else {
+              No hay negocios.
+            }
+          </p>
         } @else {
           <div class="lista-negocios">
             @for (negocio of negociosFiltrados(); track negocio.id) {
-              <div class="negocio-item" [class.expandido]="negocioExpandidoId() === negocio.id">
+              <div class="negocio-item" [class.expandido]="negocioExpandidoId() === negocio.id" [class.inactivo]="!negocio.activo">
                 <div
                   class="negocio-fila"
                   role="button"
@@ -74,19 +95,15 @@
                       }
                     }
                     @if (adminAuth.esOperador()) {
-                      <button
-                        mat-icon-button
-                        type="button"
-                        [disabled]="cambiandoEstadoNegocioId() === negocio.id"
-                        (click)="toggleEstadoNegocio(negocio, $event)"
-                        [attr.aria-label]="negocio.activo ? 'Desactivar negocio' : 'Activar negocio'"
-                      >
-                        @if (cambiandoEstadoNegocioId() === negocio.id) {
-                          <mat-spinner diameter="18"></mat-spinner>
-                        } @else {
-                          <mat-icon>{{ negocio.activo ? 'block' : 'check_circle' }}</mat-icon>
-                        }
-                      </button>
+                      <span class="switch-activo" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+                        <span class="switch-etiqueta">{{ negocio.activo ? 'Activo' : 'Inactivo' }}</span>
+                        <mat-slide-toggle
+                          [checked]="negocio.activo"
+                          [disabled]="cambiandoEstadoNegocioId() === negocio.id"
+                          (change)="cambiarActivo(negocio, $event)"
+                          [attr.aria-label]="'Negocio ' + negocio.nombre + ': ' + (negocio.activo ? 'activo' : 'inactivo')"
+                        ></mat-slide-toggle>
+                      </span>
                       <mat-icon class="chevron">{{ negocioExpandidoId() === negocio.id ? 'expand_less' : 'expand_more' }}</mat-icon>
                     }
                   </div>

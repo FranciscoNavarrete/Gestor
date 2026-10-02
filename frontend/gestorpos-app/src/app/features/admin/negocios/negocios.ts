@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,12 +9,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { RefrescoAutomatico } from '../../../core/utils/refresco-automatico';
+
+export type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
 @Component({
   selector: 'app-negocios',
@@ -40,10 +44,20 @@ export class Negocios implements OnInit, OnDestroy {
   readonly actualizando = signal(false);
   readonly ultimaActualizacion = signal<Date | null>(null);
   readonly busqueda = signal('');
+  readonly filtroEstado = signal<FiltroEstado>('activos');
+  readonly conteos = computed(() => {
+    const todos = this.negocios();
+    const activos = todos.filter((n) => n.activo).length;
+    return { todos: todos.length, activos, inactivos: todos.length - activos };
+  });
   readonly negociosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
-    if (!termino) return this.negocios();
-    return this.negocios().filter((n) => n.nombre.toLowerCase().includes(termino));
+    const estado = this.filtroEstado();
+    return this.negocios().filter(
+      (n) =>
+        (estado === 'todos' || (estado === 'activos' ? n.activo : !n.activo)) &&
+        (!termino || n.nombre.toLowerCase().includes(termino)),
+    );
   });
 
   readonly catalogoFeatures = CATALOGO_FEATURES;
@@ -150,29 +164,54 @@ export class Negocios implements OnInit, OnDestroy {
     return Negocios.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;
   }
 
-  toggleEstadoNegocio(negocio: TenantResumen, event: Event): void {
-    event.stopPropagation();
-    if (this.cambiandoEstadoNegocioId()) return;
-
-    if (negocio.activo) {
-      const confirmado = confirm(
-        `¿Desactivar "${negocio.nombre}"? El cliente pierde el acceso y el email queda libre para usarlo en otro negocio.`,
-      );
-      if (!confirmado) return;
+  cambiarActivo(negocio: TenantResumen, cambio: MatSlideToggleChange): void {
+    if (this.cambiandoEstadoNegocioId()) {
+      cambio.source.checked = negocio.activo;
+      return;
     }
 
-    this.cambiandoEstadoNegocioId.set(negocio.id);
-    const accion$ = negocio.activo
-      ? this.adminService.desactivarNegocio(negocio.id)
-      : this.adminService.activarNegocio(negocio.id);
+    if (negocio.activo) {
+      this.dialog
+        .open(ConfirmDialog, {
+          data: {
+            titulo: 'Desactivar negocio',
+            mensaje: `¿Desactivar "${negocio.nombre}"? El cliente pierde el acceso y el email queda libre para usarlo en otro negocio.`,
+            textoConfirmar: 'Desactivar',
+            peligroso: true,
+          },
+          width: '380px',
+          maxWidth: '92vw',
+        })
+        .afterClosed()
+        .subscribe((confirmado) => {
+          if (!confirmado) {
+            cambio.source.checked = true;
+            return;
+          }
+          this.aplicarEstado(negocio, cambio, this.adminService.desactivarNegocio(negocio.id));
+        });
+      return;
+    }
 
+    this.aplicarEstado(negocio, cambio, this.adminService.activarNegocio(negocio.id));
+  }
+
+  private aplicarEstado(negocio: TenantResumen, cambio: MatSlideToggleChange, accion$: Observable<TenantResumen>): void {
+    this.cambiandoEstadoNegocioId.set(negocio.id);
     accion$.subscribe({
       next: () => {
         this.cambiandoEstadoNegocioId.set(null);
-        this.cargarNegocios();
+        this.cargarNegocios(true);
       },
-      error: () => this.cambiandoEstadoNegocioId.set(null),
+      error: () => {
+        cambio.source.checked = negocio.activo;
+        this.cambiandoEstadoNegocioId.set(null);
+      },
     });
+  }
+
+  elegirFiltro(filtro: FiltroEstado): void {
+    this.filtroEstado.set(filtro);
   }
 
   // El logout + aviso + redirect ya los hace adminAuthInterceptor -- esto solo evita pisar ese
