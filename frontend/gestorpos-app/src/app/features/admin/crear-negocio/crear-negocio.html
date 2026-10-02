@@ -42,6 +42,25 @@
             <mat-hint>Lo que le vas a cobrar a este negocio por mes</mat-hint>
           </mat-form-field>
 
+          <p class="seccion">Cómo se cobra</p>
+          <mat-button-toggle-group
+            class="metodo-cobro"
+            [value]="metodoCobro()"
+            [disabled]="tarjetaActiva() || guardando()"
+            (change)="elegirMetodoCobro($event.value)"
+            aria-label="Forma de cobro"
+          >
+            <mat-button-toggle value="link">Link de pago</mat-button-toggle>
+            <mat-button-toggle value="tarjeta">Tarjeta ahora</mat-button-toggle>
+          </mat-button-toggle-group>
+          <p class="ayuda-cobro">
+            @if (metodoCobro() === 'link') {
+              Le pasás un link o QR y el cliente paga con su cuenta de Mercado Pago (el email tiene que coincidir con el de esa cuenta).
+            } @else {
+              El cliente carga la tarjeta acá mismo, sin necesidad de cuenta de Mercado Pago. La tarjeta la escribe él, no vos.
+            }
+          </p>
+
           @if (adminAuth.esOperador()) {
             <mat-form-field appearance="outline" class="full">
               <mat-label>Vendedor (opcional)</mat-label>
@@ -98,17 +117,29 @@
                     Ver QR
                   </button>
                 </div>
+              } @else if (creado.fluxoEstado === 'authorized') {
+                <p class="ayuda-cobro">Suscripción autorizada con la tarjeta: no hace falta link de pago, el cobro ya quedó programado.</p>
               }
             </div>
           }
 
-          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
-            @if (guardando()) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              Crear negocio
-            }
-          </button>
+          <div id="brick-tarjeta" class="brick-tarjeta"></div>
+
+          @if (tarjetaActiva()) {
+            <button mat-stroked-button type="button" (click)="cancelarTarjeta()" [disabled]="guardando()">
+              Cambiar datos
+            </button>
+          } @else {
+            <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+              @if (guardando()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else if (metodoCobro() === 'tarjeta') {
+                Continuar con la tarjeta
+              } @else {
+                Crear negocio
+              }
+            </button>
+          }
         </form>
       </mat-card-content>
     </mat-card>

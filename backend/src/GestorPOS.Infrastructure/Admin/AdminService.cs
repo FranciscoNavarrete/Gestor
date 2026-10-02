@@ -43,7 +43,12 @@ public class AdminService : IAdminService
         // acá un negocio sin ninguna forma de cobrarle — IniciarSuscripcionAsync tira AppException
         // en ese caso, y no queda nada a medio crear.
         var (nombrePila, apellido) = SepararNombreApellido(request.NombreAdmin);
-        var fluxo = await _fluxo.IniciarSuscripcionAsync(nombrePila, apellido, emailNormalizado, request.MpPlanId, ct);
+        var cardToken = string.IsNullOrWhiteSpace(request.CardToken) ? null : request.CardToken.Trim();
+        if (cardToken is not null && request.MpPlanId is null)
+            throw new AppException("Para cobrar con tarjeta hay que elegir un plan.");
+
+        var fluxo = await _fluxo.IniciarSuscripcionAsync(
+            nombrePila, apellido, emailNormalizado, request.MpPlanId, cardToken, ct);
 
         var tenant = Tenant.Crear(request.NombreNegocio, slug);
 
@@ -73,7 +78,7 @@ public class AdminService : IAdminService
 
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, vendedorId, vendedorNombre,
-            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo.InitPoint);
+            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo.InitPoint, fluxo.Estado);
     }
 
     public async Task<IReadOnlyList<FluxoPlanDto>> ListarPlanesFluxoAsync(CancellationToken ct = default)

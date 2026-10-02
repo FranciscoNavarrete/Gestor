@@ -11,6 +11,7 @@ export interface CrearNegocioRequest {
   password: string;
   vendedorId?: string | null;
   mpPlanId?: number | null;
+  cardToken?: string | null;
 }
 
 export interface FluxoPlan {

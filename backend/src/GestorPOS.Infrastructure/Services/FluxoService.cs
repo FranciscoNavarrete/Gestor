@@ -23,7 +23,8 @@ public class FluxoService : IFluxoService
     }
 
     public async Task<FluxoSuscripcionResultado> IniciarSuscripcionAsync(
-        string nombre, string apellido, string email, int? mpPlanId, CancellationToken ct = default)
+        string nombre, string apellido, string email, int? mpPlanId, string? cardTokenId = null,
+        CancellationToken ct = default)
     {
         var baseUrl = _config["Fluxo:BaseUrl"];
         var apiKey = _config["Fluxo:VendedorApiKey"];
@@ -33,12 +34,14 @@ public class FluxoService : IFluxoService
             throw new AppException("La integración con Fluxo no está configurada.");
         }
 
+        var conTarjeta = !string.IsNullOrWhiteSpace(cardTokenId);
+
         FluxoRespuesta? body;
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/iniciar");
             request.Headers.Add("X-Vendedor-Api-Key", apiKey);
-            request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId });
+            request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId, cardTokenId });
 
             var response = await _http.SendAsync(request, ct);
             // Fluxo devuelve el mismo cuerpo {exitoso, mensaje, contenido} tanto en 200 como en
@@ -51,15 +54,23 @@ public class FluxoService : IFluxoService
             throw new AppException("No se pudo conectar con Fluxo para crear la suscripción. Probá de nuevo en un momento.");
         }
 
-        if (body is null || !body.Exitoso || body.Contenido is null || string.IsNullOrWhiteSpace(body.Contenido.InitPoint))
+        // Por link hace falta el InitPoint; con tarjeta no hay link, alcanza con que la suscripción
+        // haya quedado creada (MpSuscripcionId).
+        var resultadoValido = body is { Exitoso: true, Contenido: not null }
+            && (conTarjeta
+                ? body.Contenido.MpSuscripcionId.HasValue
+                : !string.IsNullOrWhiteSpace(body.Contenido.InitPoint));
+        if (!resultadoValido)
         {
             _logger.LogWarning(
-                "Fluxo no devolvió un link de pago válido para {Email}: {Mensaje}", email, body?.Mensaje);
+                "Fluxo no pudo crear la suscripción de {Email} (con tarjeta: {ConTarjeta}): {Mensaje}",
+                email, conTarjeta, body?.Mensaje);
             throw new AppException(body?.Mensaje ?? "Fluxo no pudo crear la suscripción.");
         }
 
-        var c = body.Contenido;
-        return new FluxoSuscripcionResultado(c.ClienteId, c.UsuarioId, c.Email, c.PasswordTemporal, c.InitPoint!, c.MpSuscripcionId);
+        var c = body!.Contenido!;
+        return new FluxoSuscripcionResultado(
+            c.ClienteId, c.UsuarioId, c.Email, c.PasswordTemporal, c.InitPoint, c.MpSuscripcionId, c.EstadoSuscripcion);
     }
 
     public async Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default)
@@ -153,6 +164,7 @@ public class FluxoService : IFluxoService
         public string PasswordTemporal { get; set; } = string.Empty;
         public string? InitPoint { get; set; }
         public int? MpSuscripcionId { get; set; }
+        public string? EstadoSuscripcion { get; set; }
     }
 
     private class FluxoRespuestaPlanes

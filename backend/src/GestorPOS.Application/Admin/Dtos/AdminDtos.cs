@@ -14,7 +14,7 @@ public record TenantFeatureDto(Guid Id, string Clave, bool Habilitado);
 /// ignora lo que venga acá; si es Operador, puede elegir a qué vendedor atribuirlo (o ninguno).</summary>
 public record CrearNegocioRequest(
     string NombreNegocio, string NombreAdmin, string Email, string Password,
-    Guid? VendedorId = null, int? MpPlanId = null);
+    Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null);
 
 public record FluxoPlanDto(int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis);
 
