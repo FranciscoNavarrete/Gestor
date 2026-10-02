@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -8,6 +8,7 @@ import {
   CrearNegocioRequest,
   FluxoPlan,
   LinkPago,
+  ReporteVentas,
   TenantFeature,
   TenantResumen,
 } from '../models/admin.models';
@@ -27,6 +28,15 @@ export class AdminService {
   obtenerLinkPago(tenantId: string): Observable<LinkPago> {
     return this.http.get<LinkPago>(`${environment.apiUrl}/admin/tenants/${tenantId}/link-pago`, {
       headers: this.headers(),
+    });
+  }
+
+  obtenerReporteVentas(desde: string, hasta: string, vendedorId?: string | null): Observable<ReporteVentas> {
+    let params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    if (vendedorId) params = params.set('vendedorId', vendedorId);
+    return this.http.get<ReporteVentas>(`${environment.apiUrl}/admin/reportes/ventas`, {
+      headers: this.headers(),
+      params,
     });
   }
 

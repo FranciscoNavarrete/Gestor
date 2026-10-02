@@ -33,6 +33,7 @@ export class AdminShell {
     const items: ItemNavegacion[] = [
       { path: '/admin/negocios', icono: 'storefront', etiqueta: 'Negocios', etiquetaCorta: 'Negocios' },
       { path: '/admin/nuevo-negocio', icono: 'add_circle', etiqueta: 'Nuevo negocio', etiquetaCorta: 'Nuevo' },
+      { path: '/admin/reportes', icono: 'bar_chart', etiqueta: 'Reportes', etiquetaCorta: 'Reportes' },
     ];
     if (this.adminAuth.esOperador()) {
       items.push({ path: '/admin/usuarios', icono: 'group', etiqueta: 'Usuarios', etiquetaCorta: 'Usuarios' });

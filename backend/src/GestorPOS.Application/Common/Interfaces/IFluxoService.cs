@@ -9,6 +9,9 @@ public record FluxoSuscripcionResultado(
 /// <summary>Link de pago de una suscripción de Fluxo; InitPoint viene solo mientras siga pendiente.</summary>
 public record FluxoLinkPago(string Estado, string? InitPoint);
 
+/// <summary>Estado de una suscripción y si alguna vez se confirmó (aunque después se haya cancelado).</summary>
+public record FluxoEstadoSuscripcion(string Estado, bool Confirmada);
+
 public record FluxoPlan(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis);
 
@@ -34,6 +37,12 @@ public interface IFluxoService
     /// <summary>Estado (pending/authorized/...) de cada suscripción pedida, por id. Si Fluxo
     /// falla o no responde, devuelve un diccionario vacío -- el llamador no debe romperse por
     /// esto, solo mostrar el negocio sin estado de suscripción.</summary>
+    /// <summary>Como <see cref="ObtenerEstadosSuscripcionesAsync"/> pero con si la suscripción se
+    /// confirmó alguna vez. Devuelve null si Fluxo no responde (a diferencia de un resultado vacío),
+    /// para que quien arma un reporte pueda avisar en vez de mostrar números falsos.</summary>
+    Task<IReadOnlyDictionary<int, FluxoEstadoSuscripcion>?> ObtenerConfirmacionesAsync(
+        IEnumerable<int> suscripcionIds, CancellationToken ct = default);
+
     Task<IReadOnlyDictionary<int, string>> ObtenerEstadosSuscripcionesAsync(
         IEnumerable<int> suscripcionIds, CancellationToken ct = default);
 }

@@ -36,6 +36,12 @@ export const routes: Routes = [
           import('./features/admin/nuevo-negocio/nuevo-negocio').then((m) => m.NuevoNegocio),
       },
       {
+        // Vendedor: sus propias ventas y comisión. Operador: las de todos, con ranking.
+        path: 'reportes',
+        data: { titulo: 'Reportes' },
+        loadComponent: () => import('./features/admin/reportes/reportes').then((m) => m.ReportesAdmin),
+      },
+      {
         // Solo Operador — gestión de usuarios admin (Operador/Vendedor).
         path: 'usuarios',
         data: { titulo: 'Usuarios' },

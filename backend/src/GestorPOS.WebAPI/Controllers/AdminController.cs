@@ -11,10 +11,12 @@ namespace GestorPOS.WebAPI.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
+    private readonly IReportesVentasService _reportesVentas;
 
-    public AdminController(IAdminService adminService)
+    public AdminController(IAdminService adminService, IReportesVentasService reportesVentas)
     {
         _adminService = adminService;
+        _reportesVentas = reportesVentas;
     }
 
     [HttpGet("tenants")]
@@ -57,6 +59,11 @@ public class AdminController : ControllerBase
     [HttpGet("tenants/{tenantId:guid}/link-pago")]
     public async Task<ActionResult<LinkPagoDto>> ObtenerLinkPago(Guid tenantId, CancellationToken ct)
         => Ok(await _adminService.ObtenerLinkPagoAsync(tenantId, ct));
+
+    [HttpGet("reportes/ventas")]
+    public async Task<ActionResult<ReporteVentasDto>> ReporteVentas(
+        [FromQuery] DateOnly desde, [FromQuery] DateOnly hasta, [FromQuery] Guid? vendedorId, CancellationToken ct)
+        => Ok(await _reportesVentas.ObtenerVentasAsync(desde, hasta, vendedorId, ct));
 
     [HttpGet("usuarios")]
     [Authorize(Policy = "AdminOperador")]

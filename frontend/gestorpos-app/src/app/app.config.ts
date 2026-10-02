@@ -1,9 +1,10 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
-import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { AdaptadorFechaArgentina } from './core/utils/adaptador-fecha-argentina';
 import { adminAuthInterceptor } from './core/interceptors/admin-auth.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -14,6 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
+    { provide: DateAdapter, useClass: AdaptadorFechaArgentina },
     { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, adminAuthInterceptor])),
     provideServiceWorker('ngsw-worker.js', {

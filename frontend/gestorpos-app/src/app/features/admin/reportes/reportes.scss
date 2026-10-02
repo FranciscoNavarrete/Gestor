@@ -1,0 +1,297 @@
+.pagina {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 900px) {
+    margin: 0;
+  }
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.preset {
+  padding: 6px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-card);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &.activo {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+}
+
+.campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.campo-fecha {
+  flex: 1 1 150px;
+}
+
+.campo-vendedor {
+  flex: 1 1 100%;
+
+  @media (min-width: 600px) {
+    flex: 1 1 220px;
+  }
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 12px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+
+  &.cargando {
+    opacity: 0.6;
+  }
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+
+.kpi-valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.kpi-etiqueta {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.kpi-detalle {
+  font-size: 0.75rem;
+  opacity: 0.55;
+}
+
+.kpi-ventas .kpi-valor {
+  color: #2e7d32;
+}
+
+.kpi-pendientes .kpi-valor {
+  color: #f5a623;
+}
+
+.kpi-comision .kpi-valor {
+  color: var(--color-accent);
+}
+
+.titulo-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.paneles {
+  display: grid;
+  gap: 16px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.ranking-fila {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  grid-template-areas:
+    'nombre barra'
+    'valor valor';
+  align-items: center;
+  gap: 2px 10px;
+  margin-bottom: 12px;
+
+  @media (min-width: 600px) {
+    grid-template-columns: 110px 1fr auto;
+    grid-template-areas: 'nombre barra valor';
+  }
+}
+
+.ranking-nombre {
+  grid-area: nombre;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.primero {
+    font-weight: 700;
+    color: #f5a623;
+  }
+}
+
+.ranking-barra {
+  grid-area: barra;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--surface-card);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background-image: var(--gradient-brand);
+  }
+}
+
+.ranking-valor {
+  grid-area: valor;
+  font-size: 0.78rem;
+  opacity: 0.7;
+  text-align: right;
+  white-space: nowrap;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.65;
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.der {
+  text-align: right;
+}
+
+.tabla-vendedores {
+  display: none;
+
+  @media (min-width: 900px) {
+    display: block;
+  }
+}
+
+.vacio {
+  opacity: 0.6;
+  margin: 0;
+}
+
+.lista-movil {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tabla-escritorio {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .lista-movil {
+    display: none;
+  }
+
+  .tabla-escritorio {
+    display: table;
+  }
+}
+
+.venta-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.venta-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.venta-nombre {
+  font-weight: 600;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.venta-detalle {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.estado {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.estado-suscripto {
+  background: color-mix(in srgb, #2e7d32 18%, transparent);
+  color: #2e7d32;
+}
+
+.estado-pendiente {
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}
+
+.estado-baja {
+  background: color-mix(in srgb, #e53935 18%, transparent);
+  color: #e53935;
+}
+
+.estado-cancelada {
+  background: color-mix(in srgb, var(--mat-sys-on-surface, #888) 12%, transparent);
+  opacity: 0.8;
+}

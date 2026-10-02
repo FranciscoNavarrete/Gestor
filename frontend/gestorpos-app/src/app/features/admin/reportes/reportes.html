@@ -1,0 +1,184 @@
+<div class="pagina">
+  <mat-card class="card filtros-card">
+    <mat-card-content>
+      <div class="presets" role="group" aria-label="Períodos rápidos">
+        @for (p of presets; track p.clave) {
+          <button
+            type="button"
+            class="preset"
+            [class.activo]="presetActivo() === p.clave"
+            [attr.aria-pressed]="presetActivo() === p.clave"
+            (click)="aplicarPreset(p.clave)"
+          >
+            {{ p.etiqueta }}
+          </button>
+        }
+      </div>
+
+      <div class="campos">
+        @if (adminAuth.esOperador()) {
+          <mat-form-field appearance="outline" class="campo-vendedor">
+            <mat-label>Vendedor</mat-label>
+            <mat-select [formControl]="vendedorId" (selectionChange)="alCambiarVendedor()">
+              <mat-option [value]="null">Todos</mat-option>
+              @for (v of vendedores(); track v.id) {
+                <mat-option [value]="v.id">{{ v.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+
+        <mat-form-field appearance="outline" class="campo-fecha">
+          <mat-label>Desde</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerDesde"
+            [formControl]="desde"
+            [max]="hasta.value ?? hoy"
+            (dateChange)="alCambiarDesde($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+          <mat-datepicker #pickerDesde [touchUi]="esMovil"></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="campo-fecha">
+          <mat-label>Hasta</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerHasta"
+            [formControl]="hasta"
+            [min]="desde.value"
+            [max]="hoy"
+            (dateChange)="alCambiarHasta($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+          <mat-datepicker #pickerHasta [touchUi]="esMovil"></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (cargando() && !reporte()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (error()) {
+    <mat-card class="card">
+      <mat-card-content>
+        <p class="error">{{ error() }}</p>
+        <button mat-stroked-button type="button" (click)="cargar()">
+          <mat-icon>refresh</mat-icon>
+          Reintentar
+        </button>
+      </mat-card-content>
+    </mat-card>
+  } @else if (reporte(); as r) {
+    <div class="kpis" [class.cargando]="cargando()">
+      <div class="kpi kpi-ventas">
+        <span class="kpi-valor">{{ r.resumen.ventas }}</span>
+        <span class="kpi-etiqueta">Ventas confirmadas</span>
+      </div>
+      <div class="kpi kpi-pendientes">
+        <span class="kpi-valor">{{ r.resumen.pendientes }}</span>
+        <span class="kpi-etiqueta">Pendientes de pago</span>
+      </div>
+      <div class="kpi kpi-comision">
+        <span class="kpi-valor">{{ dinero(r.resumen.comision) }}</span>
+        <span class="kpi-etiqueta">{{ adminAuth.esOperador() ? 'Comisión total a pagar' : 'Comisión estimada' }}</span>
+        @if (detalleComision()) {
+          <span class="kpi-detalle">{{ detalleComision() }}</span>
+        }
+      </div>
+    </div>
+
+    @if (adminAuth.esOperador() && r.vendedores.length > 0) {
+      <div class="paneles">
+        <mat-card class="card">
+          <mat-card-header>
+            <mat-card-title class="titulo-panel"><mat-icon>emoji_events</mat-icon> Quién vendió más</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @for (v of r.vendedores; track v.vendedorId; let i = $index) {
+              <div class="ranking-fila">
+                <span class="ranking-nombre" [class.primero]="i === 0 && v.ventas > 0">
+                  @if (i === 0 && v.ventas > 0) { 1° }
+                  {{ v.nombre }}
+                </span>
+                <span class="ranking-barra"><span [style.width.%]="(v.ventas / maximoVentasVendedores()) * 100"></span></span>
+                <span class="ranking-valor">{{ v.ventas }} {{ v.ventas === 1 ? 'venta' : 'ventas' }} · {{ dinero(v.comision) }}</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="card tabla-vendedores">
+          <mat-card-content>
+            <table>
+              <thead>
+                <tr><th>Vendedor</th><th>Ventas</th><th>Pendientes</th><th class="der">Comisión</th></tr>
+              </thead>
+              <tbody>
+                @for (v of r.vendedores; track v.vendedorId) {
+                  <tr>
+                    <td>{{ v.nombre }}</td>
+                    <td>{{ v.ventas }}</td>
+                    <td>{{ v.pendientes }}</td>
+                    <td class="der">{{ dinero(v.comision) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title class="titulo-panel">Negocios dados de alta</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (r.items.length === 0) {
+          <p class="vacio">No hay altas en este período.</p>
+        } @else {
+          <div class="lista-movil">
+            @for (item of r.items; track item.tenantId) {
+              <div class="venta-fila">
+                <div class="venta-info">
+                  <span class="venta-nombre">{{ item.nombre }}</span>
+                  <span class="venta-detalle">
+                    Alta {{ item.fechaAlta | date: 'dd/MM' }}
+                    @if (adminAuth.esOperador()) { · {{ item.vendedorNombre }} }
+                    @if (item.comision !== null) { · Comisión {{ dinero(item.comision) }} }
+                  </span>
+                </div>
+                <span [class]="'estado estado-' + item.estado">{{ etiquetaEstado(item.estado) }}</span>
+              </div>
+            }
+          </div>
+
+          <table class="tabla-escritorio">
+            <thead>
+              <tr>
+                <th>Negocio</th>
+                @if (adminAuth.esOperador()) { <th>Vendedor</th> }
+                <th>Alta</th>
+                <th>Estado</th>
+                <th class="der">Comisión</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of r.items; track item.tenantId) {
+                <tr>
+                  <td>{{ item.nombre }}</td>
+                  @if (adminAuth.esOperador()) { <td>{{ item.vendedorNombre }}</td> }
+                  <td>{{ item.fechaAlta | date: 'dd/MM/yyyy' }}</td>
+                  <td><span [class]="'estado estado-' + item.estado">{{ etiquetaEstado(item.estado) }}</span></td>
+                  <td class="der">{{ item.comision !== null ? dinero(item.comision) : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

@@ -151,11 +151,23 @@ public class FluxoService : IFluxoService
     public async Task<IReadOnlyDictionary<int, string>> ObtenerEstadosSuscripcionesAsync(
         IEnumerable<int> suscripcionIds, CancellationToken ct = default)
     {
+        var confirmaciones = await ObtenerConfirmacionesAsync(suscripcionIds, ct);
+        return confirmaciones is null
+            ? new Dictionary<int, string>()
+            : confirmaciones.ToDictionary(e => e.Key, e => e.Value.Estado);
+    }
+
+    public async Task<IReadOnlyDictionary<int, FluxoEstadoSuscripcion>?> ObtenerConfirmacionesAsync(
+        IEnumerable<int> suscripcionIds, CancellationToken ct = default)
+    {
         var ids = suscripcionIds.Distinct().ToArray();
+        if (ids.Length == 0)
+            return new Dictionary<int, FluxoEstadoSuscripcion>();
+
         var baseUrl = _config["Fluxo:BaseUrl"];
         var apiKey = _config["Fluxo:VendedorApiKey"];
-        if (ids.Length == 0 || string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
-            return new Dictionary<int, string>();
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+            return null;
 
         try
         {
@@ -168,19 +180,20 @@ public class FluxoService : IFluxoService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Fluxo devolvió {StatusCode} al pedir estados de suscripciones.", response.StatusCode);
-                return new Dictionary<int, string>();
+                return null;
             }
 
             var body = await response.Content.ReadFromJsonAsync<FluxoRespuestaEstados>(JsonOptions, ct);
             if (body is null || !body.Exitoso || body.Contenido is null)
-                return new Dictionary<int, string>();
+                return null;
 
-            return body.Contenido.ToDictionary(e => e.MpSuscripcionId, e => e.Estado);
+            return body.Contenido.ToDictionary(
+                e => e.MpSuscripcionId, e => new FluxoEstadoSuscripcion(e.Estado, e.Confirmada));
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error llamando a Fluxo para pedir estados de suscripciones.");
-            return new Dictionary<int, string>();
+            return null;
         }
     }
 
@@ -244,5 +257,6 @@ public class FluxoService : IFluxoService
     {
         public int MpSuscripcionId { get; set; }
         public string Estado { get; set; } = string.Empty;
+        public bool Confirmada { get; set; }
     }
 }

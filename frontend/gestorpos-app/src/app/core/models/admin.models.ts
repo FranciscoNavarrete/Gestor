@@ -102,3 +102,41 @@ export const CATALOGO_FEATURES: FeatureCatalogoItem[] = [
     descripcion: 'Agendar tareas con fecha y hora, con recordatorio por notificación push',
   },
 ];
+
+export interface ReporteResumen {
+  ventas: number;
+  pendientes: number;
+  comision: number;
+  ventasPrimeras: number;
+  tarifaPrimeras: number;
+  ventasSiguientes: number;
+  tarifaSiguientes: number;
+}
+
+export interface ReporteVendedor {
+  vendedorId: string;
+  nombre: string;
+  ventas: number;
+  pendientes: number;
+  comision: number;
+}
+
+export type EstadoVenta = 'suscripto' | 'baja' | 'pendiente' | 'cancelada';
+
+export interface ReporteVentaItem {
+  tenantId: string;
+  nombre: string;
+  fechaAlta: string;
+  vendedorId: string;
+  vendedorNombre: string;
+  estado: EstadoVenta;
+  comision: number | null;
+}
+
+export interface ReporteVentas {
+  desde: string;
+  hasta: string;
+  resumen: ReporteResumen;
+  vendedores: ReporteVendedor[];
+  items: ReporteVentaItem[];
+}

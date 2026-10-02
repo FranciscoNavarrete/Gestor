@@ -24,3 +24,25 @@ public record FluxoPlanDto(int MpPlanId, string Nombre, decimal Monto, string Mo
 public record AdminUsuarioDto(Guid Id, string Email, string Nombre, string Rol, bool Activo, DateTime CreadoUtc);
 
 public record CrearAdminUsuarioRequest(string Email, string Password, string Nombre, string Rol);
+
+/// <summary>Ventas de vendedores entre dos fechas (hora de Argentina). Una venta es un negocio dado de
+/// alta cuya suscripción se confirmó alguna vez; las bajas posteriores no la descuentan.</summary>
+public record ReporteVentasDto(
+    DateOnly Desde, DateOnly Hasta,
+    ReporteResumenDto Resumen,
+    IReadOnlyList<ReporteVendedorDto> Vendedores,
+    IReadOnlyList<ReporteVentaItemDto> Items);
+
+/// <summary>Las primeras N ventas de cada mes (por vendedor) se pagan a una tarifa y el resto a otra;
+/// por eso el resumen informa cuántas cayeron en cada tarifa, para mostrar "3 × $35.000 + 1 × $40.000".</summary>
+public record ReporteResumenDto(
+    int Ventas, int Pendientes, decimal Comision,
+    int VentasPrimeras, decimal TarifaPrimeras, int VentasSiguientes, decimal TarifaSiguientes);
+
+public record ReporteVendedorDto(Guid VendedorId, string Nombre, int Ventas, int Pendientes, decimal Comision);
+
+/// <summary>Estado: suscripto, baja (se confirmó y después se canceló), pendiente o cancelada (nunca se pagó).
+/// Comision solo tiene valor para las ventas confirmadas.</summary>
+public record ReporteVentaItemDto(
+    Guid TenantId, string Nombre, DateTime FechaAlta, Guid VendedorId, string VendedorNombre,
+    string Estado, decimal? Comision);
