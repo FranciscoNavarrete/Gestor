@@ -150,13 +150,25 @@
         <mat-card-subtitle>Tocá un negocio para ver y activar sus funcionalidades</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
+        <div class="barra-lista">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="actualizarAhora()"
+            [disabled]="actualizando()"
+            aria-label="Actualizar la lista de negocios"
+          >
+            <mat-icon [class.girando]="actualizando()">refresh</mat-icon>
+            Actualizar
+          </button>
+          @if (ultimaActualizacion(); as hora) {
+            <span class="hora-actualizacion">Actualizado {{ hora | date: 'HH:mm:ss' }}</span>
+          }
+        </div>
         @if (refresco.activo()) {
           <p class="ayuda-cobro">Se actualiza solo mientras haya pagos pendientes.</p>
         } @else if (refresco.expirado()) {
-          <button mat-stroked-button type="button" class="boton-actualizar" (click)="actualizarAhora()">
-            <mat-icon>refresh</mat-icon>
-            Actualizar
-          </button>
+          <p class="ayuda-cobro">Dejó de actualizarse solo. Tocá Actualizar para seguir.</p>
         }
         @if (negocios().length > 0) {
           <mat-form-field appearance="outline" class="full buscador">

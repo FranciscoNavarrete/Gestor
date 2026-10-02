@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
@@ -25,6 +26,7 @@ import { RefrescoAutomatico } from '../../../core/utils/refresco-automatico';
 @Component({
   selector: 'app-crear-negocio',
   imports: [
+    DatePipe,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -73,6 +75,8 @@ export class CrearNegocio implements OnInit, OnDestroy {
 
   readonly negocios = signal<TenantResumen[]>([]);
   readonly cargandoNegocios = signal(false);
+  readonly actualizando = signal(false);
+  readonly ultimaActualizacion = signal<Date | null>(null);
   readonly busqueda = signal('');
   readonly negociosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
@@ -116,14 +120,18 @@ export class CrearNegocio implements OnInit, OnDestroy {
 
   cargarNegocios(silencioso = false): void {
     if (!silencioso) this.cargandoNegocios.set(true);
+    this.actualizando.set(true);
     this.adminService.listarNegocios().subscribe({
       next: (negocios) => {
         this.negocios.set(negocios);
         this.cargandoNegocios.set(false);
+        this.actualizando.set(false);
+        this.ultimaActualizacion.set(new Date());
         this.refresco.evaluar(negocios.some((n) => n.fluxoEstado === 'pending'));
       },
       error: (err) => {
         this.cargandoNegocios.set(false);
+        this.actualizando.set(false);
         this.manejarPosible401(err);
       },
     });
@@ -131,7 +139,7 @@ export class CrearNegocio implements OnInit, OnDestroy {
 
   actualizarAhora(): void {
     this.refresco.reanudar();
-    this.cargarNegocios();
+    this.cargarNegocios(true);
   }
 
   toggleExpandido(negocio: TenantResumen): void {

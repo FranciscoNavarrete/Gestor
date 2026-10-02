@@ -297,6 +297,26 @@
   width: 100%;
 }
 
-.boton-actualizar {
-  margin-bottom: 12px;
+.barra-lista {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.hora-actualizacion {
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant, #5f6368);
+  font-variant-numeric: tabular-nums;
+}
+
+.girando {
+  animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
 }
