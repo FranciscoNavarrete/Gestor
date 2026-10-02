@@ -1,0 +1,57 @@
+<aside class="side-nav">
+  <div class="side-nav-marca font-display">
+    <mat-icon>storefront</mat-icon>
+    <span>GestorPOS</span>
+  </div>
+
+  @for (item of items(); track item.path) {
+    <a class="side-nav-item" [routerLink]="item.path" routerLinkActive="active">
+      <mat-icon>{{ item.icono }}</mat-icon>
+      <span>{{ item.etiqueta }}</span>
+    </a>
+  }
+
+  <div class="side-nav-spacer"></div>
+
+  <button type="button" class="usuario-lateral" [matMenuTriggerFor]="menuUsuario" aria-label="Menú de usuario">
+    <span class="avatar">{{ inicial() }}</span>
+    <span class="usuario-datos">
+      <span class="usuario-nombre">{{ adminAuth.nombre() }}</span>
+      <span class="usuario-rol">{{ adminAuth.rol() }}</span>
+    </span>
+    <mat-icon>unfold_more</mat-icon>
+  </button>
+</aside>
+
+<header class="toolbar">
+  <h1 class="titulo-movil font-display">{{ titulo() }}</h1>
+  <button type="button" class="usuario-chip" [matMenuTriggerFor]="menuUsuario" aria-label="Menú de usuario">
+    <span class="avatar">{{ inicial() }}</span>
+    <span class="chip-rol">{{ adminAuth.rol() }}</span>
+  </button>
+</header>
+
+<mat-menu #menuUsuario="matMenu" xPosition="before">
+  <div class="menu-usuario-header">
+    <p class="nombre">{{ adminAuth.nombre() }}</p>
+    <p class="rol">Rol: {{ adminAuth.rol() }}</p>
+  </div>
+  <button mat-menu-item (click)="cerrarSesion()" class="salir">
+    <mat-icon>logout</mat-icon>
+    <span>Cerrar sesión</span>
+  </button>
+</mat-menu>
+
+<main class="contenido">
+  <h1 class="titulo-escritorio font-display">{{ titulo() }}</h1>
+  <router-outlet></router-outlet>
+</main>
+
+<nav class="bottom-nav" aria-label="Secciones del panel">
+  @for (item of items(); track item.path) {
+    <a class="nav-item" [routerLink]="item.path" routerLinkActive="active">
+      <mat-icon>{{ item.icono }}</mat-icon>
+      <span>{{ item.etiquetaCorta }}</span>
+    </a>
+  }
+</nav>

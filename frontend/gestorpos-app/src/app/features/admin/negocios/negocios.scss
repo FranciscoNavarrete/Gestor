@@ -1,40 +1,10 @@
+// El título y el menú los pone el shell del admin; acá solo el contenido.
 .pagina {
-  max-width: 480px;
-  margin: 24px auto;
-  padding: 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+  max-width: 880px;
+  margin: 0 auto;
 
-.grid-principal {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-@media (min-width: 900px) {
-  .pagina {
-    max-width: 960px;
-  }
-
-  .grid-principal {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
-    gap: 16px;
-  }
-}
-
-.seccion {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.55;
-  margin: 12px 0 2px;
-
-  &:first-child {
-    margin-top: 0;
+  @media (min-width: 900px) {
+    margin: 0;
   }
 }
 
@@ -46,86 +16,6 @@
   width: 100%;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.error {
-  color: var(--mat-sys-error, #b3261e);
-  font-size: 0.875rem;
-}
-
-.exito {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #2e7d32;
-  font-size: 0.875rem;
-
-  mat-icon {
-    font-size: 20px;
-    height: 20px;
-    width: 20px;
-  }
-}
-
-.resultado {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  margin: 4px 0;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, #2e7d32 10%, transparent);
-}
-
-.dato-copiable {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  background: var(--surface-card);
-  border-radius: var(--radius-sm);
-  padding: 4px 4px 4px 12px;
-  font-size: 0.8rem;
-  font-family: monospace;
-
-  span {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  button {
-    flex-shrink: 0;
-  }
-}
-
-.dato-link {
-  font-family: monospace;
-}
-
-.acciones-resultado {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-
-  a,
-  button {
-    flex: 1;
-  }
-}
-
-.boton-whatsapp {
-  color: #25d366;
-  border-color: #25d366 !important;
-}
-
 .vacio {
   opacity: 0.6;
   margin: 0;
@@ -133,25 +23,6 @@
 
 .buscador {
   margin-bottom: 4px;
-}
-
-.cambiar-clave {
-  align-self: center;
-  opacity: 0.7;
-}
-
-.pie-sesion {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sesion-info {
-  font-size: 0.78rem;
-  opacity: 0.6;
-  margin-right: 4px;
 }
 
 .lista-negocios {
@@ -279,23 +150,10 @@
   margin-top: 1px;
 }
 
-.metodo-cobro {
-  width: 100%;
-  margin-bottom: 4px;
-
-  mat-button-toggle {
-    flex: 1;
-  }
-}
-
 .ayuda-cobro {
   font-size: 0.8125rem;
   color: var(--mat-sys-on-surface-variant, #5f6368);
   margin: 4px 0 12px;
-}
-
-.brick-tarjeta {
-  width: 100%;
 }
 
 .barra-lista {
@@ -320,12 +178,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.cerrar-resultado {
-  position: absolute;
-  top: 2px;
-  right: 2px;
 }
 
 .badge-boton {

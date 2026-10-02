@@ -2,7 +2,7 @@
   @if (!adminAuth.estaLogueado()) {
     <mat-card class="card">
       <mat-card-content>
-        <p>Iniciá sesión primero en el <a routerLink="/admin/crear-negocio">panel interno</a>.</p>
+        <p>Iniciá sesión primero en el <a routerLink="/admin/login">panel interno</a>.</p>
       </mat-card-content>
     </mat-card>
   } @else if (!adminAuth.esOperador()) {
@@ -89,7 +89,5 @@
         }
       </mat-card-content>
     </mat-card>
-
-    <a mat-button routerLink="/admin/crear-negocio" class="volver">Volver al panel</a>
   }
 </div>

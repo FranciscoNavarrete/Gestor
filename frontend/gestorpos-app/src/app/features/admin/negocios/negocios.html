@@ -1,0 +1,124 @@
+<div class="pagina">
+    <mat-card class="card">
+      <mat-card-content>
+        @if (adminAuth.esOperador()) {
+          <p class="ayuda-cobro">Tocá un negocio para ver y activar sus funcionalidades.</p>
+        }
+        <div class="barra-lista">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="actualizarAhora()"
+            [disabled]="actualizando()"
+            aria-label="Actualizar la lista de negocios"
+          >
+            <mat-icon [class.girando]="actualizando()">refresh</mat-icon>
+            Actualizar
+          </button>
+          @if (ultimaActualizacion(); as hora) {
+            <span class="hora-actualizacion">Actualizado {{ hora | date: 'HH:mm:ss' }}</span>
+          }
+        </div>
+        @if (refresco.activo()) {
+          <p class="ayuda-cobro">Se actualiza solo mientras haya pagos pendientes.</p>
+        } @else if (refresco.expirado()) {
+          <p class="ayuda-cobro">Dejó de actualizarse solo. Tocá Actualizar para seguir.</p>
+        }
+        @if (negocios().length > 0) {
+          <mat-form-field appearance="outline" class="full buscador">
+            <mat-label>Buscar negocio</mat-label>
+            <input matInput [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        }
+        @if (cargandoNegocios()) {
+          <mat-spinner diameter="24"></mat-spinner>
+        } @else if (negocios().length === 0) {
+          <p class="vacio">Todavía no hay negocios cargados.</p>
+        } @else if (negociosFiltrados().length === 0) {
+          <p class="vacio">Ningún negocio coincide con "{{ busqueda() }}".</p>
+        } @else {
+          <div class="lista-negocios">
+            @for (negocio of negociosFiltrados(); track negocio.id) {
+              <div class="negocio-item" [class.expandido]="negocioExpandidoId() === negocio.id">
+                <div
+                  class="negocio-fila"
+                  role="button"
+                  tabindex="0"
+                  (click)="toggleExpandido(negocio)"
+                  (keydown.enter)="toggleExpandido(negocio)"
+                >
+                  <div class="negocio-info">
+                    <span class="negocio-nombre">{{ negocio.nombre }}</span>
+                    <span class="negocio-detalle">
+                      {{ negocio.activo ? 'Activo' : 'Inactivo' }}
+                      @if (negocio.vendedorNombre) {
+                        · {{ negocio.vendedorNombre }}
+                      }
+                    </span>
+                  </div>
+                  <div class="negocio-trailing">
+                    @if (badgeSuscripcion(negocio); as badge) {
+                      @if (negocio.fluxoEstado === 'pending') {
+                        <button
+                          type="button"
+                          [class]="'badge-suscripcion badge-boton ' + badge.clase"
+                          (click)="verLinkPago(negocio, $event)"
+                          aria-label="Ver el link de pago de este negocio"
+                        >
+                          <mat-icon>link</mat-icon>
+                          {{ badge.texto }}
+                        </button>
+                      } @else {
+                        <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
+                      }
+                    }
+                    @if (adminAuth.esOperador()) {
+                      <button
+                        mat-icon-button
+                        type="button"
+                        [disabled]="cambiandoEstadoNegocioId() === negocio.id"
+                        (click)="toggleEstadoNegocio(negocio, $event)"
+                        [attr.aria-label]="negocio.activo ? 'Desactivar negocio' : 'Activar negocio'"
+                      >
+                        @if (cambiandoEstadoNegocioId() === negocio.id) {
+                          <mat-spinner diameter="18"></mat-spinner>
+                        } @else {
+                          <mat-icon>{{ negocio.activo ? 'block' : 'check_circle' }}</mat-icon>
+                        }
+                      </button>
+                      <mat-icon class="chevron">{{ negocioExpandidoId() === negocio.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    }
+                  </div>
+                </div>
+
+                @if (negocioExpandidoId() === negocio.id) {
+                  <div class="features-panel">
+                    @if (cargandoFeatures()) {
+                      <div class="centrado-features">
+                        <mat-spinner diameter="22"></mat-spinner>
+                      </div>
+                    } @else {
+                      @for (feature of catalogoFeatures; track feature.clave) {
+                        <div class="feature-fila">
+                          <div class="feature-info">
+                            <span class="feature-nombre">{{ feature.nombre }}</span>
+                            <span class="feature-descripcion">{{ feature.descripcion }}</span>
+                          </div>
+                          <mat-slide-toggle
+                            [checked]="featuresActivos().has(feature.clave)"
+                            [disabled]="guardandoFeature() === feature.clave"
+                            (change)="toggleFeature(negocio, feature.clave)"
+                          ></mat-slide-toggle>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+</div>

@@ -15,18 +15,34 @@ export const routes: Routes = [
       import('./features/admin/admin-login/admin-login').then((m) => m.AdminLogin),
   },
   {
-    // El operador de GestorPOS la usa para dar de alta negocios de clientes.
-    path: 'admin/crear-negocio',
+    // Panel interno del equipo de GestorPOS (Operador/Vendedor): un shell con menú y, adentro, una
+    // pantalla por tarea. 'crear-negocio' era la pantalla única de antes y queda redirigida para no
+    // romper la PWA ya instalada ni favoritos.
+    path: 'admin',
     canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./features/admin/crear-negocio/crear-negocio').then((m) => m.CrearNegocio),
-  },
-  {
-    // También interna, solo para Operador — gestión de usuarios admin (Operador/Vendedor).
-    path: 'admin/usuarios',
-    canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./features/admin/usuarios-admin/usuarios-admin').then((m) => m.UsuariosAdmin),
+    loadComponent: () => import('./features/admin/admin-shell/admin-shell').then((m) => m.AdminShell),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'negocios' },
+      { path: 'crear-negocio', pathMatch: 'full', redirectTo: 'negocios' },
+      {
+        path: 'negocios',
+        data: { titulo: 'Negocios' },
+        loadComponent: () => import('./features/admin/negocios/negocios').then((m) => m.Negocios),
+      },
+      {
+        path: 'nuevo-negocio',
+        data: { titulo: 'Nuevo negocio' },
+        loadComponent: () =>
+          import('./features/admin/nuevo-negocio/nuevo-negocio').then((m) => m.NuevoNegocio),
+      },
+      {
+        // Solo Operador — gestión de usuarios admin (Operador/Vendedor).
+        path: 'usuarios',
+        data: { titulo: 'Usuarios' },
+        loadComponent: () =>
+          import('./features/admin/usuarios-admin/usuarios-admin').then((m) => m.UsuariosAdmin),
+      },
+    ],
   },
   {
     path: '',

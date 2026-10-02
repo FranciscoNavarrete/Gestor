@@ -44,7 +44,7 @@ export class AdminLogin implements OnInit, OnDestroy {
     this.adminAuth.login(email, password).subscribe({
       next: () => {
         this.iniciandoSesion.set(false);
-        this.router.navigateByUrl('/admin/crear-negocio');
+        this.router.navigateByUrl('/admin/negocios');
       },
       error: () => {
         this.iniciandoSesion.set(false);
