@@ -155,6 +155,21 @@ public class AdminService : IAdminService
         return await ArmarResumenAsync(tenant, ct);
     }
 
+    public async Task<LinkPagoDto> ObtenerLinkPagoAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        // Un Vendedor solo puede ver los links de los negocios que él mismo cargó.
+        if (!_currentAdmin.EsOperador && tenant.VendedorId != _currentAdmin.AdminId)
+            throw new AppException("El negocio no existe.");
+
+        if (tenant.FluxoSuscripcionId is null)
+            throw new AppException("Este negocio no tiene una suscripción para cobrar.");
+
+        var link = await _fluxo.ObtenerLinkPagoAsync(tenant.FluxoSuscripcionId.Value, ct);
+        return new LinkPagoDto(link.Estado, link.InitPoint);
+    }
+
     private async Task<TenantResumenDto> ArmarResumenAsync(Tenant tenant, CancellationToken ct)
     {
         var vendedorNombre = tenant.VendedorId is null

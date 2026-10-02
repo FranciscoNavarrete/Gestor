@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { QrDialog } from '../../../core/dialogs/qr-dialog/qr-dialog';
 import { AdminUsuario, CATALOGO_FEATURES, FluxoPlan, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
@@ -287,6 +288,19 @@ export class CrearNegocio implements OnInit, OnDestroy {
     this.ultimoCreadoCredenciales.set({ email, password });
     this.formDirective?.resetForm();
     this.cargarNegocios();
+  }
+
+  cerrarResultado(): void {
+    this.ultimoCreado.set(null);
+    this.ultimoCreadoCredenciales.set(null);
+  }
+
+  verLinkPago(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog
+      .open(LinkPagoDialog, { data: { tenantId: negocio.id, nombre: negocio.nombre }, width: '420px', maxWidth: '92vw' })
+      .afterClosed()
+      .subscribe(() => this.cargarNegocios(true));
   }
 
   abrirQr(): void {

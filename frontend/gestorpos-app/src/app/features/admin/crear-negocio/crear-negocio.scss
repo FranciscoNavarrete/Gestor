@@ -72,6 +72,7 @@
 }
 
 .resultado {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -318,5 +319,30 @@
 @keyframes girar {
   to {
     transform: rotate(360deg);
+  }
+}
+
+.cerrar-resultado {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.badge-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &:hover {
+    filter: brightness(1.15);
   }
 }

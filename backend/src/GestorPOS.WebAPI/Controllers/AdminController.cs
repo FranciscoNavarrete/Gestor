@@ -54,6 +54,10 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<TenantResumenDto>> ActivarTenant(Guid tenantId, CancellationToken ct)
         => Ok(await _adminService.ActivarTenantAsync(tenantId, ct));
 
+    [HttpGet("tenants/{tenantId:guid}/link-pago")]
+    public async Task<ActionResult<LinkPagoDto>> ObtenerLinkPago(Guid tenantId, CancellationToken ct)
+        => Ok(await _adminService.ObtenerLinkPagoAsync(tenantId, ct));
+
     [HttpGet("usuarios")]
     [Authorize(Policy = "AdminOperador")]
     public async Task<ActionResult<IReadOnlyList<AdminUsuarioDto>>> ListarUsuarios(CancellationToken ct)

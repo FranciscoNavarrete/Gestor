@@ -73,6 +73,41 @@ public class FluxoService : IFluxoService
             c.ClienteId, c.UsuarioId, c.Email, c.PasswordTemporal, c.InitPoint, c.MpSuscripcionId, c.EstadoSuscripcion);
     }
 
+    public async Task<FluxoLinkPago> ObtenerLinkPagoAsync(int suscripcionId, CancellationToken ct = default)
+    {
+        var baseUrl = _config["Fluxo:BaseUrl"];
+        var apiKey = _config["Fluxo:VendedorApiKey"];
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+        {
+            _logger.LogWarning("Fluxo:BaseUrl o Fluxo:VendedorApiKey no configurados.");
+            throw new AppException("La integración con Fluxo no está configurada.");
+        }
+
+        FluxoRespuestaLink? body;
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/{suscripcionId}/link");
+            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request, ct);
+            body = await response.Content.ReadFromJsonAsync<FluxoRespuestaLink>(JsonOptions, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error llamando a Fluxo para traer el link de la suscripción {Id}.", suscripcionId);
+            throw new AppException("No se pudo conectar con Fluxo para traer el link. Probá de nuevo en un momento.");
+        }
+
+        if (body is not { Exitoso: true, Contenido: not null })
+        {
+            _logger.LogWarning("Fluxo no devolvió el link de la suscripción {Id}: {Mensaje}", suscripcionId, body?.Mensaje);
+            throw new AppException(body?.Mensaje ?? "Fluxo no pudo traer el link de pago.");
+        }
+
+        return new FluxoLinkPago(body.Contenido.Estado, body.Contenido.InitPoint);
+    }
+
     public async Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default)
     {
         var baseUrl = _config["Fluxo:BaseUrl"];
@@ -165,6 +200,19 @@ public class FluxoService : IFluxoService
         public string? InitPoint { get; set; }
         public int? MpSuscripcionId { get; set; }
         public string? EstadoSuscripcion { get; set; }
+    }
+
+    private class FluxoRespuestaLink
+    {
+        public bool Exitoso { get; set; }
+        public string? Mensaje { get; set; }
+        public FluxoLinkContenido? Contenido { get; set; }
+    }
+
+    private class FluxoLinkContenido
+    {
+        public string Estado { get; set; } = string.Empty;
+        public string? InitPoint { get; set; }
     }
 
     private class FluxoRespuestaPlanes

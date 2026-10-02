@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>Link de pago</h2>
+
+<mat-dialog-content class="contenido">
+  <p class="subtitulo">{{ data.nombre }}</p>
+
+  @if (cargando()) {
+    <div class="centrado">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+    <button mat-stroked-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  } @else if (datos(); as d) {
+    @if (d.link) {
+      <div class="dato-copiable">
+        <span class="dato-link">{{ d.link }}</span>
+        <button mat-icon-button type="button" (click)="copiar(d.link)" aria-label="Copiar link">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+
+      <div class="acciones">
+        <a mat-stroked-button [href]="linkWhatsapp(d.link)" target="_blank" rel="noopener" class="boton-whatsapp">
+          <mat-icon>chat</mat-icon>
+          WhatsApp
+        </a>
+        <button mat-stroked-button type="button" (click)="abrirQr(d.link)">
+          <mat-icon>qr_code_2</mat-icon>
+          Ver QR
+        </button>
+      </div>
+
+      <p class="ayuda">Se actualiza solo cuando el cliente paga.</p>
+    } @else if (d.estado === 'authorized') {
+      <p class="exito">
+        <mat-icon>check_circle</mat-icon>
+        Este negocio ya está activo.
+      </p>
+    } @else {
+      <p class="ayuda">Este negocio no tiene un link de pago pendiente.</p>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

@@ -14,6 +14,7 @@ public interface IAdminService
     Task<TenantFeatureDto> DesactivarFeatureAsync(Guid tenantId, string clave, CancellationToken ct = default);
     Task<TenantResumenDto> DesactivarTenantAsync(Guid tenantId, CancellationToken ct = default);
     Task<TenantResumenDto> ActivarTenantAsync(Guid tenantId, CancellationToken ct = default);
+    Task<LinkPagoDto> ObtenerLinkPagoAsync(Guid tenantId, CancellationToken ct = default);
 
     Task<IReadOnlyList<AdminUsuarioDto>> ListarUsuariosAsync(CancellationToken ct = default);
     Task<AdminUsuarioDto> CrearUsuarioAsync(CrearAdminUsuarioRequest request, CancellationToken ct = default);

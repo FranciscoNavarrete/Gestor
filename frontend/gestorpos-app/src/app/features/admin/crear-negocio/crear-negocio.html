@@ -79,6 +79,9 @@
 
           @if (ultimoCreado(); as creado) {
             <div class="resultado">
+              <button mat-icon-button type="button" class="cerrar-resultado" (click)="cerrarResultado()" aria-label="Cerrar">
+                <mat-icon>close</mat-icon>
+              </button>
               <p class="exito">
                 <mat-icon>check_circle</mat-icon>
                 Negocio "{{ creado.nombre }}" creado
@@ -205,7 +208,19 @@
                   </div>
                   <div class="negocio-trailing">
                     @if (badgeSuscripcion(negocio); as badge) {
-                      <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
+                      @if (negocio.fluxoEstado === 'pending') {
+                        <button
+                          type="button"
+                          [class]="'badge-suscripcion badge-boton ' + badge.clase"
+                          (click)="verLinkPago(negocio, $event)"
+                          aria-label="Ver el link de pago de este negocio"
+                        >
+                          <mat-icon>link</mat-icon>
+                          {{ badge.texto }}
+                        </button>
+                      } @else {
+                        <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
+                      }
                     }
                     @if (adminAuth.esOperador()) {
                       <button

@@ -6,6 +6,9 @@ public record FluxoSuscripcionResultado(
     int ClienteId, int UsuarioId, string Email, string PasswordTemporal, string? InitPoint, int? SuscripcionId,
     string? Estado);
 
+/// <summary>Link de pago de una suscripción de Fluxo; InitPoint viene solo mientras siga pendiente.</summary>
+public record FluxoLinkPago(string Estado, string? InitPoint);
+
 public record FluxoPlan(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis);
 
@@ -21,6 +24,10 @@ public interface IFluxoService
     Task<FluxoSuscripcionResultado> IniciarSuscripcionAsync(
         string nombre, string apellido, string email, int? mpPlanId, string? cardTokenId = null,
         CancellationToken ct = default);
+
+    /// <summary>Tira <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> si Fluxo no
+    /// responde o no encuentra la suscripción, con un mensaje apto para mostrar.</summary>
+    Task<FluxoLinkPago> ObtenerLinkPagoAsync(int suscripcionId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default);
 

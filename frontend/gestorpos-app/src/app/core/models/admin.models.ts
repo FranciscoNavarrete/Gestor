@@ -38,6 +38,11 @@ export interface TenantResumen {
   fluxoEstado?: string | null;
 }
 
+export interface LinkPago {
+  estado: string;
+  link: string | null;
+}
+
 export type AdminRol = 'Operador' | 'Vendedor';
 
 export interface AdminUsuario {

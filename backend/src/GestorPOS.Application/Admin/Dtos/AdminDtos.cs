@@ -6,6 +6,9 @@ public record TenantResumenDto(
     int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null,
     string? FluxoEstado = null);
 
+/// <summary>Link de pago pendiente de un negocio; Link es null si ya no está pendiente.</summary>
+public record LinkPagoDto(string Estado, string? Link);
+
 public record TenantFeatureDto(Guid Id, string Clave, bool Habilitado);
 
 /// <summary>Alta de un negocio hecha por el operador de GestorPOS. El email/password que se cargan
