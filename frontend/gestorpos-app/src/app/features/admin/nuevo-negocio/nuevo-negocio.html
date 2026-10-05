@@ -37,11 +37,21 @@
             <mat-label>Plan</mat-label>
             <mat-select formControlName="mpPlanId" (openedChange)="alAbrirPlanes($event)">
               @for (plan of planes(); track plan.mpPlanId) {
-                <mat-option [value]="plan.mpPlanId">{{ plan.nombre }} — ${{ plan.monto }}</mat-option>
+                <mat-option [value]="plan.mpPlanId">{{ etiquetaPlan(plan) }}</mat-option>
               }
             </mat-select>
             <mat-hint>Lo que le vas a cobrar a este negocio por mes</mat-hint>
           </mat-form-field>
+
+          @if (planSeleccionado(); as plan) {
+            @if (tienePrimerCobroDistinto(plan)) {
+              <div class="cobro-inicial">
+                <p class="cobro-inicial-titulo">Alta + 1er mes: {{ dinero(plan.montoPrimerCobro!) }}</p>
+                <p class="cobro-inicial-detalle">Después: {{ dinero(plan.monto) }} por mes</p>
+                <p class="cobro-inicial-detalle">Se autoriza una sola vez y Mercado Pago cobra todo solo.</p>
+              </div>
+            }
+          }
 
           <p class="seccion">Cómo se cobra</p>
           <mat-button-toggle-group

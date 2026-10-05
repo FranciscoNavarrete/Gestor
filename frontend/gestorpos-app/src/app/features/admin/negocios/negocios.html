@@ -94,6 +94,9 @@
                         <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
                       }
                     }
+                    @if (ajusteMontoPendiente(negocio)) {
+                      <span class="badge-suscripcion badge-ajuste" title="El primer cobro se aprobó, pero falta bajar la suscripción al monto mensual. Se reintenta solo.">Ajustar monto</span>
+                    }
                     @if (adminAuth.esOperador()) {
                       <span class="switch-activo" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
                         <span class="switch-etiqueta">{{ negocio.activo ? 'Activo' : 'Inactivo' }}</span>

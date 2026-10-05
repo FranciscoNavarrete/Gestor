@@ -22,6 +22,7 @@ export interface FluxoPlan {
   tipoFrecuencia: string;
   frecuencia: number;
   diasGratis: number;
+  montoPrimerCobro?: number | null;
 }
 
 export interface TenantResumen {
@@ -36,6 +37,8 @@ export interface TenantResumen {
   fluxoSuscripcionId?: number | null;
   fluxoInitPoint?: string | null;
   fluxoEstado?: string | null;
+  fluxoPrimerCobroAprobado?: boolean;
+  fluxoAjustePendiente?: boolean;
 }
 
 export interface LinkPago {
@@ -121,7 +124,7 @@ export interface ReporteVendedor {
   comision: number;
 }
 
-export type EstadoVenta = 'suscripto' | 'baja' | 'pendiente' | 'cancelada';
+export type EstadoVenta = 'suscripto' | 'baja' | 'esperando' | 'pendiente' | 'cancelada';
 
 export interface ReporteVentaItem {
   tenantId: string;

@@ -85,7 +85,7 @@ public class AdminService : IAdminService
     {
         var planes = await _fluxo.ListarPlanesAsync(ct);
         return planes
-            .Select(p => new FluxoPlanDto(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis))
+            .Select(p => new FluxoPlanDto(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro))
             .ToList();
     }
 
@@ -114,7 +114,8 @@ public class AdminService : IAdminService
         // Si Fluxo no responde, estadosPorSuscripcion queda vacío y el negocio se lista igual,
         // solo sin el estado de suscripción -- nunca debe romper este listado.
         var suscripcionIds = tenants.Where(t => t.FluxoSuscripcionId != null).Select(t => t.FluxoSuscripcionId!.Value);
-        var estadosPorSuscripcion = await _fluxo.ObtenerEstadosSuscripcionesAsync(suscripcionIds, ct);
+        var estadosPorSuscripcion = await _fluxo.ObtenerConfirmacionesAsync(suscripcionIds, ct)
+            ?? new Dictionary<int, FluxoEstadoSuscripcion>();
 
         return tenants
             .Select(t => new TenantResumenDto(
@@ -123,7 +124,11 @@ public class AdminService : IAdminService
                 t.FluxoClienteId, t.FluxoSuscripcionId,
                 FluxoEstado: t.FluxoSuscripcionId is null
                     ? null
-                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)))
+                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.Estado,
+                FluxoPrimerCobroAprobado: t.FluxoSuscripcionId is not null
+                    && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.PrimerCobroAprobado == true,
+                FluxoAjustePendiente: t.FluxoSuscripcionId is not null
+                    && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.AjusteMontoPendiente == true))
             .ToList();
     }
 
@@ -202,16 +207,17 @@ public class AdminService : IAdminService
             ? null
             : await _db.AdminUsuarios.Where(v => v.Id == tenant.VendedorId).Select(v => v.Nombre).FirstOrDefaultAsync(ct);
 
-        string? fluxoEstado = null;
+        FluxoEstadoSuscripcion? fluxoEstado = null;
         if (tenant.FluxoSuscripcionId is not null)
         {
-            var estados = await _fluxo.ObtenerEstadosSuscripcionesAsync([tenant.FluxoSuscripcionId.Value], ct);
-            fluxoEstado = estados.GetValueOrDefault(tenant.FluxoSuscripcionId.Value);
+            var estados = await _fluxo.ObtenerConfirmacionesAsync([tenant.FluxoSuscripcionId.Value], ct);
+            fluxoEstado = estados?.GetValueOrDefault(tenant.FluxoSuscripcionId.Value);
         }
 
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, tenant.VendedorId, vendedorNombre,
-            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, null, fluxoEstado);
+            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, null, fluxoEstado?.Estado,
+            fluxoEstado?.PrimerCobroAprobado == true, fluxoEstado?.AjusteMontoPendiente == true);
     }
 
     private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>

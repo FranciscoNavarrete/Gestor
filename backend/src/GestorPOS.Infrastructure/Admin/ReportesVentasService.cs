@@ -67,7 +67,7 @@ public class ReportesVentasService : IReportesVentasService
             .ToList();
 
         var comisiones = CalculadoraComisiones.Asignar(
-            conEstado.Where(x => x.Estado.Confirmada)
+            conEstado.Where(x => EstaCobrada(x.Estado))
                 .Select(x => new VentaConfirmada(x.Negocio.Id, x.Negocio.VendedorId!.Value, x.Negocio.FechaCreacion)),
             _tarifa);
 
@@ -85,12 +85,12 @@ public class ReportesVentasService : IReportesVentasService
             .Select(x =>
             {
                 var vendedor = x.Negocio.VendedorId!.Value;
-                var confirmada = x.Estado.Confirmada;
+                var cobrada = EstaCobrada(x.Estado);
                 return new ReporteVentaItemDto(
                     x.Negocio.Id, x.Negocio.Nombre, x.Negocio.FechaCreacion,
                     vendedor, nombres.GetValueOrDefault(vendedor, "Vendedor"),
                     ClasificarEstado(x.Estado),
-                    confirmada ? comisiones[x.Negocio.Id].Comision : null);
+                    cobrada ? comisiones[x.Negocio.Id].Comision : null);
             })
             .OrderByDescending(i => i.FechaAlta)
             .ToList();
@@ -100,7 +100,7 @@ public class ReportesVentasService : IReportesVentasService
 
         var resumen = new ReporteResumenDto(
             Ventas: confirmadas.Count,
-            Pendientes: items.Count(i => i.Estado == "pendiente"),
+            Pendientes: items.Count(EsperaCobro),
             Comision: confirmadas.Sum(i => i.Comision!.Value),
             VentasPrimeras: primeras, TarifaPrimeras: _tarifa.Primeras,
             VentasSiguientes: confirmadas.Count - primeras, TarifaSiguientes: _tarifa.Siguientes);
@@ -110,7 +110,7 @@ public class ReportesVentasService : IReportesVentasService
             .Select(g => new ReporteVendedorDto(
                 g.Key.VendedorId, g.Key.VendedorNombre,
                 Ventas: g.Count(i => i.Comision is not null),
-                Pendientes: g.Count(i => i.Estado == "pendiente"),
+                Pendientes: g.Count(EsperaCobro),
                 Comision: g.Sum(i => i.Comision ?? 0)))
             .OrderByDescending(v => v.Ventas).ThenByDescending(v => v.Comision).ThenBy(v => v.Nombre)
             .ToList();
@@ -118,13 +118,21 @@ public class ReportesVentasService : IReportesVentasService
         return new ReporteVentasDto(desde, hasta, resumen, vendedores, items);
     }
 
-    private static string ClasificarEstado(FluxoEstadoSuscripcion estado) => (estado.Confirmada, estado.Estado) switch
-    {
-        (true, "cancelled") => "baja",
-        (true, _) => "suscripto",
-        (false, "pending") => "pendiente",
-        _ => "cancelada",
-    };
+    // La venta cuenta (y paga comisión) recién cuando Mercado Pago aprobó el primer cobro.
+    private static bool EstaCobrada(FluxoEstadoSuscripcion estado) => estado.Confirmada && estado.PrimerCobroAprobado;
+
+    private static bool EsperaCobro(ReporteVentaItemDto item) => item.Estado is "pendiente" or "esperando";
+
+    private static string ClasificarEstado(FluxoEstadoSuscripcion estado) =>
+        (estado.Confirmada, estado.PrimerCobroAprobado, estado.Estado) switch
+        {
+            (true, true, "cancelled") => "baja",
+            (true, true, _) => "suscripto",
+            (true, false, "cancelled") => "cancelada",
+            (true, false, _) => "esperando",
+            (false, _, "pending") => "pendiente",
+            _ => "cancelada",
+        };
 
     // Medianoche de un día de Argentina, expresada en UTC (Argentina es UTC-3).
     private static DateTime InicioDelDiaEnUtc(DateOnly dia) =>

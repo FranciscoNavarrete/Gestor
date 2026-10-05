@@ -96,6 +96,16 @@
   color: #f5a623;
 }
 
+.badge-esperando {
+  background: color-mix(in srgb, #1976d2 18%, transparent);
+  color: #1976d2;
+}
+
+.badge-ajuste {
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}
+
 .badge-suscripto {
   background: color-mix(in srgb, #2e7d32 18%, transparent);
   color: #2e7d32;

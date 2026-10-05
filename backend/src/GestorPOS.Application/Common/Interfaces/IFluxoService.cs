@@ -9,11 +9,15 @@ public record FluxoSuscripcionResultado(
 /// <summary>Link de pago de una suscripción de Fluxo; InitPoint viene solo mientras siga pendiente.</summary>
 public record FluxoLinkPago(string Estado, string? InitPoint);
 
-/// <summary>Estado de una suscripción y si alguna vez se confirmó (aunque después se haya cancelado).</summary>
-public record FluxoEstadoSuscripcion(string Estado, bool Confirmada);
+/// <summary>Estado de una suscripción, si alguna vez se confirmó (aunque después se haya cancelado) y si
+/// Mercado Pago ya aprobó el primer cobro. AjusteMontoPendiente: el primer cobro se aprobó pero falta bajar
+/// la suscripción al monto mensual.</summary>
+public record FluxoEstadoSuscripcion(
+    string Estado, bool Confirmada, bool PrimerCobroAprobado = false, bool AjusteMontoPendiente = false);
 
 public record FluxoPlan(
-    int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis);
+    int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
+    decimal? MontoPrimerCobro = null);
 
 /// <summary>Integración con Fluxo (el motor de cobros/suscripciones que factura a los negocios
 /// que usan GestorPOS).</summary>

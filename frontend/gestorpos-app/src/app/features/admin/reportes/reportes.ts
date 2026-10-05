@@ -19,7 +19,8 @@ type Preset = 'hoy' | 'semana' | 'mes' | 'mes-pasado';
 const ETIQUETAS_ESTADO: Record<EstadoVenta, string> = {
   suscripto: 'Suscripto',
   baja: 'Baja',
-  pendiente: 'Pendiente',
+  esperando: 'Esperando cobro',
+  pendiente: 'Sin autorizar',
   cancelada: 'Sin pagar',
 };
 

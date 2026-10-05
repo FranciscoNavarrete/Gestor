@@ -151,3 +151,23 @@
   top: 2px;
   right: 2px;
 }
+
+.cobro-inicial {
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #1976d2) 55%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-primary, #1976d2) 10%, transparent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 4px 0 12px;
+}
+
+.cobro-inicial-titulo {
+  margin: 0 0 2px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.cobro-inicial-detalle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant, #5f6368);
+}

@@ -161,7 +161,15 @@ export class Negocios implements OnInit, OnDestroy {
 
   badgeSuscripcion(negocio: TenantResumen): { texto: string; clase: string } | null {
     if (!negocio.fluxoEstado) return null;
+    if (negocio.fluxoEstado === 'authorized' && !negocio.fluxoPrimerCobroAprobado) {
+      return { texto: 'Esperando 1er cobro', clase: 'badge-esperando' };
+    }
     return Negocios.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;
+  }
+
+  // El primer cobro ya se aprobó pero Fluxo no pudo bajar la suscripción al monto mensual todavía.
+  ajusteMontoPendiente(negocio: TenantResumen): boolean {
+    return this.adminAuth.esOperador() && negocio.fluxoAjustePendiente === true;
   }
 
   cambiarActivo(negocio: TenantResumen, cambio: MatSlideToggleChange): void {

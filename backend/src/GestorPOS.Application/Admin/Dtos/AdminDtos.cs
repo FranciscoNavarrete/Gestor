@@ -4,7 +4,7 @@ public record TenantResumenDto(
     Guid Id, string Nombre, string Slug, bool Activo, DateTime FechaCreacion,
     Guid? VendedorId, string? VendedorNombre,
     int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null,
-    string? FluxoEstado = null);
+    string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false);
 
 /// <summary>Link de pago pendiente de un negocio; Link es null si ya no está pendiente.</summary>
 public record LinkPagoDto(string Estado, string? Link);
@@ -19,7 +19,9 @@ public record CrearNegocioRequest(
     string NombreNegocio, string NombreAdmin, string Email, string Password,
     Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null);
 
-public record FluxoPlanDto(int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis);
+public record FluxoPlanDto(
+    int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
+    decimal? MontoPrimerCobro = null);
 
 public record AdminUsuarioDto(Guid Id, string Email, string Nombre, string Rol, bool Activo, DateTime CreadoUtc);
 
@@ -41,8 +43,9 @@ public record ReporteResumenDto(
 
 public record ReporteVendedorDto(Guid VendedorId, string Nombre, int Ventas, int Pendientes, decimal Comision);
 
-/// <summary>Estado: suscripto, baja (se confirmó y después se canceló), pendiente o cancelada (nunca se pagó).
-/// Comision solo tiene valor para las ventas confirmadas.</summary>
+/// <summary>Estado: suscripto, baja (se cobró y después se canceló), esperando (autorizada, falta el primer
+/// cobro), pendiente (el cliente no autorizó) o cancelada (nunca se cobró). Comision solo tiene valor para
+/// las ventas con el primer cobro aprobado.</summary>
 public record ReporteVentaItemDto(
     Guid TenantId, string Nombre, DateTime FechaAlta, Guid VendedorId, string VendedorNombre,
     string Estado, decimal? Comision);

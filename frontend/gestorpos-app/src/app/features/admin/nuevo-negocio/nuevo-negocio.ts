@@ -1,6 +1,7 @@
 import { Clipboard } from '@angular/cdk/clipboard';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -57,6 +58,8 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   readonly vendedores = signal<AdminUsuario[]>([]);
   readonly planes = signal<FluxoPlan[]>([]);
+  private readonly planIdElegido = toSignal(this.form.controls.mpPlanId.valueChanges, { initialValue: null });
+  readonly planSeleccionado = computed(() => this.planes().find((p) => p.mpPlanId === this.planIdElegido()) ?? null);
 
   @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
 
@@ -74,6 +77,23 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.mp.unmountBrick();
+  }
+
+  private static readonly FORMATO_PESOS = new Intl.NumberFormat('es-AR');
+
+  dinero(monto: number): string {
+    return '$' + NuevoNegocio.FORMATO_PESOS.format(monto);
+  }
+
+  // El primer cobro puede ser distinto del mensual (alta + primer mes).
+  tienePrimerCobroDistinto(plan: FluxoPlan): boolean {
+    return plan.montoPrimerCobro != null && plan.montoPrimerCobro !== plan.monto;
+  }
+
+  etiquetaPlan(plan: FluxoPlan): string {
+    return this.tienePrimerCobroDistinto(plan)
+      ? `${plan.nombre} — Alta + 1er mes ${this.dinero(plan.montoPrimerCobro!)}, luego ${this.dinero(plan.monto)}/mes`
+      : `${plan.nombre} — ${this.dinero(plan.monto)}`;
   }
 
   // Los planes se crean en Fluxo: al abrir el desplegable se vuelven a pedir para que uno nuevo
@@ -149,7 +169,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     try {
       await this.mp.mountCardPaymentBrick({
         containerId: 'brick-tarjeta',
-        amount: plan.monto,
+        amount: plan.montoPrimerCobro ?? plan.monto,
         emailPagador: email,
         submitLabel: 'Crear negocio y cobrar',
         onSubmit: (data) => this.crearConTarjeta(data.token),

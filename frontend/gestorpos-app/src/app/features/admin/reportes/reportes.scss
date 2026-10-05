@@ -281,6 +281,11 @@ td {
   color: #2e7d32;
 }
 
+.estado-esperando {
+  background: color-mix(in srgb, #1976d2 18%, transparent);
+  color: #1976d2;
+}
+
 .estado-pendiente {
   background: color-mix(in srgb, #f5a623 18%, transparent);
   color: #f5a623;

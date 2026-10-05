@@ -138,7 +138,7 @@ public class FluxoService : IFluxoService
             }
 
             return body.Contenido
-                .Select(p => new FluxoPlan(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis))
+                .Select(p => new FluxoPlan(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro))
                 .ToList();
         }
         catch (Exception ex)
@@ -188,7 +188,8 @@ public class FluxoService : IFluxoService
                 return null;
 
             return body.Contenido.ToDictionary(
-                e => e.MpSuscripcionId, e => new FluxoEstadoSuscripcion(e.Estado, e.Confirmada));
+                e => e.MpSuscripcionId,
+                e => new FluxoEstadoSuscripcion(e.Estado, e.Confirmada, e.PrimerCobroAprobado, e.AjusteMontoPendiente));
         }
         catch (Exception ex)
         {
@@ -244,6 +245,7 @@ public class FluxoService : IFluxoService
         public string TipoFrecuencia { get; set; } = string.Empty;
         public int Frecuencia { get; set; }
         public int DiasGratis { get; set; }
+        public decimal? MontoPrimerCobro { get; set; }
     }
 
     private class FluxoRespuestaEstados
@@ -258,5 +260,7 @@ public class FluxoService : IFluxoService
         public int MpSuscripcionId { get; set; }
         public string Estado { get; set; } = string.Empty;
         public bool Confirmada { get; set; }
+        public bool PrimerCobroAprobado { get; set; }
+        public bool AjusteMontoPendiente { get; set; }
     }
 }

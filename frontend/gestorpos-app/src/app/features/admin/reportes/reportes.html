@@ -74,11 +74,11 @@
     <div class="kpis" [class.cargando]="cargando()">
       <div class="kpi kpi-ventas">
         <span class="kpi-valor">{{ r.resumen.ventas }}</span>
-        <span class="kpi-etiqueta">Ventas confirmadas</span>
+        <span class="kpi-etiqueta">Ventas cobradas</span>
       </div>
       <div class="kpi kpi-pendientes">
         <span class="kpi-valor">{{ r.resumen.pendientes }}</span>
-        <span class="kpi-etiqueta">Pendientes de pago</span>
+        <span class="kpi-etiqueta">Esperando cobro</span>
       </div>
       <div class="kpi kpi-comision">
         <span class="kpi-valor">{{ dinero(r.resumen.comision) }}</span>
