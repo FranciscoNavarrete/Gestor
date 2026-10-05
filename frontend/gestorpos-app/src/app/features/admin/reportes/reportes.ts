@@ -83,8 +83,23 @@ export class ReportesAdmin implements OnInit {
     const partes: string[] = [];
     if (r.ventasPrimeras > 0) partes.push(`${r.ventasPrimeras} × ${this.dinero(r.tarifaPrimeras)}`);
     if (r.ventasSiguientes > 0) partes.push(`${r.ventasSiguientes} × ${this.dinero(r.tarifaSiguientes)}`);
+    if (r.bono > 0) partes.push(`bono ${this.dinero(r.bono)}`);
     return partes.join(' + ');
   });
+
+  // Progreso hacia el bono del mes de la fecha "hasta": el del propio vendedor, o el de cada uno en el panel del operador.
+  readonly progresoBono = computed(() => {
+    const r = this.reporte();
+    if (!r || r.resumen.bonoVentas <= 0) return null;
+    const meta = r.resumen.bonoVentas;
+    const ventas = r.vendedores.reduce((max, v) => Math.max(max, v.ventasMes), 0);
+    return { meta, ventas: Math.min(ventas, meta), ganado: ventas >= meta, faltan: Math.max(meta - ventas, 0), monto: r.resumen.bonoMonto };
+  });
+
+  textoBono(v: { ventasMes: number }): string {
+    const meta = this.reporte()?.resumen.bonoVentas ?? 0;
+    return meta > 0 ? `${Math.min(v.ventasMes, meta)}/${meta}` : '—';
+  }
 
   ngOnInit(): void {
     if (this.adminAuth.esOperador()) this.cargarVendedores();
@@ -93,6 +108,10 @@ export class ReportesAdmin implements OnInit {
 
   dinero(valor: number): string {
     return '$' + Math.round(valor).toLocaleString('es-AR');
+  }
+
+  total(r: { comision: number; bono: number }): number {
+    return r.comision + r.bono;
   }
 
   etiquetaEstado(estado: EstadoVenta): string {

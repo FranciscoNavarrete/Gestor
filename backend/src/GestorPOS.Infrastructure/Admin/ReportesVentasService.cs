@@ -90,7 +90,8 @@ public class ReportesVentasService : IReportesVentasService
                     x.Negocio.Id, x.Negocio.Nombre, x.Negocio.FechaCreacion,
                     vendedor, nombres.GetValueOrDefault(vendedor, "Vendedor"),
                     ClasificarEstado(x.Estado),
-                    cobrada ? comisiones[x.Negocio.Id].Comision : null);
+                    cobrada ? comisiones[x.Negocio.Id].Comision : null,
+                    cobrada && comisiones[x.Negocio.Id].Bono > 0 ? comisiones[x.Negocio.Id].Bono : null);
             })
             .OrderByDescending(i => i.FechaAlta)
             .ToList();
@@ -103,7 +104,20 @@ public class ReportesVentasService : IReportesVentasService
             Pendientes: items.Count(EsperaCobro),
             Comision: confirmadas.Sum(i => i.Comision!.Value),
             VentasPrimeras: primeras, TarifaPrimeras: _tarifa.Primeras,
-            VentasSiguientes: confirmadas.Count - primeras, TarifaSiguientes: _tarifa.Siguientes);
+            VentasSiguientes: confirmadas.Count - primeras, TarifaSiguientes: _tarifa.Siguientes,
+            Bono: items.Sum(i => i.Bono ?? 0), BonoVentas: _tarifa.BonoVentas, BonoMonto: _tarifa.BonoMonto);
+
+        // Progreso hacia el bono: ventas cobradas de cada vendedor en el mes de "hasta" (mes completo).
+        var mesHasta = (hasta.Year, hasta.Month);
+        var ventasDelMes = conEstado
+            .Where(x => EstaCobrada(x.Estado))
+            .Where(x =>
+            {
+                var local = CalculadoraComisiones.AHoraArgentina(x.Negocio.FechaCreacion);
+                return (local.Year, local.Month) == mesHasta;
+            })
+            .GroupBy(x => x.Negocio.VendedorId!.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
 
         var vendedores = items
             .GroupBy(i => (i.VendedorId, i.VendedorNombre))
@@ -111,7 +125,9 @@ public class ReportesVentasService : IReportesVentasService
                 g.Key.VendedorId, g.Key.VendedorNombre,
                 Ventas: g.Count(i => i.Comision is not null),
                 Pendientes: g.Count(EsperaCobro),
-                Comision: g.Sum(i => i.Comision ?? 0)))
+                Comision: g.Sum(i => i.Comision ?? 0),
+                Bono: g.Sum(i => i.Bono ?? 0),
+                VentasMes: ventasDelMes.GetValueOrDefault(g.Key.VendedorId)))
             .OrderByDescending(v => v.Ventas).ThenByDescending(v => v.Comision).ThenBy(v => v.Nombre)
             .ToList();
 
@@ -144,6 +160,8 @@ public class ReportesVentasService : IReportesVentasService
         return new TarifaComision(
             int.TryParse(config["Comisiones:CantidadPrimeras"], out var cantidad) ? cantidad : predeterminada.CantidadPrimeras,
             decimal.TryParse(config["Comisiones:TarifaPrimeras"], NumberStyles.Number, CultureInfo.InvariantCulture, out var primeras) ? primeras : predeterminada.Primeras,
-            decimal.TryParse(config["Comisiones:TarifaSiguientes"], NumberStyles.Number, CultureInfo.InvariantCulture, out var siguientes) ? siguientes : predeterminada.Siguientes);
+            decimal.TryParse(config["Comisiones:TarifaSiguientes"], NumberStyles.Number, CultureInfo.InvariantCulture, out var siguientes) ? siguientes : predeterminada.Siguientes,
+            int.TryParse(config["Comisiones:BonoVentas"], out var bonoVentas) ? bonoVentas : predeterminada.BonoVentas,
+            decimal.TryParse(config["Comisiones:BonoMonto"], NumberStyles.Number, CultureInfo.InvariantCulture, out var bonoMonto) ? bonoMonto : predeterminada.BonoMonto);
     }
 }

@@ -300,3 +300,54 @@ td {
   background: color-mix(in srgb, var(--mat-sys-on-surface, #888) 12%, transparent);
   opacity: 0.8;
 }
+
+.bono-card {
+  margin-bottom: 16px;
+}
+
+.bono-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  mat-icon {
+    color: #f5a623;
+  }
+}
+
+.bono-barra {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mat-sys-on-surface, #888) 14%, transparent);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: #f5a623;
+  }
+}
+
+.bono-ganado .bono-barra span {
+  background: #2e7d32;
+}
+
+.bono-texto {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  opacity: 0.75;
+}
+
+.chip-bono {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}

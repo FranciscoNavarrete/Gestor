@@ -81,13 +81,36 @@
         <span class="kpi-etiqueta">Esperando cobro</span>
       </div>
       <div class="kpi kpi-comision">
-        <span class="kpi-valor">{{ dinero(r.resumen.comision) }}</span>
+        <span class="kpi-valor">{{ dinero(total(r.resumen)) }}</span>
         <span class="kpi-etiqueta">{{ adminAuth.esOperador() ? 'Comisión total a pagar' : 'Comisión estimada' }}</span>
         @if (detalleComision()) {
           <span class="kpi-detalle">{{ detalleComision() }}</span>
         }
       </div>
     </div>
+
+    @if (!adminAuth.esOperador() && progresoBono(); as pb) {
+      <mat-card class="card bono-card" [class.bono-ganado]="pb.ganado">
+        <mat-card-content>
+          <div class="bono-titulo">
+            <mat-icon>emoji_events</mat-icon>
+            @if (pb.ganado) {
+              <strong>¡Ganaste el bono de {{ dinero(pb.monto) }}!</strong>
+            } @else {
+              <strong>Bono de {{ dinero(pb.monto) }}</strong>
+            }
+          </div>
+          <div class="bono-barra"><span [style.width.%]="(pb.ventas / pb.meta) * 100"></span></div>
+          <p class="bono-texto">
+            @if (pb.ganado) {
+              Llegaste a {{ pb.meta }} ventas cobradas este mes.
+            } @else {
+              {{ pb.ventas }} de {{ pb.meta }} ventas cobradas este mes. Te {{ pb.faltan === 1 ? 'falta' : 'faltan' }} {{ pb.faltan }} para el bono.
+            }
+          </p>
+        </mat-card-content>
+      </mat-card>
+    }
 
     @if (adminAuth.esOperador() && r.vendedores.length > 0) {
       <div class="paneles">
@@ -103,7 +126,7 @@
                   {{ v.nombre }}
                 </span>
                 <span class="ranking-barra"><span [style.width.%]="(v.ventas / maximoVentasVendedores()) * 100"></span></span>
-                <span class="ranking-valor">{{ v.ventas }} {{ v.ventas === 1 ? 'venta' : 'ventas' }} · {{ dinero(v.comision) }}</span>
+                <span class="ranking-valor">{{ v.ventas }} {{ v.ventas === 1 ? 'venta' : 'ventas' }} · {{ dinero(total(v)) }}</span>
               </div>
             }
           </mat-card-content>
@@ -113,7 +136,7 @@
           <mat-card-content>
             <table>
               <thead>
-                <tr><th>Vendedor</th><th>Ventas</th><th>Pendientes</th><th class="der">Comisión</th></tr>
+                <tr><th>Vendedor</th><th>Ventas</th><th>Pendientes</th><th>Bono del mes</th><th class="der">Total</th></tr>
               </thead>
               <tbody>
                 @for (v of r.vendedores; track v.vendedorId) {
@@ -121,7 +144,8 @@
                     <td>{{ v.nombre }}</td>
                     <td>{{ v.ventas }}</td>
                     <td>{{ v.pendientes }}</td>
-                    <td class="der">{{ dinero(v.comision) }}</td>
+                    <td>{{ textoBono(v) }}@if (v.bono > 0) { <span class="chip-bono">ganado</span> }</td>
+                    <td class="der">{{ dinero(total(v)) }}</td>
                   </tr>
                 }
               </tbody>
@@ -148,6 +172,7 @@
                     Alta {{ item.fechaAlta | date: 'dd/MM' }}
                     @if (adminAuth.esOperador()) { · {{ item.vendedorNombre }} }
                     @if (item.comision !== null) { · Comisión {{ dinero(item.comision) }} }
+                    @if (item.bono) { <span class="chip-bono">Bono +{{ dinero(item.bono) }}</span> }
                   </span>
                 </div>
                 <span [class]="'estado estado-' + item.estado">{{ etiquetaEstado(item.estado) }}</span>
@@ -172,7 +197,10 @@
                   @if (adminAuth.esOperador()) { <td>{{ item.vendedorNombre }}</td> }
                   <td>{{ item.fechaAlta | date: 'dd/MM/yyyy' }}</td>
                   <td><span [class]="'estado estado-' + item.estado">{{ etiquetaEstado(item.estado) }}</span></td>
-                  <td class="der">{{ item.comision !== null ? dinero(item.comision) : '—' }}</td>
+                  <td class="der">
+                    {{ item.comision !== null ? dinero(item.comision) : '—' }}
+                    @if (item.bono) { <span class="chip-bono">Bono +{{ dinero(item.bono) }}</span> }
+                  </td>
                 </tr>
               }
             </tbody>

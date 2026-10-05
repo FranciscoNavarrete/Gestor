@@ -4,11 +4,17 @@ namespace GestorPOS.Application.Admin;
 public record VentaConfirmada(Guid Id, Guid VendedorId, DateTime FechaAltaUtc);
 
 /// <summary>Las primeras <paramref name="CantidadPrimeras"/> ventas de cada mes valen <paramref name="Primeras"/>;
-/// de ahí en adelante, <paramref name="Siguientes"/>.</summary>
-public record TarifaComision(int CantidadPrimeras, decimal Primeras, decimal Siguientes)
+/// de ahí en adelante, <paramref name="Siguientes"/>. Quien llega a <paramref name="BonoVentas"/> ventas en el
+/// mes gana además un bono de <paramref name="BonoMonto"/> (una vez por mes).</summary>
+public record TarifaComision(
+    int CantidadPrimeras, decimal Primeras, decimal Siguientes, int BonoVentas = 10, decimal BonoMonto = 100_000m)
 {
     public static readonly TarifaComision Predeterminada = new(3, 35_000m, 40_000m);
 }
+
+/// <summary>Lo que corresponde a una venta: su comisión, si cayó en la tarifa de las "primeras" y el bono
+/// (distinto de cero solo en la venta que completa la cantidad que desbloquea el bono).</summary>
+public record AsignacionComision(decimal Comision, bool EsPrimera, decimal Bono);
 
 /// <summary>Reglas del manual del vendedor: la comisión depende del orden de la venta dentro del mes
 /// calendario (hora de Argentina) y se reinicia cada mes, por vendedor. El orden es por fecha de alta.</summary>
@@ -19,11 +25,11 @@ public static class CalculadoraComisiones
 
     public static DateTime AHoraArgentina(DateTime utc) => utc + OffsetArgentina;
 
-    /// <summary>Comisión de cada venta y si cayó en la tarifa de las "primeras".</summary>
-    public static Dictionary<Guid, (decimal Comision, bool EsPrimera)> Asignar(
+    /// <summary>Comisión de cada venta, si cayó en la tarifa de las "primeras" y el bono.</summary>
+    public static Dictionary<Guid, AsignacionComision> Asignar(
         IEnumerable<VentaConfirmada> ventas, TarifaComision tarifa)
     {
-        var resultado = new Dictionary<Guid, (decimal, bool)>();
+        var resultado = new Dictionary<Guid, AsignacionComision>();
 
         var grupos = ventas.GroupBy(v =>
         {
@@ -37,8 +43,9 @@ public static class CalculadoraComisiones
             foreach (var venta in grupo.OrderBy(v => v.FechaAltaUtc).ThenBy(v => v.Id))
             {
                 var esPrimera = orden < tarifa.CantidadPrimeras;
-                resultado[venta.Id] = (esPrimera ? tarifa.Primeras : tarifa.Siguientes, esPrimera);
                 orden++;
+                var bono = tarifa.BonoVentas > 0 && orden == tarifa.BonoVentas ? tarifa.BonoMonto : 0m;
+                resultado[venta.Id] = new AsignacionComision(esPrimera ? tarifa.Primeras : tarifa.Siguientes, esPrimera, bono);
             }
         }
 

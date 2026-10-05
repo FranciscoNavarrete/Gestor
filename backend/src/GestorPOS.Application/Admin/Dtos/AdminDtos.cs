@@ -39,13 +39,17 @@ public record ReporteVentasDto(
 /// por eso el resumen informa cuántas cayeron en cada tarifa, para mostrar "3 × $35.000 + 1 × $40.000".</summary>
 public record ReporteResumenDto(
     int Ventas, int Pendientes, decimal Comision,
-    int VentasPrimeras, decimal TarifaPrimeras, int VentasSiguientes, decimal TarifaSiguientes);
+    int VentasPrimeras, decimal TarifaPrimeras, int VentasSiguientes, decimal TarifaSiguientes,
+    decimal Bono = 0, int BonoVentas = 0, decimal BonoMonto = 0);
 
-public record ReporteVendedorDto(Guid VendedorId, string Nombre, int Ventas, int Pendientes, decimal Comision);
+/// <summary>Bono: lo ganado en el período. VentasMes: ventas cobradas del vendedor en el mes de la fecha
+/// "hasta", para mostrar cuánto falta para el bono.</summary>
+public record ReporteVendedorDto(
+    Guid VendedorId, string Nombre, int Ventas, int Pendientes, decimal Comision, decimal Bono = 0, int VentasMes = 0);
 
 /// <summary>Estado: suscripto, baja (se cobró y después se canceló), esperando (autorizada, falta el primer
 /// cobro), pendiente (el cliente no autorizó) o cancelada (nunca se cobró). Comision solo tiene valor para
 /// las ventas con el primer cobro aprobado.</summary>
 public record ReporteVentaItemDto(
     Guid TenantId, string Nombre, DateTime FechaAlta, Guid VendedorId, string VendedorNombre,
-    string Estado, decimal? Comision);
+    string Estado, decimal? Comision, decimal? Bono = null);

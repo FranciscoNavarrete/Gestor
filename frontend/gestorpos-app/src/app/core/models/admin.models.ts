@@ -114,6 +114,9 @@ export interface ReporteResumen {
   tarifaPrimeras: number;
   ventasSiguientes: number;
   tarifaSiguientes: number;
+  bono: number;
+  bonoVentas: number;
+  bonoMonto: number;
 }
 
 export interface ReporteVendedor {
@@ -122,6 +125,8 @@ export interface ReporteVendedor {
   ventas: number;
   pendientes: number;
   comision: number;
+  bono: number;
+  ventasMes: number;
 }
 
 export type EstadoVenta = 'suscripto' | 'baja' | 'esperando' | 'pendiente' | 'cancelada';
@@ -134,6 +139,7 @@ export interface ReporteVentaItem {
   vendedorNombre: string;
   estado: EstadoVenta;
   comision: number | null;
+  bono: number | null;
 }
 
 export interface ReporteVentas {
