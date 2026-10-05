@@ -10,12 +10,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
+import { extraerMensajeError } from '../../../core/utils/error.util';
 import { RefrescoAutomatico } from '../../../core/utils/refresco-automatico';
 
 export type FiltroEstado = 'todos' | 'activos' | 'inactivos';
@@ -38,6 +40,7 @@ export type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 export class Negocios implements OnInit, OnDestroy {
   private readonly adminService = inject(AdminService);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   protected readonly adminAuth = inject(AdminAuthService);
 
   readonly negocios = signal<TenantResumen[]>([]);
@@ -162,6 +165,11 @@ export class Negocios implements OnInit, OnDestroy {
 
   badgeSuscripcion(negocio: TenantResumen): { texto: string; clase: string } | null {
     if (!negocio.fluxoEstado) return null;
+    // Cancelada pero ya pagada: el negocio sigue usándose hasta la fecha de su próximo cobro.
+    if (negocio.fluxoEstado === 'cancelled' && negocio.fluxoAccesoHasta) {
+      const hasta = new Date(negocio.fluxoAccesoHasta).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' });
+      return { texto: `Cancelado · acceso hasta ${hasta}`, clase: 'badge-cancelado' };
+    }
     if (negocio.fluxoEstado === 'authorized' && negocio.fluxoCobroRechazado) {
       return {
         texto: negocio.fluxoPrimerCobroAprobado ? 'Cobro rechazado' : '1er cobro rechazado',
@@ -228,9 +236,10 @@ export class Negocios implements OnInit, OnDestroy {
         this.cambiandoEstadoNegocioId.set(null);
         this.cargarNegocios(true);
       },
-      error: () => {
+      error: (err) => {
         cambio.source.checked = negocio.activo;
         this.cambiandoEstadoNegocioId.set(null);
+        this.snackBar.open(extraerMensajeError(err), 'OK', { duration: 6000 });
       },
     });
   }

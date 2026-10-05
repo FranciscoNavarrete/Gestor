@@ -5,7 +5,7 @@ public record TenantResumenDto(
     Guid? VendedorId, string? VendedorNombre,
     int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null,
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
-    bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null);
+    bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null);
 
 public record LiquidacionItemDto(Guid TenantId, string Nombre, DateTime FechaAltaUtc, int Orden, decimal Comision, decimal Bono);
 

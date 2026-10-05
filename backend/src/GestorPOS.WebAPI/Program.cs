@@ -6,6 +6,7 @@ using GestorPOS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,7 +42,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+
+        // Un negocio desactivado (p. ej. por suscripción cancelada) no tiene que seguir entrando con una
+        // sesión que ya tenía abierta: se revisa el negocio en cada request (con una caché corta).
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async contexto =>
+            {
+                var claimTenant = contexto.Principal?.FindFirst("tenant_id")?.Value;
+                if (!Guid.TryParse(claimTenant, out var tenantId)) return;
+
+                var cache = contexto.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
+                if (!cache.TryGetValue($"tenant-activo:{tenantId}", out bool activo))
+                {
+                    var db = contexto.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                    activo = await db.Tenants.IgnoreQueryFilters().Where(t => t.Id == tenantId).Select(t => t.Activo).FirstOrDefaultAsync();
+                    cache.Set($"tenant-activo:{tenantId}", activo, TimeSpan.FromSeconds(60));
+                }
+
+                if (!activo) contexto.Fail("El negocio está desactivado.");
+            }
+        };
     });
+builder.Services.AddMemoryCache();
 builder.Services.AddAuthorization(options =>
 {
     // El panel admin usa un JWT propio con el claim "admin_rol", separado del JWT de tenant.

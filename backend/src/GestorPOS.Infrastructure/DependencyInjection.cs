@@ -71,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<ITareaService, TareaService>();
         services.AddHostedService<TareaRecordatorioBackgroundService>();
+        services.AddScoped<GestorPOS.Infrastructure.Suscripcion.CorteAccesoPorSuscripcionService>();
+        services.AddHostedService<GestorPOS.Infrastructure.Suscripcion.CorteAccesoBackgroundService>();
 
         return services;
     }

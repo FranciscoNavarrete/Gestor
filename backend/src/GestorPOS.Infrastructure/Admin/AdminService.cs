@@ -5,6 +5,7 @@ using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
+using GestorPOS.Infrastructure.Suscripcion;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestorPOS.Infrastructure.Admin;
@@ -155,7 +156,10 @@ public class AdminService : IAdminService
                     && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.CobroRechazado == true,
                 FluxoMotivoRechazo: t.FluxoSuscripcionId is null
                     ? null
-                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.MotivoRechazo))
+                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.MotivoRechazo,
+                FluxoAccesoHasta: t.Activo && t.FluxoSuscripcionId is not null
+                    && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value) is { } est
+                    ? CorteAccesoPorSuscripcionService.AccesoVigenteHasta(est) : null))
             .ToList();
     }
 
@@ -183,6 +187,16 @@ public class AdminService : IAdminService
     public async Task<TenantResumenDto> ActivarTenantAsync(Guid tenantId, CancellationToken ct = default)
     {
         var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        // Un negocio con la suscripción cancelada no se reactiva: el sistema lo volvería a desactivar y,
+        // además, no hay con qué cobrarle. Primero hay que darle una suscripción nueva.
+        if (tenant.FluxoSuscripcionId is { } suscripcionId)
+        {
+            var estados = await _fluxo.ObtenerConfirmacionesAsync([suscripcionId], ct)
+                ?? throw new AppException("No se pudo verificar la suscripción del negocio. Probá de nuevo en un momento.");
+            if (estados.GetValueOrDefault(suscripcionId)?.Estado == "cancelled")
+                throw new AppException("No se puede reactivar: la suscripción de este negocio está cancelada. Primero hay que crearle una suscripción nueva.");
+        }
 
         // Al desactivar se liberó el email y se cortó el acceso de los usuarios; al reactivar hay que
         // devolverles ambas cosas, si no el cliente no podría entrar con su email de siempre. Si otro

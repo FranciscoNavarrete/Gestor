@@ -41,6 +41,7 @@ export interface TenantResumen {
   fluxoAjustePendiente?: boolean;
   fluxoCobroRechazado?: boolean;
   fluxoMotivoRechazo?: string | null;
+  fluxoAccesoHasta?: string | null;
 }
 
 export interface CobroNegocio {
