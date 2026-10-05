@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Cambiar tarjeta</h2>
+
+<mat-dialog-content class="contenido">
+  <p class="ayuda">
+    Cargá la tarjeta nueva. Los próximos cobros de <strong>{{ dinero(data.monto) }}</strong> van a salir de ella.
+  </p>
+
+  @if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+  }
+
+  <div id="brick-cambio-tarjeta"></div>
+
+  <p class="ayuda">Los datos de la tarjeta van directo a Mercado Pago. GestorPOS no los guarda.</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="false">Cancelar</button>
+</mat-dialog-actions>

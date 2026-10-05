@@ -67,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<IMovimientosAdminService, MovimientosAdminService>();
         services.AddScoped<IResumenFinancieroService, ResumenFinancieroService>();
         services.AddScoped<ILiquidacionesService, LiquidacionesService>();
+        services.AddScoped<GestorPOS.Application.Suscripcion.IMiSuscripcionService, GestorPOS.Infrastructure.Suscripcion.MiSuscripcionService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<ITareaService, TareaService>();
         services.AddHostedService<TareaRecordatorioBackgroundService>();

@@ -24,7 +24,8 @@ public record FluxoCobro(
 
 /// <summary>Historial de cobros y próximo cobro (si la suscripción sigue autorizada).</summary>
 public record FluxoCobros(
-    string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<FluxoCobro> Cobros);
+    string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<FluxoCobro> Cobros,
+    bool TarjetaEditable = false);
 
 public record FluxoPlan(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
@@ -50,6 +51,11 @@ public interface IFluxoService
     /// <summary>Tira <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> si Fluxo no
     /// responde o no puede consultar los cobros en Mercado Pago.</summary>
     Task<FluxoCobros> ObtenerCobrosAsync(int suscripcionId, CancellationToken ct = default);
+
+    /// <summary>Cambia la tarjeta de la suscripción con un token generado en el navegador. Tira
+    /// <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> con un mensaje apto para mostrar
+    /// si Mercado Pago no acepta la tarjeta o Fluxo no responde.</summary>
+    Task CambiarTarjetaAsync(int suscripcionId, string cardTokenId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default);
 

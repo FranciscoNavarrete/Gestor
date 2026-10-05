@@ -1,0 +1,147 @@
+:host {
+  display: block;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.error {
+  margin: 0 0 12px;
+  color: var(--mat-sys-error, #b3261e);
+}
+
+.alerta {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 11px 13px;
+  border-radius: var(--radius-md, 12px);
+  background: color-mix(in srgb, #e53935 16%, transparent);
+  color: #e53935;
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+}
+
+.columnas {
+  display: grid;
+  gap: 14px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    align-items: start;
+  }
+}
+
+.titulo {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.monto {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+.por-mes {
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.65;
+}
+
+.linea {
+  margin: 6px 0 0;
+}
+
+.secundaria {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+.destacada {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.boton {
+  margin-top: 14px;
+}
+
+.aviso-link {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.pago {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  font-size: 0.85rem;
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.pago-fecha {
+  opacity: 0.65;
+}
+
+.pago-detalle {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  small {
+    font-size: 0.72rem;
+    opacity: 0.65;
+  }
+}
+
+.chip {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.chip-ok {
+  background: color-mix(in srgb, #2e7d32 18%, transparent);
+  color: #2e7d32;
+}
+
+.chip-aviso {
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}
+
+.chip-peligro {
+  background: color-mix(in srgb, #e53935 18%, transparent);
+  color: #e53935;
+}
+
+.chip-gris {
+  background: color-mix(in srgb, #888 20%, transparent);
+  color: #888;
+}

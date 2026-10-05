@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -14,24 +14,37 @@ import { Categoria } from '../../core/models/catalog.models';
 import { Proveedor } from '../../core/models/compra.models';
 import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { MedioPagoDto, NegocioDto } from '../../core/models/configuracion.models';
+import { MiSuscripcion } from '../../core/models/suscripcion.models';
 import { FEATURE_FACTURAS_PROVEEDOR } from '../../core/models/facturas-proveedor-feature';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { CompraService } from '../../core/services/compra.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { NotificacionPushService } from '../../core/services/notificacion-push.service';
+import { SuscripcionService } from '../../core/services/suscripcion.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { comprimirImagen } from '../../core/utils/imagen.util';
 import { CategoriaDialog, CategoriaDialogData } from '../productos/categoria-dialog/categoria-dialog';
+import { CambiarTarjetaDialog, CambiarTarjetaDialogData } from './cambiar-tarjeta-dialog/cambiar-tarjeta-dialog';
 import { MedioPagoDialog, MedioPagoDialogData } from './medio-pago-dialog/medio-pago-dialog';
 import { ProveedorDialog, ProveedorDialogData } from './proveedor-dialog/proveedor-dialog';
+import { MiSuscripcionVista } from './suscripcion/mi-suscripcion';
 
-type Vista = 'categorias' | 'proveedores' | 'medios-pago' | 'negocio';
+type Vista = 'categorias' | 'proveedores' | 'medios-pago' | 'negocio' | 'suscripcion';
+
+const TITULOS_VISTA: Record<Vista, string> = {
+  categorias: 'Categorías',
+  proveedores: 'Proveedores',
+  'medios-pago': 'Métodos de pago',
+  negocio: 'Negocio',
+  suscripcion: 'Suscripción',
+};
 
 @Component({
   selector: 'app-configuracion',
   imports: [
     FormsModule,
+    MiSuscripcionVista,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -50,6 +63,7 @@ export class Configuracion implements OnInit, OnDestroy {
   private readonly configuracionService = inject(ConfiguracionService);
   private readonly authService = inject(AuthService);
   private readonly notificacionPushService = inject(NotificacionPushService);
+  private readonly suscripcionService = inject(SuscripcionService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
@@ -57,6 +71,12 @@ export class Configuracion implements OnInit, OnDestroy {
   private logoObjectUrl: string | null = null;
 
   readonly vista = signal<Vista>('categorias');
+  // La suscripción es del negocio: solo la ve su dueño (usuario Admin), no los cajeros.
+  readonly esDueno = this.authService.auth()?.rol === 'Admin';
+  readonly suscripcion = signal<MiSuscripcion | null>(null);
+  readonly cargandoSuscripcion = signal(false);
+  readonly errorSuscripcion = signal<string | null>(null);
+  readonly tituloVista = computed(() => TITULOS_VISTA[this.vista()]);
   readonly tieneCompras = this.authService.tieneFeature(FEATURE_COMPRAS);
   readonly tieneFacturasProveedor = this.authService.tieneFeature(FEATURE_FACTURAS_PROVEEDOR);
   readonly tieneProveedores = this.tieneCompras || this.tieneFacturasProveedor;
@@ -88,6 +108,7 @@ export class Configuracion implements OnInit, OnDestroy {
     this.cargarMediosPago();
     this.cargarNegocio();
     this.cargarEstadoNotificaciones();
+    if (this.esDueno) this.cargarSuscripcion();
   }
 
   ngOnDestroy(): void {
@@ -96,6 +117,37 @@ export class Configuracion implements OnInit, OnDestroy {
 
   cambiarVista(vista: Vista): void {
     this.vista.set(vista);
+  }
+
+  // --- Suscripción ---
+
+  cargarSuscripcion(): void {
+    this.cargandoSuscripcion.set(true);
+    this.errorSuscripcion.set(null);
+    this.suscripcionService.obtener().subscribe({
+      next: (datos) => {
+        this.suscripcion.set(datos);
+        this.cargandoSuscripcion.set(false);
+      },
+      error: (err) => {
+        this.errorSuscripcion.set(extraerMensajeError(err));
+        this.cargandoSuscripcion.set(false);
+      },
+    });
+  }
+
+  abrirCambiarTarjeta(): void {
+    const datos = this.suscripcion();
+    if (!datos) return;
+    const data: CambiarTarjetaDialogData = { monto: datos.proximoMonto ?? datos.montoMensual, email: datos.emailPagador };
+    this.dialog
+      .open(CambiarTarjetaDialog, { data, width: '480px', maxWidth: '94vw', disableClose: false })
+      .afterClosed()
+      .subscribe((cambio) => {
+        if (!cambio) return;
+        this.snackBar.open('Tarjeta actualizada. Los próximos cobros salen de la tarjeta nueva.', 'OK', { duration: 4000 });
+        this.cargarSuscripcion();
+      });
   }
 
   // --- Categorías ---

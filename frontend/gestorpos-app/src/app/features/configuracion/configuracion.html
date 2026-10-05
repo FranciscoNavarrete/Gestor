@@ -17,7 +17,18 @@
     <mat-icon>storefront</mat-icon>
     <span class="etiqueta">Negocio</span>
   </mat-button-toggle>
+  @if (esDueno) {
+    <mat-button-toggle value="suscripcion" aria-label="Suscripción">
+      <span class="icono-con-punto" [class.con-alerta]="suscripcion()?.cobroRechazado">
+        <mat-icon>credit_card</mat-icon>
+      </span>
+      <span class="etiqueta">Suscripción</span>
+    </mat-button-toggle>
+  }
 </mat-button-toggle-group>
+
+<!-- En celular el selector muestra solo íconos: el nombre de la sección ayuda a ubicarse. -->
+<p class="vista-titulo">{{ tituloVista() }}</p>
 
 @if (vista() === 'categorias') {
   <button mat-flat-button color="primary" class="boton-nuevo" (click)="nuevaCategoria()">
@@ -214,4 +225,14 @@
       </mat-card>
     }
   }
+}
+
+@if (vista() === 'suscripcion' && esDueno) {
+  <app-mi-suscripcion
+    [datos]="suscripcion()"
+    [cargando]="cargandoSuscripcion()"
+    [error]="errorSuscripcion()"
+    (cambiarTarjeta)="abrirCambiarTarjeta()"
+    (reintentar)="cargarSuscripcion()"
+  />
 }

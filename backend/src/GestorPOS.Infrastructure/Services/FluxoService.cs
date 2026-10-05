@@ -140,7 +140,39 @@ public class FluxoService : IFluxoService
         var c = body.Contenido;
         return new FluxoCobros(
             c.Estado, c.MontoMensual, c.ProximoCobro, c.ProximoMonto,
-            (c.Cobros ?? []).Select(x => new FluxoCobro(x.Fecha, x.Monto, x.Estado, x.Motivo, x.Intento, x.ProximoReintento, x.EsPrimerCobro)).ToList());
+            (c.Cobros ?? []).Select(x => new FluxoCobro(x.Fecha, x.Monto, x.Estado, x.Motivo, x.Intento, x.ProximoReintento, x.EsPrimerCobro)).ToList(),
+            c.TarjetaEditable);
+    }
+
+    public async Task CambiarTarjetaAsync(int suscripcionId, string cardTokenId, CancellationToken ct = default)
+    {
+        var baseUrl = _config["Fluxo:BaseUrl"];
+        var apiKey = _config["Fluxo:VendedorApiKey"];
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+            throw new AppException("La integración con Fluxo no está configurada.");
+
+        FluxoRespuestaSimple? body;
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/{suscripcionId}/tarjeta")
+            {
+                Content = JsonContent.Create(new { cardTokenId }),
+            };
+            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request, ct);
+            body = await response.Content.ReadFromJsonAsync<FluxoRespuestaSimple>(JsonOptions, ct);
+            if (response.IsSuccessStatusCode && body?.Exitoso == true) return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error llamando a Fluxo para cambiar la tarjeta de la suscripción {Id}.", suscripcionId);
+            throw new AppException("No se pudo conectar para cambiar la tarjeta. Probá de nuevo en un momento.");
+        }
+
+        _logger.LogWarning("Fluxo no pudo cambiar la tarjeta de la suscripción {Id}: {Mensaje}", suscripcionId, body?.Mensaje);
+        throw new AppException(body?.Mensaje ?? "No se pudo cambiar la tarjeta. Revisá los datos y probá de nuevo.");
     }
 
     public async Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default)
@@ -243,6 +275,13 @@ public class FluxoService : IFluxoService
         }
     }
 
+    // Respuestas cuyo contenido no se lee (solo importa si salió bien y el mensaje).
+    private class FluxoRespuestaSimple
+    {
+        public bool Exitoso { get; set; }
+        public string? Mensaje { get; set; }
+    }
+
     private class FluxoRespuesta
     {
         public bool Exitoso { get; set; }
@@ -330,6 +369,7 @@ public class FluxoService : IFluxoService
         public decimal MontoMensual { get; set; }
         public DateTime? ProximoCobro { get; set; }
         public decimal? ProximoMonto { get; set; }
+        public bool TarjetaEditable { get; set; }
         public List<FluxoCobroContenido>? Cobros { get; set; }
     }
 

@@ -187,3 +187,32 @@
   font-size: 0.78rem;
   opacity: 0.6;
 }
+
+// Nombre de la sección: solo en pantallas angostas, donde el selector muestra únicamente íconos.
+.vista-titulo {
+  display: none;
+  margin: -4px 0 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  @media (max-width: 420px) {
+    display: block;
+  }
+}
+
+.icono-con-punto {
+  position: relative;
+  display: inline-flex;
+
+  &.con-alerta::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #e53935;
+    border: 2px solid var(--surface-card, #fff);
+  }
+}

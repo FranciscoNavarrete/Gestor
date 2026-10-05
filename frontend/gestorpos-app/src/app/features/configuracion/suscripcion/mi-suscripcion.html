@@ -1,0 +1,74 @@
+@if (cargando() && !datos()) {
+  <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+} @else if (error()) {
+  <mat-card class="card">
+    <mat-card-content>
+      <p class="error">{{ error() }}</p>
+      <button mat-stroked-button type="button" (click)="reintentar.emit()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </mat-card-content>
+  </mat-card>
+} @else if (datos(); as s) {
+  @if (s.cobroRechazado) {
+    <div class="alerta">
+      <mat-icon>warning</mat-icon>
+      <p>
+        <strong>No pudimos cobrar tu suscripción.</strong>
+        @if (s.motivoRechazo) { Motivo: {{ s.motivoRechazo }}. }
+        @if (s.proximoReintento) { Mercado Pago lo reintenta el {{ s.proximoReintento | date: 'dd/MM' : '-0300' }}. }
+        @if (s.tarjetaEditable) { Podés cambiar la tarjeta para evitar que se corte el servicio. }
+      </p>
+    </div>
+  }
+
+  <div class="columnas">
+    <mat-card class="card">
+      <mat-card-content>
+        <h3 class="titulo">Tu plan</h3>
+        <p class="monto">{{ dinero(s.montoMensual) }}<span class="por-mes"> por mes</span></p>
+        <p class="linea">
+          <span [class]="'chip ' + etiquetaEstado(s).clase">{{ etiquetaEstado(s).texto }}</span>
+        </p>
+        @if (s.proximoCobro && s.estado === 'authorized') {
+          <p class="linea secundaria">{{ s.cobroRechazado ? 'Próximo intento' : 'Próximo cobro' }}</p>
+          <p class="linea destacada">{{ s.proximoCobro | date: 'dd/MM' : '-0300' }} · {{ dinero(s.proximoMonto ?? s.montoMensual) }}</p>
+        }
+
+        @if (s.tarjetaEditable) {
+          <button mat-flat-button type="button" class="boton" (click)="cambiarTarjeta.emit()">Cambiar tarjeta</button>
+        } @else if (s.estado !== 'cancelled') {
+          <p class="aviso-link">
+            Tu suscripción se paga con tu cuenta de Mercado Pago. Para cambiar el medio de pago, entrá a
+            <a href="https://www.mercadopago.com.ar/subscriptions" target="_blank" rel="noopener">tus suscripciones en Mercado Pago</a>.
+          </p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="card">
+      <mat-card-content>
+        <h3 class="titulo">Tus pagos</h3>
+        @if (s.cobros.length === 0) {
+          <p class="secundaria">Todavía no hay pagos. El primero sale al día siguiente del alta.</p>
+        } @else {
+          @for (c of s.cobros; track $index) {
+            <div class="pago">
+              <span class="pago-fecha">{{ c.fecha ? (c.fecha | date: 'dd/MM' : '-0300') : '—' }}</span>
+              <span class="pago-detalle">
+                <strong>{{ dinero(c.monto) }}</strong>
+                <small>
+                  @if (c.esPrimerCobro) { Alta + 1er mes }
+                  @if (c.esPrimerCobro && c.motivo) { · }
+                  @if (c.motivo) { {{ c.motivo }} }
+                </small>
+              </span>
+              <span [class]="'chip chip-' + (c.estado === 'aprobado' ? 'ok' : c.estado === 'rechazado' ? 'peligro' : 'aviso')">{{ etiquetaCobro(c.estado) }}</span>
+            </div>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+}
