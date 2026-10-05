@@ -34,6 +34,9 @@ export class AdminShell {
       { path: '/admin/negocios', icono: 'storefront', etiqueta: 'Negocios', etiquetaCorta: 'Negocios' },
       { path: '/admin/nuevo-negocio', icono: 'add_circle', etiqueta: 'Nuevo negocio', etiquetaCorta: 'Nuevo' },
       { path: '/admin/reportes', icono: 'bar_chart', etiqueta: 'Reportes', etiquetaCorta: 'Reportes' },
+      this.adminAuth.esOperador()
+        ? { path: '/admin/liquidaciones', icono: 'payments', etiqueta: 'Liquidaciones', etiquetaCorta: 'Liquidar' }
+        : { path: '/admin/liquidaciones', icono: 'payments', etiqueta: 'Mis pagos', etiquetaCorta: 'Pagos' },
     ];
     if (this.adminAuth.esOperador()) {
       items.unshift({ path: '/admin/resumen', icono: 'insights', etiqueta: 'Resumen', etiquetaCorta: 'Resumen' });
@@ -76,6 +79,8 @@ export class AdminShell {
   private leerTitulo(): string {
     let ruta = this.router.routerState.snapshot.root;
     while (ruta.firstChild) ruta = ruta.firstChild;
-    return ruta.data['titulo'] ?? '';
+    const titulo: string = ruta.data['titulo'] ?? '';
+    // Para el vendedor, la pantalla de liquidaciones es solo la lista de sus pagos.
+    return titulo === 'Liquidaciones' && !this.adminAuth.esOperador() ? 'Mis pagos' : titulo;
   }
 }

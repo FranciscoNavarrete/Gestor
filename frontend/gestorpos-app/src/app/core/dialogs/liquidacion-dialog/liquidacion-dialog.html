@@ -1,0 +1,98 @@
+<h2 mat-dialog-title>
+  @switch (data.modo) {
+    @case ('liquidar') { Liquidar a {{ data.vendedorNombre }} }
+    @case ('pagar') { Marcar como pagada }
+    @default { Liquidación de {{ data.vendedorNombre }} }
+  }
+</h2>
+
+<mat-dialog-content class="contenido">
+  <p class="subtitulo">
+    @if (data.modo === 'pagar') {
+      {{ data.vendedorNombre }} · {{ periodo }} · {{ dinero(total) }}
+    } @else {
+      {{ periodo }} · {{ items.length }} {{ items.length === 1 ? 'venta' : 'ventas' }} con el primer cobro aprobado
+    }
+  </p>
+
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else {
+    @if (data.modo === 'pagar') {
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de pago</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaPago" [max]="hoy" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Nota (opcional)</mat-label>
+        <input matInput [(ngModel)]="nota" maxlength="300" placeholder="Transferencia, comprobante 4471" />
+      </mat-form-field>
+      <p class="aviso">Una liquidación pagada no se puede modificar ni anular.</p>
+    } @else {
+      @if (data.modo === 'ver' && data.liquidacion; as liq) {
+        <p class="estado">
+          @if (liq.estado === 'Pagada') {
+            <span class="chip chip-ok">Pagada el {{ liq.fechaPago | date: 'dd/MM/yyyy' }}</span>
+          } @else {
+            <span class="chip chip-aviso">Pendiente de pago</span>
+          }
+        </p>
+        @if (liq.nota) { <p class="subtitulo">Nota: {{ liq.nota }}</p> }
+      }
+
+      <div class="lista">
+        @for (item of items; track item.tenantId) {
+          <div class="item">
+            <div class="item-info">
+              <span class="item-nombre">{{ item.nombre }}</span>
+              <span class="item-detalle">
+                Alta {{ item.fechaAltaUtc | date: 'dd/MM' : '-0300' }} · {{ etiquetaOrden(item.orden) }}
+                @if (item.bono > 0) { · <strong>Bono {{ dinero(item.bono) }}</strong> }
+              </span>
+            </div>
+            <span>{{ dinero(item.comision) }}</span>
+          </div>
+        } @empty {
+          <p class="subtitulo">No hay ventas para liquidar.</p>
+        }
+      </div>
+
+      <div class="total"><span>Total a pagar</span><span>{{ dinero(total) }}</span></div>
+
+      @if (data.modo === 'liquidar' && items.length > 0) {
+        <p class="aviso">Al liquidar, estos importes quedan congelados. Si después se cancela alguno de estos clientes, no cambia lo liquidado.</p>
+        @if ((previsualizacion()?.esperandoCobro ?? 0) > 0) {
+          <p class="subtitulo">
+            Hay {{ previsualizacion()?.esperandoCobro }} {{ previsualizacion()?.esperandoCobro === 1 ? 'venta' : 'ventas' }} de este mes esperando su primer cobro: no se incluyen.
+          </p>
+        }
+      }
+    }
+  }
+
+  @if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (data.modo === 'ver') {
+    @if (data.esOperador && data.liquidacion?.estado === 'Pendiente') {
+      <button mat-button type="button" class="peligro" (click)="anular()" [disabled]="guardando()">
+        {{ confirmandoAnular() ? 'Confirmar anulación' : 'Anular liquidación' }}
+      </button>
+    }
+    <button mat-button type="button" [mat-dialog-close]="false">Cerrar</button>
+  } @else {
+    <button mat-button type="button" [mat-dialog-close]="false">Cancelar</button>
+    @if (data.modo === 'liquidar') {
+      <button mat-flat-button type="button" (click)="liquidar()" [disabled]="guardando() || cargando() || items.length === 0">
+        {{ guardando() ? 'Liquidando…' : 'Liquidar' }}
+      </button>
+    } @else {
+      <button mat-flat-button type="button" (click)="pagar()" [disabled]="guardando() || !fechaPago">
+        {{ guardando() ? 'Guardando…' : 'Confirmar pago' }}
+      </button>
+    }
+  }
+</mat-dialog-actions>

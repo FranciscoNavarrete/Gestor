@@ -48,6 +48,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/reportes/reportes').then((m) => m.ReportesAdmin),
       },
       {
+        // Operador: cierra y paga las comisiones de cada mes. Vendedor: ve sus propios pagos.
+        path: 'liquidaciones',
+        data: { titulo: 'Liquidaciones' },
+        loadComponent: () =>
+          import('./features/admin/liquidaciones/liquidaciones').then((m) => m.LiquidacionesAdmin),
+      },
+      {
         // Solo Operador (lo exige el backend): quién hizo qué en el panel.
         path: 'movimientos',
         data: { titulo: 'Movimientos' },

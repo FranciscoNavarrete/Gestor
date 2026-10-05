@@ -24,7 +24,7 @@ public class ReportesVentasService : IReportesVentasService
         _db = db;
         _currentAdmin = currentAdmin;
         _fluxo = fluxo;
-        _tarifa = LeerTarifa(config);
+        _tarifa = TarifaComisionConfiguracion.Leer(config);
     }
 
     public async Task<ReporteVentasDto> ObtenerVentasAsync(
@@ -153,15 +153,4 @@ public class ReportesVentasService : IReportesVentasService
     // Medianoche de un día de Argentina, expresada en UTC (Argentina es UTC-3).
     private static DateTime InicioDelDiaEnUtc(DateOnly dia) =>
         DateTime.SpecifyKind(dia.ToDateTime(TimeOnly.MinValue) - CalculadoraComisiones.OffsetArgentina, DateTimeKind.Utc);
-
-    private static TarifaComision LeerTarifa(IConfiguration config)
-    {
-        var predeterminada = TarifaComision.Predeterminada;
-        return new TarifaComision(
-            int.TryParse(config["Comisiones:CantidadPrimeras"], out var cantidad) ? cantidad : predeterminada.CantidadPrimeras,
-            decimal.TryParse(config["Comisiones:TarifaPrimeras"], NumberStyles.Number, CultureInfo.InvariantCulture, out var primeras) ? primeras : predeterminada.Primeras,
-            decimal.TryParse(config["Comisiones:TarifaSiguientes"], NumberStyles.Number, CultureInfo.InvariantCulture, out var siguientes) ? siguientes : predeterminada.Siguientes,
-            int.TryParse(config["Comisiones:BonoVentas"], out var bonoVentas) ? bonoVentas : predeterminada.BonoVentas,
-            decimal.TryParse(config["Comisiones:BonoMonto"], NumberStyles.Number, CultureInfo.InvariantCulture, out var bonoMonto) ? bonoMonto : predeterminada.BonoMonto);
-    }
 }

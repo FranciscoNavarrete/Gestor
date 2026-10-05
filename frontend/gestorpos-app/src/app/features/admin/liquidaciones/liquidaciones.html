@@ -1,0 +1,137 @@
+<div class="pagina">
+  @if (adminAuth.esOperador()) {
+    <div class="meses" role="group" aria-label="Mes a liquidar">
+      @for (m of meses; track m.etiqueta) {
+        <button
+          type="button"
+          class="mes"
+          [class.activo]="mesElegido() === m"
+          [attr.aria-pressed]="mesElegido() === m"
+          (click)="elegirMes(m)"
+        >
+          {{ m.etiqueta }}
+        </button>
+      }
+    </div>
+
+    @if (cargando() && !cierre()) {
+      <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+    } @else if (error()) {
+      <mat-card class="card">
+        <mat-card-content>
+          <p class="error">{{ error() }}</p>
+          <button mat-stroked-button type="button" (click)="cargar()">
+            <mat-icon>refresh</mat-icon>
+            Reintentar
+          </button>
+        </mat-card-content>
+      </mat-card>
+    } @else if (cierre(); as c) {
+      @if (c.vendedores.length === 0) {
+        <mat-card class="card">
+          <mat-card-content><p class="vacio">No hubo ventas cobradas de vendedores en este mes.</p></mat-card-content>
+        </mat-card>
+      }
+
+      <div class="lista" [class.cargando]="cargando()">
+        @for (v of c.vendedores; track v.vendedorId) {
+          <mat-card class="card vendedor">
+            <mat-card-content>
+              <div class="cabecera">
+                <div>
+                  <span class="nombre">{{ v.nombre }}</span>
+                  <span class="resumen">{{ v.ventas }} {{ v.ventas === 1 ? 'venta' : 'ventas' }} · comisión {{ dinero(v.comision) }}@if (v.bono > 0) { + bono {{ dinero(v.bono) }} }</span>
+                </div>
+                <strong class="total">{{ dinero(v.comision + v.bono) }}</strong>
+              </div>
+
+              @if (v.ventasSinLiquidar > 0) {
+                <div class="fila">
+                  <span class="chip chip-gris">Sin liquidar</span>
+                  <span class="fila-texto">{{ v.ventasSinLiquidar }} {{ v.ventasSinLiquidar === 1 ? 'venta' : 'ventas' }} · {{ dinero(v.comisionSinLiquidar + v.bonoSinLiquidar) }}</span>
+                  <button mat-flat-button type="button" (click)="abrir('liquidar', v)">Liquidar</button>
+                </div>
+              }
+
+              @for (l of v.liquidaciones; track l.id) {
+                <div class="fila">
+                  @if (l.estado === 'Pagada') {
+                    <span class="chip chip-ok">Pagada el {{ l.fechaPago | date: 'dd/MM' }}</span>
+                  } @else {
+                    <span class="chip chip-aviso">Pendiente de pago</span>
+                  }
+                  <span class="fila-texto">{{ l.ventas }} {{ l.ventas === 1 ? 'venta' : 'ventas' }} · {{ dinero(l.total) }}</span>
+                  @if (l.estado === 'Pendiente') {
+                    <button mat-flat-button type="button" (click)="abrir('pagar', v, l)">Marcar pagada</button>
+                  }
+                  <button mat-stroked-button type="button" (click)="abrir('ver', v, l)">Ver</button>
+                </div>
+              }
+
+              @if (v.esperandoCobro > 0) {
+                <p class="nota">
+                  {{ v.esperandoCobro }} {{ v.esperandoCobro === 1 ? 'venta de este mes espera' : 'ventas de este mes esperan' }} su primer cobro: no se {{ v.esperandoCobro === 1 ? 'incluye' : 'incluyen' }} hasta que se apruebe.
+                </p>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  } @else {
+    @if (cargando() && misPagos().length === 0) {
+      <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+    } @else if (error()) {
+      <mat-card class="card">
+        <mat-card-content>
+          <p class="error">{{ error() }}</p>
+          <button mat-stroked-button type="button" (click)="cargar()">
+            <mat-icon>refresh</mat-icon>
+            Reintentar
+          </button>
+        </mat-card-content>
+      </mat-card>
+    } @else if (misPagos().length === 0) {
+      <mat-card class="card">
+        <mat-card-content>
+          <p class="vacio">Todavía no tenés liquidaciones. Se arman una vez por mes, con las ventas cobradas del mes anterior.</p>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <div class="lista">
+        @for (l of misPagos(); track l.id) {
+          <mat-card class="card vendedor">
+            <mat-card-content>
+              <button type="button" class="cabecera boton" (click)="alternar(l.id)" [attr.aria-expanded]="expandida() === l.id">
+                <div>
+                  <span class="nombre">{{ nombreMes(l.mes) }} {{ l.anio }}</span>
+                  <span class="resumen">{{ l.ventas }} {{ l.ventas === 1 ? 'venta' : 'ventas' }} · comisión {{ dinero(l.totalComision) }}@if (l.totalBono > 0) { + bono {{ dinero(l.totalBono) }} }</span>
+                </div>
+                <div class="lado">
+                  <strong class="total">{{ dinero(l.total) }}</strong>
+                  @if (l.estado === 'Pagada') {
+                    <span class="chip chip-ok">Pagada el {{ l.fechaPago | date: 'dd/MM' }}</span>
+                  } @else {
+                    <span class="chip chip-aviso">Pendiente de pago</span>
+                  }
+                </div>
+              </button>
+
+              @if (expandida() === l.id) {
+                <div class="detalle">
+                  @for (i of l.items; track i.tenantId) {
+                    <div class="item">
+                      <span>{{ i.nombre }}<small>Alta {{ i.fechaAltaUtc | date: 'dd/MM' : '-0300' }}@if (i.bono > 0) { · bono {{ dinero(i.bono) }} }</small></span>
+                      <span>{{ dinero(i.comision) }}</span>
+                    </div>
+                  }
+                  @if (l.nota) { <p class="nota">Nota: {{ l.nota }}</p> }
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

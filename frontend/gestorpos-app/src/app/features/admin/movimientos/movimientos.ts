@@ -34,6 +34,9 @@ const ACCIONES: Record<string, { verbo: string; icono: string; tono: Tono }> = {
   'usuario.creado': { verbo: 'creó al usuario', icono: 'person_add', tono: 'info' },
   'usuario.activado': { verbo: 'reactivó al usuario', icono: 'how_to_reg', tono: 'ok' },
   'usuario.desactivado': { verbo: 'desactivó al usuario', icono: 'person_off', tono: 'peligro' },
+  'liquidacion.cerrada': { verbo: 'liquidó las comisiones de', icono: 'request_quote', tono: 'info' },
+  'liquidacion.pagada': { verbo: 'marcó como pagadas las comisiones de', icono: 'paid', tono: 'ok' },
+  'liquidacion.anulada': { verbo: 'anuló la liquidación de', icono: 'undo', tono: 'aviso' },
 };
 
 @Component({
@@ -83,6 +86,7 @@ export class MovimientosAdminPantalla implements OnInit, OnDestroy {
     { valor: 'negocio.desactivado', etiqueta: 'Negocios desactivados' },
     { valor: 'feature', etiqueta: 'Funciones de negocios' },
     { valor: 'usuario', etiqueta: 'Usuarios del panel' },
+    { valor: 'liquidacion', etiqueta: 'Liquidaciones' },
   ];
 
   private temporizadorBusqueda: ReturnType<typeof setTimeout> | null = null;

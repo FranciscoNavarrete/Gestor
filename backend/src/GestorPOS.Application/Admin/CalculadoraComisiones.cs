@@ -14,7 +14,7 @@ public record TarifaComision(
 
 /// <summary>Lo que corresponde a una venta: su comisión, si cayó en la tarifa de las "primeras" y el bono
 /// (distinto de cero solo en la venta que completa la cantidad que desbloquea el bono).</summary>
-public record AsignacionComision(decimal Comision, bool EsPrimera, decimal Bono);
+public record AsignacionComision(decimal Comision, bool EsPrimera, decimal Bono, int Orden = 0);
 
 /// <summary>Reglas del manual del vendedor: la comisión depende del orden de la venta dentro del mes
 /// calendario (hora de Argentina) y se reinicia cada mes, por vendedor. El orden es por fecha de alta.</summary>
@@ -26,8 +26,10 @@ public static class CalculadoraComisiones
     public static DateTime AHoraArgentina(DateTime utc) => utc + OffsetArgentina;
 
     /// <summary>Comisión de cada venta, si cayó en la tarifa de las "primeras" y el bono.</summary>
+    /// <param name="yaLiquidadas">Ventas ya liquidadas: van primero en el orden del mes, así una venta que se
+    /// cobra tarde no corre de tramo (ni de bono) a las que ya se pagaron.</param>
     public static Dictionary<Guid, AsignacionComision> Asignar(
-        IEnumerable<VentaConfirmada> ventas, TarifaComision tarifa)
+        IEnumerable<VentaConfirmada> ventas, TarifaComision tarifa, IReadOnlySet<Guid>? yaLiquidadas = null)
     {
         var resultado = new Dictionary<Guid, AsignacionComision>();
 
@@ -40,12 +42,12 @@ public static class CalculadoraComisiones
         foreach (var grupo in grupos)
         {
             var orden = 0;
-            foreach (var venta in grupo.OrderBy(v => v.FechaAltaUtc).ThenBy(v => v.Id))
+            foreach (var venta in grupo.OrderBy(v => yaLiquidadas?.Contains(v.Id) == true ? 0 : 1).ThenBy(v => v.FechaAltaUtc).ThenBy(v => v.Id))
             {
                 var esPrimera = orden < tarifa.CantidadPrimeras;
                 orden++;
                 var bono = tarifa.BonoVentas > 0 && orden == tarifa.BonoVentas ? tarifa.BonoMonto : 0m;
-                resultado[venta.Id] = new AsignacionComision(esPrimera ? tarifa.Primeras : tarifa.Siguientes, esPrimera, bono);
+                resultado[venta.Id] = new AsignacionComision(esPrimera ? tarifa.Primeras : tarifa.Siguientes, esPrimera, bono, orden);
             }
         }
 

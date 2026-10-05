@@ -14,11 +14,13 @@ public class AdminController : ControllerBase
     private readonly IReportesVentasService _reportesVentas;
     private readonly IMovimientosAdminService _movimientos;
     private readonly IResumenFinancieroService _resumenFinanciero;
+    private readonly ILiquidacionesService _liquidaciones;
 
     public AdminController(
         IAdminService adminService, IReportesVentasService reportesVentas, IMovimientosAdminService movimientos,
-        IResumenFinancieroService resumenFinanciero)
+        IResumenFinancieroService resumenFinanciero, ILiquidacionesService liquidaciones)
     {
+        _liquidaciones = liquidaciones;
         _adminService = adminService;
         _reportesVentas = reportesVentas;
         _movimientos = movimientos;
@@ -74,6 +76,41 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<ReporteVentasDto>> ReporteVentas(
         [FromQuery] DateOnly desde, [FromQuery] DateOnly hasta, [FromQuery] Guid? vendedorId, CancellationToken ct)
         => Ok(await _reportesVentas.ObtenerVentasAsync(desde, hasta, vendedorId, ct));
+
+    [HttpGet("liquidaciones/resumen")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<LiquidacionesMesDto>> ResumenLiquidaciones(
+        [FromQuery] int anio, [FromQuery] int mes, CancellationToken ct)
+        => Ok(await _liquidaciones.ResumenAsync(anio, mes, ct));
+
+    [HttpGet("liquidaciones/previsualizar")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<PrevisualizacionLiquidacionDto>> PrevisualizarLiquidacion(
+        [FromQuery] Guid vendedorId, [FromQuery] int anio, [FromQuery] int mes, CancellationToken ct)
+        => Ok(await _liquidaciones.PrevisualizarAsync(vendedorId, anio, mes, ct));
+
+    [HttpGet("liquidaciones")]
+    public async Task<ActionResult<IReadOnlyList<LiquidacionDto>>> ListarLiquidaciones(
+        [FromQuery] Guid? vendedorId, CancellationToken ct)
+        => Ok(await _liquidaciones.ListarAsync(vendedorId, ct));
+
+    [HttpPost("liquidaciones")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<LiquidacionDto>> Liquidar(LiquidarRequest request, CancellationToken ct)
+        => Ok(await _liquidaciones.LiquidarAsync(request, ct));
+
+    [HttpPost("liquidaciones/{id:guid}/pagar")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<LiquidacionDto>> PagarLiquidacion(Guid id, PagarLiquidacionRequest request, CancellationToken ct)
+        => Ok(await _liquidaciones.PagarAsync(id, request, ct));
+
+    [HttpDelete("liquidaciones/{id:guid}")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<IActionResult> AnularLiquidacion(Guid id, CancellationToken ct)
+    {
+        await _liquidaciones.AnularAsync(id, ct);
+        return NoContent();
+    }
 
     [HttpGet("resumen")]
     [Authorize(Policy = "AdminOperador")]

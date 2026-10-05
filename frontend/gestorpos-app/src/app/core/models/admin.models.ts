@@ -61,6 +61,63 @@ export interface CobrosNegocio {
   cobros: CobroNegocio[];
 }
 
+export interface LiquidacionItem {
+  tenantId: string;
+  nombre: string;
+  fechaAltaUtc: string;
+  orden: number;
+  comision: number;
+  bono: number;
+}
+
+export interface Liquidacion {
+  id: string;
+  vendedorId: string;
+  vendedorNombre: string;
+  anio: number;
+  mes: number;
+  estado: 'Pendiente' | 'Pagada';
+  fechaCierreUtc: string;
+  fechaPago: string | null;
+  nota: string | null;
+  ventas: number;
+  totalComision: number;
+  totalBono: number;
+  total: number;
+  items: LiquidacionItem[];
+}
+
+export interface LiquidacionVendedor {
+  vendedorId: string;
+  nombre: string;
+  ventas: number;
+  comision: number;
+  bono: number;
+  ventasSinLiquidar: number;
+  comisionSinLiquidar: number;
+  bonoSinLiquidar: number;
+  esperandoCobro: number;
+  liquidaciones: Liquidacion[];
+}
+
+export interface LiquidacionesMes {
+  anio: number;
+  mes: number;
+  vendedores: LiquidacionVendedor[];
+}
+
+export interface PrevisualizacionLiquidacion {
+  vendedorId: string;
+  vendedorNombre: string;
+  anio: number;
+  mes: number;
+  items: LiquidacionItem[];
+  totalComision: number;
+  totalBono: number;
+  total: number;
+  esperandoCobro: number;
+}
+
 export interface ClienteEnRiesgo {
   tenantId: string;
   nombre: string;

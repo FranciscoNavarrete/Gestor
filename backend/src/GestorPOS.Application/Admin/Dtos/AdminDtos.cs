@@ -7,6 +7,32 @@ public record TenantResumenDto(
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null);
 
+public record LiquidacionItemDto(Guid TenantId, string Nombre, DateTime FechaAltaUtc, int Orden, decimal Comision, decimal Bono);
+
+/// <summary>Estado: Pendiente (cerrada, falta pagarla) o Pagada.</summary>
+public record LiquidacionDto(
+    Guid Id, Guid VendedorId, string VendedorNombre, int Anio, int Mes, string Estado, DateTime FechaCierreUtc,
+    DateOnly? FechaPago, string? Nota, int Ventas, decimal TotalComision, decimal TotalBono, decimal Total,
+    IReadOnlyList<LiquidacionItemDto> Items);
+
+/// <summary>Un vendedor en el cierre de un mes. Ventas/Comision/Bono son de todas sus ventas cobradas del mes
+/// (liquidadas y no); "SinLiquidar" es lo que todavía no está en ninguna liquidación; EsperandoCobro son ventas
+/// del mes cuyo primer cobro aún no se aprobó (no se incluyen).</summary>
+public record LiquidacionVendedorDto(
+    Guid VendedorId, string Nombre, int Ventas, decimal Comision, decimal Bono,
+    int VentasSinLiquidar, decimal ComisionSinLiquidar, decimal BonoSinLiquidar, int EsperandoCobro,
+    IReadOnlyList<LiquidacionDto> Liquidaciones);
+
+public record LiquidacionesMesDto(int Anio, int Mes, IReadOnlyList<LiquidacionVendedorDto> Vendedores);
+
+public record PrevisualizacionLiquidacionDto(
+    Guid VendedorId, string VendedorNombre, int Anio, int Mes, IReadOnlyList<LiquidacionItemDto> Items,
+    decimal TotalComision, decimal TotalBono, decimal Total, int EsperandoCobro);
+
+public record LiquidarRequest(Guid VendedorId, int Anio, int Mes);
+
+public record PagarLiquidacionRequest(DateOnly? FechaPago, string? Nota);
+
 /// <summary>Resumen financiero de la plataforma, armado con las suscripciones de Fluxo. Los importes son lo
 /// programado (plan y fechas de cada suscripción), no lo efectivamente cobrado.</summary>
 public record ResumenFinancieroDto(

@@ -8,7 +8,10 @@ import {
   CrearAdminUsuarioRequest,
   CrearNegocioRequest,
   FluxoPlan,
+  Liquidacion,
+  LiquidacionesMes,
   LinkPago,
+  PrevisualizacionLiquidacion,
   MovimientosAdmin,
   ResumenFinanciero,
   ReporteVentas,
@@ -38,6 +41,35 @@ export class AdminService {
     return this.http.get<CobrosNegocio>(`${environment.apiUrl}/admin/tenants/${tenantId}/cobros`, {
       headers: this.headers(),
     });
+  }
+
+  obtenerLiquidacionesMes(anio: number, mes: number): Observable<LiquidacionesMes> {
+    const params = new HttpParams().set('anio', anio).set('mes', mes);
+    return this.http.get<LiquidacionesMes>(`${environment.apiUrl}/admin/liquidaciones/resumen`, { headers: this.headers(), params });
+  }
+
+  previsualizarLiquidacion(vendedorId: string, anio: number, mes: number): Observable<PrevisualizacionLiquidacion> {
+    const params = new HttpParams().set('vendedorId', vendedorId).set('anio', anio).set('mes', mes);
+    return this.http.get<PrevisualizacionLiquidacion>(`${environment.apiUrl}/admin/liquidaciones/previsualizar`, {
+      headers: this.headers(),
+      params,
+    });
+  }
+
+  listarLiquidaciones(): Observable<Liquidacion[]> {
+    return this.http.get<Liquidacion[]>(`${environment.apiUrl}/admin/liquidaciones`, { headers: this.headers() });
+  }
+
+  liquidar(vendedorId: string, anio: number, mes: number): Observable<Liquidacion> {
+    return this.http.post<Liquidacion>(`${environment.apiUrl}/admin/liquidaciones`, { vendedorId, anio, mes }, { headers: this.headers() });
+  }
+
+  pagarLiquidacion(id: string, fechaPago: string | null, nota: string | null): Observable<Liquidacion> {
+    return this.http.post<Liquidacion>(`${environment.apiUrl}/admin/liquidaciones/${id}/pagar`, { fechaPago, nota }, { headers: this.headers() });
+  }
+
+  anularLiquidacion(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/admin/liquidaciones/${id}`, { headers: this.headers() });
   }
 
   obtenerResumen(): Observable<ResumenFinanciero> {
