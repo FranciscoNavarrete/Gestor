@@ -1,0 +1,157 @@
+.pagina {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 900px) {
+    margin: 0;
+  }
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.preset {
+  padding: 6px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-card);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &.activo {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+}
+
+.campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.campo-fecha {
+  flex: 1 1 150px;
+}
+
+.campo-filtro {
+  flex: 1 1 100%;
+
+  @media (min-width: 600px) {
+    flex: 1 1 200px;
+  }
+}
+
+.campo-busqueda {
+  flex: 1 1 100%;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 12px;
+}
+
+.cargando {
+  opacity: 0.6;
+}
+
+.vacio,
+.nota {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.nota {
+  margin-top: 12px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.evento {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.icono {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.tono-ok {
+  background: color-mix(in srgb, #2e7d32 18%, transparent);
+  color: #2e7d32;
+}
+
+.tono-aviso {
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}
+
+.tono-peligro {
+  background: color-mix(in srgb, #e53935 18%, transparent);
+  color: #e53935;
+}
+
+.tono-info {
+  background: color-mix(in srgb, #1976d2 18%, transparent);
+  color: #1976d2;
+}
+
+.frase {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.detalle {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  opacity: 0.65;
+}
+
+.hora {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.4;
+}

@@ -42,6 +42,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/reportes/reportes').then((m) => m.ReportesAdmin),
       },
       {
+        // Solo Operador (lo exige el backend): quién hizo qué en el panel.
+        path: 'movimientos',
+        data: { titulo: 'Movimientos' },
+        loadComponent: () =>
+          import('./features/admin/movimientos/movimientos').then((m) => m.MovimientosAdminPantalla),
+      },
+      {
         // Solo Operador — gestión de usuarios admin (Operador/Vendedor).
         path: 'usuarios',
         data: { titulo: 'Usuarios' },

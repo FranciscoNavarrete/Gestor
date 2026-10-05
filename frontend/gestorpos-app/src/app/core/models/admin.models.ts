@@ -61,6 +61,26 @@ export interface CobrosNegocio {
   cobros: CobroNegocio[];
 }
 
+export interface MovimientoAdmin {
+  id: string;
+  fechaUtc: string;
+  adminId: string;
+  adminNombre: string;
+  adminRol: string;
+  accion: string;
+  entidad: string;
+  entidadId: string | null;
+  entidadNombre: string;
+  detalle: string | null;
+}
+
+export interface MovimientosAdmin {
+  desde: string;
+  hasta: string;
+  total: number;
+  items: MovimientoAdmin[];
+}
+
 export interface LinkPago {
   estado: string;
   link: string | null;

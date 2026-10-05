@@ -9,6 +9,7 @@ import {
   CrearNegocioRequest,
   FluxoPlan,
   LinkPago,
+  MovimientosAdmin,
   ReporteVentas,
   TenantFeature,
   TenantResumen,
@@ -35,6 +36,23 @@ export class AdminService {
   obtenerCobros(tenantId: string): Observable<CobrosNegocio> {
     return this.http.get<CobrosNegocio>(`${environment.apiUrl}/admin/tenants/${tenantId}/cobros`, {
       headers: this.headers(),
+    });
+  }
+
+  obtenerMovimientos(
+    desde: string,
+    hasta: string,
+    adminId?: string | null,
+    accion?: string | null,
+    texto?: string | null,
+  ): Observable<MovimientosAdmin> {
+    let params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    if (adminId) params = params.set('adminId', adminId);
+    if (accion) params = params.set('accion', accion);
+    if (texto?.trim()) params = params.set('texto', texto.trim());
+    return this.http.get<MovimientosAdmin>(`${environment.apiUrl}/admin/movimientos`, {
+      headers: this.headers(),
+      params,
     });
   }
 

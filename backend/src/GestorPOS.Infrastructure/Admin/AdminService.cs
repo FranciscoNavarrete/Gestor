@@ -70,6 +70,13 @@ public class AdminService : IAdminService
         var admin = Usuario.Crear(tenant.Id, request.NombreAdmin, emailNormalizado, passwordHash, RolUsuario.Admin);
         _db.Usuarios.Add(admin);
 
+        var detalleAlta = new List<string>
+        {
+            request.MpPlanId is null ? "Sin plan" : cardToken is not null ? "Cobro con tarjeta" : "Cobro con link de pago",
+        };
+        if (_currentAdmin.EsOperador && vendedorId is not null) detalleAlta.Add("con vendedor asignado");
+        await RegistrarMovimientoAsync("negocio.alta", "negocio", tenant.Id, tenant.Nombre, string.Join(" · ", detalleAlta), ct);
+
         await _db.SaveChangesAsync(ct);
 
         var vendedorNombre = vendedorId is null
@@ -88,6 +95,21 @@ public class AdminService : IAdminService
             .Select(p => new FluxoPlanDto(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro))
             .ToList();
     }
+
+    // Deja anotada la acción para el historial de movimientos. Se agrega al mismo SaveChanges de la acción,
+    // así queda registrada si y solo si la acción se guardó.
+    private async Task RegistrarMovimientoAsync(
+        string accion, string entidad, Guid? entidadId, string entidadNombre, string? detalle, CancellationToken ct)
+    {
+        var nombre = await _db.AdminUsuarios.Where(a => a.Id == _currentAdmin.AdminId)
+            .Select(a => a.Nombre).FirstOrDefaultAsync(ct) ?? "Admin";
+        _db.MovimientosAdmin.Add(MovimientoAdmin.Crear(
+            _currentAdmin.AdminId, nombre, _currentAdmin.Rol, accion, entidad, entidadId, entidadNombre, detalle));
+    }
+
+    private async Task<string> NombreDeTenantAsync(Guid tenantId, CancellationToken ct) =>
+        await _db.Tenants.IgnoreQueryFilters().Where(t => t.Id == tenantId).Select(t => t.Nombre).FirstOrDefaultAsync(ct)
+        ?? "Negocio";
 
     private static (string Nombre, string Apellido) SepararNombreApellido(string nombreCompleto)
     {
@@ -153,6 +175,7 @@ public class AdminService : IAdminService
             usuario.LiberarEmail();
         }
 
+        await RegistrarMovimientoAsync("negocio.desactivado", "negocio", tenant.Id, tenant.Nombre, null, ct);
         await _db.SaveChangesAsync(ct);
         return await ArmarResumenAsync(tenant, ct);
     }
@@ -187,6 +210,7 @@ public class AdminService : IAdminService
             usuario.Activar();
         }
 
+        await RegistrarMovimientoAsync("negocio.activado", "negocio", tenant.Id, tenant.Nombre, null, ct);
         await _db.SaveChangesAsync(ct);
         return await ArmarResumenAsync(tenant, ct);
     }
@@ -275,6 +299,7 @@ public class AdminService : IAdminService
             feature.Habilitar();
         }
 
+        await RegistrarMovimientoAsync("feature.activada", "negocio", tenantId, await NombreDeTenantAsync(tenantId, ct), clave, ct);
         await _db.SaveChangesAsync(ct);
         return new TenantFeatureDto(feature.Id, feature.Clave, feature.Habilitado);
     }
@@ -286,6 +311,7 @@ public class AdminService : IAdminService
             ?? throw new AppException($"El negocio no tiene el feature '{clave}'.");
 
         feature.Deshabilitar();
+        await RegistrarMovimientoAsync("feature.desactivada", "negocio", tenantId, await NombreDeTenantAsync(tenantId, ct), clave, ct);
         await _db.SaveChangesAsync(ct);
         return new TenantFeatureDto(feature.Id, feature.Clave, feature.Habilitado);
     }
@@ -310,6 +336,7 @@ public class AdminService : IAdminService
 
         var usuario = AdminUsuario.Crear(emailNormalizado, _passwordHasher.Hash(request.Password), request.Nombre, rol);
         _db.AdminUsuarios.Add(usuario);
+        await RegistrarMovimientoAsync("usuario.creado", "usuario", usuario.Id, usuario.Nombre, rol.ToString(), ct);
         await _db.SaveChangesAsync(ct);
 
         return new AdminUsuarioDto(usuario.Id, usuario.Email, usuario.Nombre, usuario.Rol.ToString(), usuario.Activo, usuario.CreadoUtc);
@@ -319,6 +346,7 @@ public class AdminService : IAdminService
     {
         var usuario = await ObtenerAdminUsuarioAsync(id, ct);
         usuario.Desactivar();
+        await RegistrarMovimientoAsync("usuario.desactivado", "usuario", usuario.Id, usuario.Nombre, usuario.Rol.ToString(), ct);
         await _db.SaveChangesAsync(ct);
         return new AdminUsuarioDto(usuario.Id, usuario.Email, usuario.Nombre, usuario.Rol.ToString(), usuario.Activo, usuario.CreadoUtc);
     }
@@ -327,6 +355,7 @@ public class AdminService : IAdminService
     {
         var usuario = await ObtenerAdminUsuarioAsync(id, ct);
         usuario.Activar();
+        await RegistrarMovimientoAsync("usuario.activado", "usuario", usuario.Id, usuario.Nombre, usuario.Rol.ToString(), ct);
         await _db.SaveChangesAsync(ct);
         return new AdminUsuarioDto(usuario.Id, usuario.Email, usuario.Nombre, usuario.Rol.ToString(), usuario.Activo, usuario.CreadoUtc);
     }

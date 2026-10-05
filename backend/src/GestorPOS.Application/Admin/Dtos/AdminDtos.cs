@@ -7,6 +7,14 @@ public record TenantResumenDto(
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null);
 
+/// <summary>Movimientos del panel de administración. Total es la cantidad que cumple los filtros; Items trae
+/// como máximo los 500 más recientes.</summary>
+public record MovimientosAdminDto(DateOnly Desde, DateOnly Hasta, int Total, IReadOnlyList<MovimientoAdminDto> Items);
+
+public record MovimientoAdminDto(
+    Guid Id, DateTime FechaUtc, Guid AdminId, string AdminNombre, string AdminRol,
+    string Accion, string Entidad, Guid? EntidadId, string EntidadNombre, string? Detalle);
+
 /// <summary>Historial de cobros de un negocio (viene de Mercado Pago, vía Fluxo).</summary>
 public record CobrosNegocioDto(
     string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<CobroNegocioDto> Cobros);

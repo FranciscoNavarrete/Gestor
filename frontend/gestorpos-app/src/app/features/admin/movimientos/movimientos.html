@@ -1,0 +1,109 @@
+<div class="pagina">
+  <mat-card class="card filtros-card">
+    <mat-card-content>
+      <div class="presets" role="group" aria-label="Períodos rápidos">
+        @for (p of presets; track p.clave) {
+          <button
+            type="button"
+            class="preset"
+            [class.activo]="presetActivo() === p.clave"
+            [attr.aria-pressed]="presetActivo() === p.clave"
+            (click)="aplicarPreset(p.clave)"
+          >
+            {{ p.etiqueta }}
+          </button>
+        }
+      </div>
+
+      <div class="campos">
+        <mat-form-field appearance="outline" class="campo-fecha">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="pickerDesde" [formControl]="desde" [max]="hasta.value ?? hoy" (dateChange)="alCambiarDesde($event)" />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+          <mat-datepicker #pickerDesde [touchUi]="esMovil"></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="campo-fecha">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="pickerHasta" [formControl]="hasta" [min]="desde.value" [max]="hoy" (dateChange)="alCambiarHasta($event)" />
+          <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+          <mat-datepicker #pickerHasta [touchUi]="esMovil"></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="campo-filtro">
+          <mat-label>Usuario</mat-label>
+          <mat-select [formControl]="adminId" (selectionChange)="cargar()">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (u of usuarios(); track u.id) {
+              <mat-option [value]="u.id">{{ u.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="campo-filtro">
+          <mat-label>Acción</mat-label>
+          <mat-select [formControl]="accion" (selectionChange)="cargar()">
+            @for (o of opcionesAccion; track o.etiqueta) {
+              <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="campo-busqueda">
+          <mat-label>Buscar negocio o usuario</mat-label>
+          <input matInput [formControl]="texto" (input)="alEscribirBusqueda()" />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (cargando() && !resultado()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (error()) {
+    <mat-card class="card">
+      <mat-card-content>
+        <p class="error">{{ error() }}</p>
+        <button mat-stroked-button type="button" (click)="cargar()">
+          <mat-icon>refresh</mat-icon>
+          Reintentar
+        </button>
+      </mat-card-content>
+    </mat-card>
+  } @else if (resultado(); as r) {
+    <mat-card class="card" [class.cargando]="cargando()">
+      <mat-card-content>
+        @if (r.items.length === 0) {
+          <p class="vacio">No hay movimientos con estos filtros.</p>
+        } @else {
+          <div class="lista">
+            @for (m of r.items; track m.id) {
+              <div class="evento">
+                <span [class]="'icono tono-' + tono(m)"><mat-icon>{{ icono(m) }}</mat-icon></span>
+                <div class="evento-texto">
+                  <p class="frase">
+                    <strong>{{ m.adminNombre }}</strong>
+                    {{ verbo(m) }}
+                    @if (nombreFuncion(m); as funcion) {
+                      <strong>{{ funcion }}</strong> en
+                    }
+                    <strong>{{ m.entidadNombre }}</strong>
+                  </p>
+                  @if (detalle(m); as texto) {
+                    <p class="detalle">{{ texto }}</p>
+                  }
+                </div>
+                <span class="hora">
+                  {{ dia(m.fechaUtc) || (m.fechaUtc | date: 'dd/MM' : '-0300') }}<br />{{ m.fechaUtc | date: 'HH:mm' : '-0300' }}
+                </span>
+              </div>
+            }
+          </div>
+          @if (r.total > r.items.length) {
+            <p class="nota">Se muestran los {{ r.items.length }} más recientes de {{ r.total }}. Afiná los filtros para ver el resto.</p>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

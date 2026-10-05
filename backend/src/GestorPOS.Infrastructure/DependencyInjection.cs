@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddHttpClient<IFluxoService, FluxoService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IReportesVentasService, ReportesVentasService>();
+        services.AddScoped<IMovimientosAdminService, MovimientosAdminService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<ITareaService, TareaService>();
         services.AddHostedService<TareaRecordatorioBackgroundService>();
