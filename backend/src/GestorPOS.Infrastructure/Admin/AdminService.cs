@@ -128,7 +128,12 @@ public class AdminService : IAdminService
                 FluxoPrimerCobroAprobado: t.FluxoSuscripcionId is not null
                     && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.PrimerCobroAprobado == true,
                 FluxoAjustePendiente: t.FluxoSuscripcionId is not null
-                    && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.AjusteMontoPendiente == true))
+                    && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.AjusteMontoPendiente == true,
+                FluxoCobroRechazado: t.FluxoSuscripcionId is not null
+                    && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.CobroRechazado == true,
+                FluxoMotivoRechazo: t.FluxoSuscripcionId is null
+                    ? null
+                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.MotivoRechazo))
             .ToList();
     }
 
@@ -201,6 +206,23 @@ public class AdminService : IAdminService
         return new LinkPagoDto(link.Estado, link.InitPoint);
     }
 
+    public async Task<CobrosNegocioDto> ObtenerCobrosAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        // Un Vendedor solo puede ver los cobros de los negocios que él mismo cargó.
+        if (!_currentAdmin.EsOperador && tenant.VendedorId != _currentAdmin.AdminId)
+            throw new AppException("El negocio no existe.");
+
+        if (tenant.FluxoSuscripcionId is null)
+            throw new AppException("Este negocio no tiene una suscripción.");
+
+        var cobros = await _fluxo.ObtenerCobrosAsync(tenant.FluxoSuscripcionId.Value, ct);
+        return new CobrosNegocioDto(
+            cobros.Estado, cobros.MontoMensual, cobros.ProximoCobro, cobros.ProximoMonto,
+            cobros.Cobros.Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro)).ToList());
+    }
+
     private async Task<TenantResumenDto> ArmarResumenAsync(Tenant tenant, CancellationToken ct)
     {
         var vendedorNombre = tenant.VendedorId is null
@@ -217,7 +239,8 @@ public class AdminService : IAdminService
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, tenant.VendedorId, vendedorNombre,
             tenant.FluxoClienteId, tenant.FluxoSuscripcionId, null, fluxoEstado?.Estado,
-            fluxoEstado?.PrimerCobroAprobado == true, fluxoEstado?.AjusteMontoPendiente == true);
+            fluxoEstado?.PrimerCobroAprobado == true, fluxoEstado?.AjusteMontoPendiente == true,
+            fluxoEstado?.CobroRechazado == true, fluxoEstado?.MotivoRechazo);
     }
 
     private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>

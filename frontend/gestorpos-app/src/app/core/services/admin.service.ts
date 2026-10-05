@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AdminUsuario,
+  CobrosNegocio,
   CrearAdminUsuarioRequest,
   CrearNegocioRequest,
   FluxoPlan,
@@ -27,6 +28,12 @@ export class AdminService {
 
   obtenerLinkPago(tenantId: string): Observable<LinkPago> {
     return this.http.get<LinkPago>(`${environment.apiUrl}/admin/tenants/${tenantId}/link-pago`, {
+      headers: this.headers(),
+    });
+  }
+
+  obtenerCobros(tenantId: string): Observable<CobrosNegocio> {
+    return this.http.get<CobrosNegocio>(`${environment.apiUrl}/admin/tenants/${tenantId}/cobros`, {
       headers: this.headers(),
     });
   }

@@ -101,6 +101,36 @@
   color: #1976d2;
 }
 
+.badge-rechazado {
+  background: color-mix(in srgb, #e53935 18%, transparent);
+  color: #e53935;
+}
+
+.boton-cobros {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 .badge-ajuste {
   background: color-mix(in srgb, #f5a623 18%, transparent);
   color: #f5a623;

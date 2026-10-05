@@ -4,7 +4,15 @@ public record TenantResumenDto(
     Guid Id, string Nombre, string Slug, bool Activo, DateTime FechaCreacion,
     Guid? VendedorId, string? VendedorNombre,
     int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null,
-    string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false);
+    string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
+    bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null);
+
+/// <summary>Historial de cobros de un negocio (viene de Mercado Pago, vía Fluxo).</summary>
+public record CobrosNegocioDto(
+    string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<CobroNegocioDto> Cobros);
+
+public record CobroNegocioDto(
+    DateTime? Fecha, decimal Monto, string Estado, string? Motivo, int Intento, DateTime? ProximoReintento, bool EsPrimerCobro);
 
 /// <summary>Link de pago pendiente de un negocio; Link es null si ya no está pendiente.</summary>
 public record LinkPagoDto(string Estado, string? Link);

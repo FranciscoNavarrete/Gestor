@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
+import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
@@ -161,10 +162,26 @@ export class Negocios implements OnInit, OnDestroy {
 
   badgeSuscripcion(negocio: TenantResumen): { texto: string; clase: string } | null {
     if (!negocio.fluxoEstado) return null;
+    if (negocio.fluxoEstado === 'authorized' && negocio.fluxoCobroRechazado) {
+      return {
+        texto: negocio.fluxoPrimerCobroAprobado ? 'Cobro rechazado' : '1er cobro rechazado',
+        clase: 'badge-rechazado',
+      };
+    }
     if (negocio.fluxoEstado === 'authorized' && !negocio.fluxoPrimerCobroAprobado) {
       return { texto: 'Esperando 1er cobro', clase: 'badge-esperando' };
     }
     return Negocios.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;
+  }
+
+  // Los cobros solo existen cuando la suscripción ya se autorizó alguna vez.
+  tieneCobros(negocio: TenantResumen): boolean {
+    return !!negocio.fluxoSuscripcionId && !!negocio.fluxoEstado && negocio.fluxoEstado !== 'pending';
+  }
+
+  verCobros(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(CobrosDialog, { data: { tenantId: negocio.id, nombre: negocio.nombre }, width: '440px', maxWidth: '92vw' });
   }
 
   // El primer cobro ya se aprobó pero Fluxo no pudo bajar la suscripción al monto mensual todavía.

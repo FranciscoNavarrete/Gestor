@@ -94,6 +94,11 @@
                         <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
                       }
                     }
+                    @if (tieneCobros(negocio)) {
+                      <button type="button" class="boton-cobros" (click)="verCobros(negocio, $event)" aria-label="Ver los cobros de este negocio" title="Ver cobros">
+                        <mat-icon>receipt_long</mat-icon>
+                      </button>
+                    }
                     @if (ajusteMontoPendiente(negocio)) {
                       <span class="badge-suscripcion badge-ajuste" title="El primer cobro se aprobó, pero falta bajar la suscripción al monto mensual. Se reintenta solo.">Ajustar monto</span>
                     }

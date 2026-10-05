@@ -60,6 +60,10 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<LinkPagoDto>> ObtenerLinkPago(Guid tenantId, CancellationToken ct)
         => Ok(await _adminService.ObtenerLinkPagoAsync(tenantId, ct));
 
+    [HttpGet("tenants/{tenantId:guid}/cobros")]
+    public async Task<ActionResult<CobrosNegocioDto>> ObtenerCobros(Guid tenantId, CancellationToken ct)
+        => Ok(await _adminService.ObtenerCobrosAsync(tenantId, ct));
+
     [HttpGet("reportes/ventas")]
     public async Task<ActionResult<ReporteVentasDto>> ReporteVentas(
         [FromQuery] DateOnly desde, [FromQuery] DateOnly hasta, [FromQuery] Guid? vendedorId, CancellationToken ct)

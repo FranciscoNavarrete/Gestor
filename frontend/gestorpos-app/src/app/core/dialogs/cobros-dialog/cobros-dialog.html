@@ -1,0 +1,64 @@
+<h2 mat-dialog-title>Cobros de {{ data.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+    <button mat-stroked-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  } @else if (datos(); as d) {
+    <p class="subtitulo">Plan de {{ dinero(d.montoMensual) }} por mes</p>
+
+    @if (rechazoActual(); as rechazo) {
+      <div class="aviso">
+        <mat-icon>warning</mat-icon>
+        <p>
+          @if (rechazo.esPrimerCobro) { El primer cobro de {{ dinero(rechazo.monto) }} fue rechazado. } @else { El último cobro de {{ dinero(rechazo.monto) }} fue rechazado. }
+          @if (rechazo.motivo) { Motivo: {{ rechazo.motivo }}. }
+          @if (rechazo.proximoReintento) { Mercado Pago lo reintenta el {{ rechazo.proximoReintento | date: 'dd/MM' }}. }
+          Avisale al cliente que revise su tarjeta.
+        </p>
+      </div>
+    }
+
+    @if (d.proximoCobro && d.estado === 'authorized') {
+      <div class="proximo">
+        <div>
+          <span class="proximo-titulo">{{ rechazoActual() ? 'Próximo intento' : 'Próximo cobro' }}</span>
+        </div>
+        <strong>{{ d.proximoCobro | date: 'dd/MM' }} · {{ dinero(d.proximoMonto ?? d.montoMensual) }}</strong>
+      </div>
+    }
+
+    @if (d.cobros.length === 0) {
+      <p class="ayuda">Todavía no hay cobros. El primero sale al día siguiente del alta.</p>
+    } @else {
+      <div class="lista">
+        @for (cobro of d.cobros; track $index) {
+          <div class="item">
+            <span class="fecha">{{ cobro.fecha ? (cobro.fecha | date: 'dd/MM') : '—' }}</span>
+            <span class="detalle">
+              <span class="monto">{{ dinero(cobro.monto) }}</span>
+              <span class="motivo">
+                @if (cobro.esPrimerCobro) { Alta + 1er mes }
+                @if (cobro.esPrimerCobro && cobro.motivo) { · }
+                @if (cobro.motivo) { {{ cobro.motivo }} }
+                @if (cobro.estado === 'rechazado' && cobro.intento > 0) { · intento {{ cobro.intento }} }
+              </span>
+            </span>
+            <span [class]="'estado estado-' + cobro.estado">{{ etiqueta(cobro.estado) }}</span>
+          </div>
+        }
+      </div>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

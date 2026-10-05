@@ -39,6 +39,26 @@ export interface TenantResumen {
   fluxoEstado?: string | null;
   fluxoPrimerCobroAprobado?: boolean;
   fluxoAjustePendiente?: boolean;
+  fluxoCobroRechazado?: boolean;
+  fluxoMotivoRechazo?: string | null;
+}
+
+export interface CobroNegocio {
+  fecha: string | null;
+  monto: number;
+  estado: 'aprobado' | 'rechazado' | 'pendiente' | 'cancelado';
+  motivo: string | null;
+  intento: number;
+  proximoReintento: string | null;
+  esPrimerCobro: boolean;
+}
+
+export interface CobrosNegocio {
+  estado: string;
+  montoMensual: number;
+  proximoCobro: string | null;
+  proximoMonto: number | null;
+  cobros: CobroNegocio[];
 }
 
 export interface LinkPago {

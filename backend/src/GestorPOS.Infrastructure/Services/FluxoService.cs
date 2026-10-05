@@ -108,6 +108,41 @@ public class FluxoService : IFluxoService
         return new FluxoLinkPago(body.Contenido.Estado, body.Contenido.InitPoint);
     }
 
+    public async Task<FluxoCobros> ObtenerCobrosAsync(int suscripcionId, CancellationToken ct = default)
+    {
+        var baseUrl = _config["Fluxo:BaseUrl"];
+        var apiKey = _config["Fluxo:VendedorApiKey"];
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+            throw new AppException("La integración con Fluxo no está configurada.");
+
+        FluxoRespuestaCobros? body;
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/{suscripcionId}/cobros");
+            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request, ct);
+            body = await response.Content.ReadFromJsonAsync<FluxoRespuestaCobros>(JsonOptions, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error llamando a Fluxo para traer los cobros de la suscripción {Id}.", suscripcionId);
+            throw new AppException("No se pudo conectar con Fluxo para traer los cobros. Probá de nuevo en un momento.");
+        }
+
+        if (body is not { Exitoso: true, Contenido: not null })
+        {
+            _logger.LogWarning("Fluxo no devolvió los cobros de la suscripción {Id}: {Mensaje}", suscripcionId, body?.Mensaje);
+            throw new AppException(body?.Mensaje ?? "Fluxo no pudo traer los cobros.");
+        }
+
+        var c = body.Contenido;
+        return new FluxoCobros(
+            c.Estado, c.MontoMensual, c.ProximoCobro, c.ProximoMonto,
+            (c.Cobros ?? []).Select(x => new FluxoCobro(x.Fecha, x.Monto, x.Estado, x.Motivo, x.Intento, x.ProximoReintento, x.EsPrimerCobro)).ToList());
+    }
+
     public async Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default)
     {
         var baseUrl = _config["Fluxo:BaseUrl"];
@@ -189,7 +224,8 @@ public class FluxoService : IFluxoService
 
             return body.Contenido.ToDictionary(
                 e => e.MpSuscripcionId,
-                e => new FluxoEstadoSuscripcion(e.Estado, e.Confirmada, e.PrimerCobroAprobado, e.AjusteMontoPendiente));
+                e => new FluxoEstadoSuscripcion(
+                    e.Estado, e.Confirmada, e.PrimerCobroAprobado, e.AjusteMontoPendiente, e.CobroRechazado, e.MotivoRechazo));
         }
         catch (Exception ex)
         {
@@ -262,5 +298,34 @@ public class FluxoService : IFluxoService
         public bool Confirmada { get; set; }
         public bool PrimerCobroAprobado { get; set; }
         public bool AjusteMontoPendiente { get; set; }
+        public bool CobroRechazado { get; set; }
+        public string? MotivoRechazo { get; set; }
+    }
+
+    private class FluxoRespuestaCobros
+    {
+        public bool Exitoso { get; set; }
+        public string? Mensaje { get; set; }
+        public FluxoCobrosContenido? Contenido { get; set; }
+    }
+
+    private class FluxoCobrosContenido
+    {
+        public string Estado { get; set; } = string.Empty;
+        public decimal MontoMensual { get; set; }
+        public DateTime? ProximoCobro { get; set; }
+        public decimal? ProximoMonto { get; set; }
+        public List<FluxoCobroContenido>? Cobros { get; set; }
+    }
+
+    private class FluxoCobroContenido
+    {
+        public DateTime? Fecha { get; set; }
+        public decimal Monto { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public string? Motivo { get; set; }
+        public int Intento { get; set; }
+        public DateTime? ProximoReintento { get; set; }
+        public bool EsPrimerCobro { get; set; }
     }
 }

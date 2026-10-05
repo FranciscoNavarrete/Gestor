@@ -13,7 +13,16 @@ public record FluxoLinkPago(string Estado, string? InitPoint);
 /// Mercado Pago ya aprobó el primer cobro. AjusteMontoPendiente: el primer cobro se aprobó pero falta bajar
 /// la suscripción al monto mensual.</summary>
 public record FluxoEstadoSuscripcion(
-    string Estado, bool Confirmada, bool PrimerCobroAprobado = false, bool AjusteMontoPendiente = false);
+    string Estado, bool Confirmada, bool PrimerCobroAprobado = false, bool AjusteMontoPendiente = false,
+    bool CobroRechazado = false, string? MotivoRechazo = null);
+
+/// <summary>Un cobro de la suscripción. Estado: aprobado, rechazado, pendiente o cancelado; el motivo viene en español.</summary>
+public record FluxoCobro(
+    DateTime? Fecha, decimal Monto, string Estado, string? Motivo, int Intento, DateTime? ProximoReintento, bool EsPrimerCobro);
+
+/// <summary>Historial de cobros y próximo cobro (si la suscripción sigue autorizada).</summary>
+public record FluxoCobros(
+    string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<FluxoCobro> Cobros);
 
 public record FluxoPlan(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
@@ -35,6 +44,10 @@ public interface IFluxoService
     /// <summary>Tira <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> si Fluxo no
     /// responde o no encuentra la suscripción, con un mensaje apto para mostrar.</summary>
     Task<FluxoLinkPago> ObtenerLinkPagoAsync(int suscripcionId, CancellationToken ct = default);
+
+    /// <summary>Tira <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> si Fluxo no
+    /// responde o no puede consultar los cobros en Mercado Pago.</summary>
+    Task<FluxoCobros> ObtenerCobrosAsync(int suscripcionId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default);
 
