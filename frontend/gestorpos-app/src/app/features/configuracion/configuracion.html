@@ -153,7 +153,7 @@
     </div>
     <p class="ayuda">"Efectivo" es fijo del sistema: se usa para calcular el efectivo esperado al cerrar la caja, por eso no se puede renombrar ni desactivar.</p>
   }
-} @else {
+} @else if (vista() === 'negocio') {
   @if (cargandoNegocio()) {
     <div class="centrado">
       <mat-spinner></mat-spinner>
