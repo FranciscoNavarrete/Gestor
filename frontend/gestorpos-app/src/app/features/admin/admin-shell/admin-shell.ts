@@ -36,6 +36,7 @@ export class AdminShell {
       { path: '/admin/reportes', icono: 'bar_chart', etiqueta: 'Reportes', etiquetaCorta: 'Reportes' },
     ];
     if (this.adminAuth.esOperador()) {
+      items.unshift({ path: '/admin/resumen', icono: 'insights', etiqueta: 'Resumen', etiquetaCorta: 'Resumen' });
       items.push({ path: '/admin/movimientos', icono: 'history', etiqueta: 'Movimientos', etiquetaCorta: 'Historial' });
       items.push({ path: '/admin/usuarios', icono: 'group', etiqueta: 'Usuarios', etiquetaCorta: 'Usuarios' });
     }

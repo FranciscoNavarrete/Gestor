@@ -206,26 +206,35 @@ public class FluxoService : IFluxoService
 
         try
         {
-            var idsQuery = string.Join(',', ids);
-            using var request = new HttpRequestMessage(
-                HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/estados?ids={idsQuery}");
-            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
-
-            var response = await _http.SendAsync(request, ct);
-            if (!response.IsSuccessStatusCode)
+            // En tandas, para no armar una URL gigante cuando hay muchos negocios.
+            var resultado = new Dictionary<int, FluxoEstadoSuscripcion>();
+            foreach (var tanda in ids.Chunk(150))
             {
-                _logger.LogWarning("Fluxo devolvió {StatusCode} al pedir estados de suscripciones.", response.StatusCode);
-                return null;
+                var idsQuery = string.Join(',', tanda);
+                using var request = new HttpRequestMessage(
+                    HttpMethod.Get, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/estados?ids={idsQuery}");
+                request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+                var response = await _http.SendAsync(request, ct);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Fluxo devolvió {StatusCode} al pedir estados de suscripciones.", response.StatusCode);
+                    return null;
+                }
+
+                var body = await response.Content.ReadFromJsonAsync<FluxoRespuestaEstados>(JsonOptions, ct);
+                if (body is null || !body.Exitoso || body.Contenido is null)
+                    return null;
+
+                foreach (var e in body.Contenido)
+                {
+                    resultado[e.MpSuscripcionId] = new FluxoEstadoSuscripcion(
+                        e.Estado, e.Confirmada, e.PrimerCobroAprobado, e.AjusteMontoPendiente, e.CobroRechazado, e.MotivoRechazo,
+                        e.ProximoReintento, e.MontoMensual, e.MontoProximoCobro, e.ProximoCobro, e.FechaInicio, e.FechaCancelacion);
+                }
             }
 
-            var body = await response.Content.ReadFromJsonAsync<FluxoRespuestaEstados>(JsonOptions, ct);
-            if (body is null || !body.Exitoso || body.Contenido is null)
-                return null;
-
-            return body.Contenido.ToDictionary(
-                e => e.MpSuscripcionId,
-                e => new FluxoEstadoSuscripcion(
-                    e.Estado, e.Confirmada, e.PrimerCobroAprobado, e.AjusteMontoPendiente, e.CobroRechazado, e.MotivoRechazo));
+            return resultado;
         }
         catch (Exception ex)
         {
@@ -300,6 +309,12 @@ public class FluxoService : IFluxoService
         public bool AjusteMontoPendiente { get; set; }
         public bool CobroRechazado { get; set; }
         public string? MotivoRechazo { get; set; }
+        public DateTime? ProximoReintento { get; set; }
+        public decimal MontoMensual { get; set; }
+        public decimal MontoProximoCobro { get; set; }
+        public DateTime? ProximoCobro { get; set; }
+        public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaCancelacion { get; set; }
     }
 
     private class FluxoRespuestaCobros

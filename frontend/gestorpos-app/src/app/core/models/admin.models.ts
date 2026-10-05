@@ -61,6 +61,37 @@ export interface CobrosNegocio {
   cobros: CobroNegocio[];
 }
 
+export interface ClienteEnRiesgo {
+  tenantId: string;
+  nombre: string;
+  tipo: 'primer-cobro' | 'rechazado' | 'pausado' | 'suspendido';
+  motivo: string | null;
+  monto: number;
+  proximoReintento: string | null;
+}
+
+export interface AltasMes {
+  anio: number;
+  mes: number;
+  altas: number;
+}
+
+export interface ResumenFinanciero {
+  ingresoMensual: number;
+  clientesActivos: number;
+  esperandoPrimerCobro: number;
+  porCobrarPrimerosCobros: number;
+  altasMes: number;
+  bajasMes: number;
+  porcentajeBajas: number;
+  aCobrar30Dias: number;
+  cobrosRechazados: number;
+  montoRechazado: number;
+  pausadosOSuspendidos: number;
+  enRiesgo: ClienteEnRiesgo[];
+  altasPorMes: AltasMes[];
+}
+
 export interface MovimientoAdmin {
   id: string;
   fechaUtc: string;

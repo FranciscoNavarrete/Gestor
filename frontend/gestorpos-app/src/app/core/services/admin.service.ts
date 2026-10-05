@@ -10,6 +10,7 @@ import {
   FluxoPlan,
   LinkPago,
   MovimientosAdmin,
+  ResumenFinanciero,
   ReporteVentas,
   TenantFeature,
   TenantResumen,
@@ -37,6 +38,10 @@ export class AdminService {
     return this.http.get<CobrosNegocio>(`${environment.apiUrl}/admin/tenants/${tenantId}/cobros`, {
       headers: this.headers(),
     });
+  }
+
+  obtenerResumen(): Observable<ResumenFinanciero> {
+    return this.http.get<ResumenFinanciero>(`${environment.apiUrl}/admin/resumen`, { headers: this.headers() });
   }
 
   obtenerMovimientos(

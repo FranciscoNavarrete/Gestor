@@ -13,12 +13,16 @@ public class AdminController : ControllerBase
     private readonly IAdminService _adminService;
     private readonly IReportesVentasService _reportesVentas;
     private readonly IMovimientosAdminService _movimientos;
+    private readonly IResumenFinancieroService _resumenFinanciero;
 
-    public AdminController(IAdminService adminService, IReportesVentasService reportesVentas, IMovimientosAdminService movimientos)
+    public AdminController(
+        IAdminService adminService, IReportesVentasService reportesVentas, IMovimientosAdminService movimientos,
+        IResumenFinancieroService resumenFinanciero)
     {
         _adminService = adminService;
         _reportesVentas = reportesVentas;
         _movimientos = movimientos;
+        _resumenFinanciero = resumenFinanciero;
     }
 
     [HttpGet("tenants")]
@@ -70,6 +74,11 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<ReporteVentasDto>> ReporteVentas(
         [FromQuery] DateOnly desde, [FromQuery] DateOnly hasta, [FromQuery] Guid? vendedorId, CancellationToken ct)
         => Ok(await _reportesVentas.ObtenerVentasAsync(desde, hasta, vendedorId, ct));
+
+    [HttpGet("resumen")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<ResumenFinancieroDto>> Resumen(CancellationToken ct)
+        => Ok(await _resumenFinanciero.ObtenerAsync(ct));
 
     [HttpGet("movimientos")]
     [Authorize(Policy = "AdminOperador")]

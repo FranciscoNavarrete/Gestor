@@ -14,7 +14,9 @@ public record FluxoLinkPago(string Estado, string? InitPoint);
 /// la suscripción al monto mensual.</summary>
 public record FluxoEstadoSuscripcion(
     string Estado, bool Confirmada, bool PrimerCobroAprobado = false, bool AjusteMontoPendiente = false,
-    bool CobroRechazado = false, string? MotivoRechazo = null);
+    bool CobroRechazado = false, string? MotivoRechazo = null, DateTime? ProximoReintento = null,
+    decimal MontoMensual = 0, decimal MontoProximoCobro = 0, DateTime? ProximoCobro = null,
+    DateTime? FechaInicio = null, DateTime? FechaCancelacion = null);
 
 /// <summary>Un cobro de la suscripción. Estado: aprobado, rechazado, pendiente o cancelado; el motivo viene en español.</summary>
 public record FluxoCobro(

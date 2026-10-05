@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IReportesVentasService, ReportesVentasService>();
         services.AddScoped<IMovimientosAdminService, MovimientosAdminService>();
+        services.AddScoped<IResumenFinancieroService, ResumenFinancieroService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<ITareaService, TareaService>();
         services.AddHostedService<TareaRecordatorioBackgroundService>();

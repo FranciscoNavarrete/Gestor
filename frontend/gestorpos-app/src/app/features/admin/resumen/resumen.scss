@@ -1,0 +1,224 @@
+.pagina {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 900px) {
+    margin: 0;
+  }
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+.pie {
+  text-align: right;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 12px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+
+  &.cargando {
+    opacity: 0.6;
+  }
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  min-width: 0;
+}
+
+.kpi-grande {
+  grid-column: span 2;
+
+  @media (max-width: 520px) {
+    grid-column: 1 / -1;
+  }
+}
+
+.kpi-valor {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.kpi-etiqueta {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.kpi-detalle {
+  font-size: 0.75rem;
+  opacity: 0.55;
+}
+
+.ok {
+  color: #2e7d32;
+  opacity: 1;
+}
+
+.aviso {
+  color: #f5a623;
+  opacity: 1;
+}
+
+.peligro {
+  color: #e53935;
+  opacity: 1;
+}
+
+.paneles {
+  display: grid;
+  gap: 16px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.titulo-panel {
+  font-size: 1rem;
+}
+
+.vacio {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.riesgo-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.riesgo-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.riesgo-nombre {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.riesgo-detalle {
+  font-size: 0.75rem;
+  opacity: 0.65;
+  line-height: 1.4;
+}
+
+.riesgo-lado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.riesgo-monto {
+  font-size: 0.85rem;
+}
+
+.etiqueta {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.etiqueta-primer-cobro,
+.etiqueta-rechazado {
+  background: color-mix(in srgb, #e53935 18%, transparent);
+  color: #e53935;
+}
+
+.etiqueta-pausado,
+.etiqueta-suspendido {
+  background: color-mix(in srgb, #f5a623 18%, transparent);
+  color: #f5a623;
+}
+
+.grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 150px;
+  padding-top: 10px;
+}
+
+.barra-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 0.72rem;
+  min-width: 0;
+
+  .barra {
+    display: block;
+    width: 100%;
+    max-width: 36px;
+    min-height: 3px;
+    border-radius: 5px 5px 0 0;
+    background: var(--color-accent);
+    opacity: 0.7;
+  }
+
+  &.actual .barra {
+    opacity: 1;
+  }
+}
+
+.barra-valor {
+  font-weight: 600;
+}
+
+.barra-mes {
+  opacity: 0.65;
+}

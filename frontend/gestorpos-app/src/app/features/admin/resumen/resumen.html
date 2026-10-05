@@ -1,0 +1,122 @@
+<div class="pagina">
+  <div class="encabezado">
+    <p class="nota">Lo programado según los planes y estados de Fluxo, no lo cobrado en Mercado Pago.</p>
+    <button mat-stroked-button type="button" (click)="cargar()" [disabled]="cargando()">
+      <mat-icon>refresh</mat-icon>
+      Actualizar
+    </button>
+  </div>
+
+  @if (cargando() && !resumen()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (error()) {
+    <mat-card class="card">
+      <mat-card-content>
+        <p class="error">{{ error() }}</p>
+        <button mat-stroked-button type="button" (click)="cargar()">
+          <mat-icon>refresh</mat-icon>
+          Reintentar
+        </button>
+      </mat-card-content>
+    </mat-card>
+  } @else if (resumen(); as r) {
+    <div class="kpis" [class.cargando]="cargando()">
+      <div class="kpi kpi-grande">
+        <span class="kpi-valor">{{ dinero(r.ingresoMensual) }}</span>
+        <span class="kpi-etiqueta">Ingreso mensual recurrente</span>
+        <span class="kpi-detalle ok">{{ r.clientesActivos }} {{ r.clientesActivos === 1 ? 'cliente activo' : 'clientes activos' }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-valor">{{ r.clientesActivos }}</span>
+        <span class="kpi-etiqueta">Clientes activos</span>
+        @if (r.esperandoPrimerCobro > 0) {
+          <span class="kpi-detalle aviso">+{{ r.esperandoPrimerCobro }} esperando 1er cobro</span>
+        }
+      </div>
+      <div class="kpi">
+        <span class="kpi-valor ok">+{{ r.altasMes }}</span>
+        <span class="kpi-etiqueta">Altas del mes</span>
+        <span class="kpi-detalle">con el 1er cobro aprobado</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-valor peligro">−{{ r.bajasMes }}</span>
+        <span class="kpi-etiqueta">Bajas del mes</span>
+        <span class="kpi-detalle">{{ r.porcentajeBajas.toString().replace('.', ',') }}% de los clientes</span>
+      </div>
+    </div>
+
+    <div class="kpis" [class.cargando]="cargando()">
+      <div class="kpi">
+        <span class="kpi-valor">{{ dinero(r.aCobrar30Dias) }}</span>
+        <span class="kpi-etiqueta">A cobrar en 30 días</span>
+        <span class="kpi-detalle">cobros mensuales programados</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-valor">{{ dinero(r.porCobrarPrimerosCobros) }}</span>
+        <span class="kpi-etiqueta">Primeros cobros pendientes</span>
+        <span class="kpi-detalle">{{ r.esperandoPrimerCobro }} {{ r.esperandoPrimerCobro === 1 ? 'cliente' : 'clientes' }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-valor aviso">{{ r.cobrosRechazados }}</span>
+        <span class="kpi-etiqueta">Cobros rechazados</span>
+        <span class="kpi-detalle">{{ dinero(r.montoRechazado) }} en juego</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-valor">{{ r.pausadosOSuspendidos }}</span>
+        <span class="kpi-etiqueta">Pausados o suspendidos</span>
+        <span class="kpi-detalle">revisar con el cliente</span>
+      </div>
+    </div>
+
+    <div class="paneles">
+      <mat-card class="card">
+        <mat-card-header>
+          <mat-card-title class="titulo-panel">Clientes en riesgo</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (r.enRiesgo.length === 0) {
+            <p class="vacio">Ningún cliente en riesgo. Todos los cobros están al día.</p>
+          } @else {
+            @for (c of r.enRiesgo; track c.tenantId) {
+              <div class="riesgo-fila">
+                <div class="riesgo-info">
+                  <span class="riesgo-nombre">{{ c.nombre }}</span>
+                  <span class="riesgo-detalle">
+                    {{ motivo(c) }}
+                    @if (c.proximoReintento) { · reintenta el {{ c.proximoReintento | date: 'dd/MM' : '-0300' }} }
+                  </span>
+                </div>
+                <div class="riesgo-lado">
+                  <span class="riesgo-monto">{{ dinero(c.monto) }}</span>
+                  <span [class]="'etiqueta etiqueta-' + c.tipo">{{ etiquetaRiesgo(c.tipo) }}</span>
+                </div>
+              </div>
+            }
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="card">
+        <mat-card-header>
+          <mat-card-title class="titulo-panel">Altas por mes</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="nota">Clientes con el primer cobro aprobado</p>
+          <div class="grafico" role="img" aria-label="Altas de los últimos seis meses">
+            @for (a of r.altasPorMes; track a.anio + '-' + a.mes) {
+              <div class="barra-col" [class.actual]="a.mes === mesActual">
+                <span class="barra-valor">{{ a.altas }}</span>
+                <span class="barra" [style.height.%]="(a.altas / maximoAltas()) * 100"></span>
+                <span class="barra-mes">{{ nombreMes(a.mes) }}</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    @if (actualizado(); as hora) {
+      <p class="nota pie">Actualizado {{ hora | date: 'HH:mm' }}</p>
+    }
+  }
+</div>

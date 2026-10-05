@@ -25,6 +25,12 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'negocios' },
       { path: 'crear-negocio', pathMatch: 'full', redirectTo: 'negocios' },
       {
+        // Solo Operador (lo exige el backend): ingresos, clientes y cobros en riesgo.
+        path: 'resumen',
+        data: { titulo: 'Resumen' },
+        loadComponent: () => import('./features/admin/resumen/resumen').then((m) => m.ResumenAdmin),
+      },
+      {
         path: 'negocios',
         data: { titulo: 'Negocios' },
         loadComponent: () => import('./features/admin/negocios/negocios').then((m) => m.Negocios),

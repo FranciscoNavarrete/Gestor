@@ -7,6 +7,20 @@ public record TenantResumenDto(
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null);
 
+/// <summary>Resumen financiero de la plataforma, armado con las suscripciones de Fluxo. Los importes son lo
+/// programado (plan y fechas de cada suscripción), no lo efectivamente cobrado.</summary>
+public record ResumenFinancieroDto(
+    decimal IngresoMensual, int ClientesActivos, int EsperandoPrimerCobro, decimal PorCobrarPrimerosCobros,
+    int AltasMes, int BajasMes, decimal PorcentajeBajas, decimal ACobrar30Dias,
+    int CobrosRechazados, decimal MontoRechazado, int PausadosOSuspendidos,
+    IReadOnlyList<ClienteEnRiesgoDto> EnRiesgo, IReadOnlyList<AltasMesDto> AltasPorMes);
+
+/// <summary>Tipo: primer-cobro (el primer cobro fue rechazado), rechazado (un cobro mensual), pausado o suspendido.</summary>
+public record ClienteEnRiesgoDto(
+    Guid TenantId, string Nombre, string Tipo, string? Motivo, decimal Monto, DateTime? ProximoReintento);
+
+public record AltasMesDto(int Anio, int Mes, int Altas);
+
 /// <summary>Movimientos del panel de administración. Total es la cantidad que cumple los filtros; Items trae
 /// como máximo los 500 más recientes.</summary>
 public record MovimientosAdminDto(DateOnly Desde, DateOnly Hasta, int Total, IReadOnlyList<MovimientoAdminDto> Items);
