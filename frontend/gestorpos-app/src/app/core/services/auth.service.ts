@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest } from '../models/auth.models';
 
@@ -39,6 +39,18 @@ export class AuthService {
     const actual = this.authState();
     if (!actual) return;
     this.guardarSesion({ ...actual, nombreNegocio: nombre });
+  }
+
+  /** Las sesiones iniciadas antes de que existieran los términos no traen el dato: se le pregunta al servidor una vez.
+   * Devuelve true si el dueño todavía tiene que aceptarlos. Si no se puede saber, no bloquea. */
+  verificarTerminos(): Observable<boolean> {
+    const actual = this.authState();
+    if (!actual || actual.rol !== 'Admin' || actual.terminosPendientes !== undefined) return of(actual?.terminosPendientes === true);
+    return this.http.get<{ aceptados: boolean }>(`${environment.apiUrl}/terminos/estado`).pipe(
+      tap((estado) => this.guardarSesion({ ...actual, terminosPendientes: !estado.aceptados })),
+      map((estado) => !estado.aceptados),
+      catchError(() => of(false)),
+    );
   }
 
   marcarTerminosAceptados(): void {
