@@ -131,10 +131,16 @@ app.UseExceptionHandler(errorApp =>
 
 // Railway termina TLS en su proxy y reenvía como HTTP interno — sin esto,
 // UseHttpsRedirection entraría en loop de redirects creyendo que cada request es HTTP.
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+// El proxy de Railway no es loopback, así que por defecto .NET ignoraba esos headers y la IP de cada request
+// (la que queda en la constancia de aceptación de términos) era la del proxy interno. Se confía en el proxy
+// de la plataforma: la app solo es alcanzable a través de él.
+var forwardedHeaders = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+};
+forwardedHeaders.KnownNetworks.Clear();
+forwardedHeaders.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeaders);
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
 app.UseAuthentication();
