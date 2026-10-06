@@ -12,7 +12,10 @@
       Reintentar
     </button>
   } @else if (datos(); as d) {
-    <p class="subtitulo">Plan de {{ dinero(d.montoMensual) }} por mes</p>
+    <p class="subtitulo">
+      {{ d.planNombre || 'Plan' }} · {{ dinero(d.montoMensual) }} por mes
+      @if (d.promo; as p) { · promo mes {{ p.mesActual }} de {{ p.mesesPromo }}, luego {{ dinero(p.montoNormal) }} }
+    </p>
 
     @if (rechazoActual(); as rechazo) {
       <div class="aviso">

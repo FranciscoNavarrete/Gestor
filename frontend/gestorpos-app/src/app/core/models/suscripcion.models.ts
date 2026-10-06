@@ -1,3 +1,5 @@
+import { PromoSuscripcion } from './admin.models';
+
 export interface CobroSuscripcion {
   fecha: string | null;
   monto: number;
@@ -20,4 +22,7 @@ export interface MiSuscripcion {
   emailPagador: string;
   cobros: CobroSuscripcion[];
   primerPagoManual?: boolean;
+  planNombre?: string | null;
+  montoNormal?: number;
+  promo?: PromoSuscripcion | null;
 }

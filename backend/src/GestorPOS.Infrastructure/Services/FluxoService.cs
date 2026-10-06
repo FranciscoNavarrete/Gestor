@@ -141,7 +141,38 @@ public class FluxoService : IFluxoService
         return new FluxoCobros(
             c.Estado, c.MontoMensual, c.ProximoCobro, c.ProximoMonto,
             (c.Cobros ?? []).Select(x => new FluxoCobro(x.Fecha, x.Monto, x.Estado, x.Motivo, x.Intento, x.ProximoReintento, x.EsPrimerCobro)).ToList(),
-            c.TarjetaEditable);
+            c.TarjetaEditable, c.MpPlanId, c.PlanNombre, c.MontoNormal, c.Promo?.ComoPromo());
+    }
+
+    public async Task CambiarPlanAsync(int suscripcionId, int mpPlanId, CancellationToken ct = default)
+    {
+        var baseUrl = _config["Fluxo:BaseUrl"];
+        var apiKey = _config["Fluxo:VendedorApiKey"];
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+            throw new AppException("La integración con Fluxo no está configurada.");
+
+        FluxoRespuestaSimple? body;
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/{suscripcionId}/plan")
+            {
+                Content = JsonContent.Create(new { mpPlanId }),
+            };
+            request.Headers.Add("X-Vendedor-Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request, ct);
+            body = await response.Content.ReadFromJsonAsync<FluxoRespuestaSimple>(JsonOptions, ct);
+            if (response.IsSuccessStatusCode && body?.Exitoso == true) return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error llamando a Fluxo para cambiar el plan de la suscripción {Id}.", suscripcionId);
+            throw new AppException("No se pudo conectar para cambiar el plan. Probá de nuevo en un momento.");
+        }
+
+        _logger.LogWarning("Fluxo no pudo cambiar el plan de la suscripción {Id}: {Mensaje}", suscripcionId, body?.Mensaje);
+        throw new AppException(body?.Mensaje ?? "No se pudo cambiar el plan.");
     }
 
     public async Task CambiarTarjetaAsync(int suscripcionId, string cardTokenId, CancellationToken ct = default)
@@ -205,7 +236,7 @@ public class FluxoService : IFluxoService
             }
 
             return body.Contenido
-                .Select(p => new FluxoPlan(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro))
+                .Select(p => new FluxoPlan(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro, p.MontoPromo, p.MesesPromo))
                 .ToList();
         }
         catch (Exception ex)
@@ -262,7 +293,8 @@ public class FluxoService : IFluxoService
                 {
                     resultado[e.MpSuscripcionId] = new FluxoEstadoSuscripcion(
                         e.Estado, e.Confirmada, e.PrimerCobroAprobado, e.AjusteMontoPendiente, e.CobroRechazado, e.MotivoRechazo,
-                        e.ProximoReintento, e.MontoMensual, e.MontoProximoCobro, e.ProximoCobro, e.FechaInicio, e.FechaCancelacion);
+                        e.ProximoReintento, e.MontoMensual, e.MontoProximoCobro, e.ProximoCobro, e.FechaInicio, e.FechaCancelacion,
+                        e.MpPlanId, e.PlanNombre, e.Promo?.ComoPromo());
                 }
             }
 
@@ -330,6 +362,8 @@ public class FluxoService : IFluxoService
         public int Frecuencia { get; set; }
         public int DiasGratis { get; set; }
         public decimal? MontoPrimerCobro { get; set; }
+        public decimal? MontoPromo { get; set; }
+        public int? MesesPromo { get; set; }
     }
 
     private class FluxoRespuestaEstados
@@ -354,6 +388,21 @@ public class FluxoService : IFluxoService
         public DateTime? ProximoCobro { get; set; }
         public DateTime? FechaInicio { get; set; }
         public DateTime? FechaCancelacion { get; set; }
+        public int MpPlanId { get; set; }
+        public string? PlanNombre { get; set; }
+        public FluxoPromoContenido? Promo { get; set; }
+    }
+
+    private class FluxoPromoContenido
+    {
+        public decimal MontoPromo { get; set; }
+        public int MesesPromo { get; set; }
+        public int MesActual { get; set; }
+        public decimal MontoNormal { get; set; }
+        public DateTime? UltimoCobroPromo { get; set; }
+        public DateTime? NormalDesde { get; set; }
+
+        public FluxoPromo ComoPromo() => new(MontoPromo, MesesPromo, MesActual, MontoNormal, UltimoCobroPromo, NormalDesde);
     }
 
     private class FluxoRespuestaCobros
@@ -370,6 +419,10 @@ public class FluxoService : IFluxoService
         public DateTime? ProximoCobro { get; set; }
         public decimal? ProximoMonto { get; set; }
         public bool TarjetaEditable { get; set; }
+        public int MpPlanId { get; set; }
+        public string? PlanNombre { get; set; }
+        public decimal MontoNormal { get; set; }
+        public FluxoPromoContenido? Promo { get; set; }
         public List<FluxoCobroContenido>? Cobros { get; set; }
     }
 

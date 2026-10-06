@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { PromoSuscripcion } from '../../../core/models/admin.models';
 import { MiSuscripcion } from '../../../core/models/suscripcion.models';
 
 const ETIQUETAS_COBRO: Record<string, string> = {
@@ -30,6 +31,10 @@ export class MiSuscripcionVista {
 
   dinero(valor: number): string {
     return '$' + Math.round(valor).toLocaleString('es-AR');
+  }
+
+  mesesDePromo(p: PromoSuscripcion): number[] {
+    return Array.from({ length: p.mesesPromo }, (_, i) => i + 1);
   }
 
   etiquetaCobro(estado: string): string {

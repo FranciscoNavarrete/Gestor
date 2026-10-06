@@ -122,12 +122,30 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   // El primer cobro puede ser distinto del mensual (alta + primer mes).
   tienePrimerCobroDistinto(plan: FluxoPlan): boolean {
-    return plan.montoPrimerCobro != null && plan.montoPrimerCobro !== plan.monto;
+    return plan.montoPrimerCobro != null && plan.montoPrimerCobro !== this.precioMes(plan, 2);
+  }
+
+  tienePromo(plan: FluxoPlan): boolean {
+    return !!plan.montoPromo && !!plan.mesesPromo;
+  }
+
+  // Lo que se cobra por mes en el mes número `mes` del plan: el promocional mientras dure la promoción y después el normal.
+  precioMes(plan: FluxoPlan, mes: number): number {
+    return this.tienePromo(plan) && mes <= plan.mesesPromo! ? plan.montoPromo! : plan.monto;
+  }
+
+  // Lo que cobra el primer cobro por Mercado Pago: el alta + 1er mes si el plan lo define, o el precio del mes 1.
+  montoPrimerCobro(plan: FluxoPlan): number {
+    return plan.montoPrimerCobro ?? this.precioMes(plan, 1);
   }
 
   etiquetaPlan(plan: FluxoPlan): string {
-    return this.tienePrimerCobroDistinto(plan)
-      ? `${plan.nombre} — Alta + 1er mes ${this.dinero(plan.montoPrimerCobro!)}, luego ${this.dinero(plan.monto)}/mes`
+    const promo = this.tienePromo(plan) ? `, ${this.dinero(plan.montoPromo!)} x ${plan.mesesPromo} meses y luego ${this.dinero(plan.monto)}` : '';
+    if (this.tienePrimerCobroDistinto(plan) || (this.tienePromo(plan) && plan.montoPrimerCobro != null)) {
+      return `${plan.nombre} — Alta + 1er mes ${this.dinero(plan.montoPrimerCobro!)}${promo || `, luego ${this.dinero(plan.monto)}/mes`}`;
+    }
+    return this.tienePromo(plan)
+      ? `${plan.nombre} — ${this.dinero(plan.montoPromo!)} x ${plan.mesesPromo} meses y luego ${this.dinero(plan.monto)}`
       : `${plan.nombre} — ${this.dinero(plan.monto)}`;
   }
 
@@ -198,7 +216,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
   // Sugiere el monto del primer pago del plan (alta + 1er mes); se puede cambiar.
   private completarMontoPrimerPago(): void {
     const plan = this.planSeleccionado();
-    if (plan) this.form.controls.primerPagoMonto.setValue(plan.montoPrimerCobro ?? plan.monto);
+    if (plan) this.form.controls.primerPagoMonto.setValue(this.montoPrimerCobro(plan));
   }
 
   private validarPrimerPago(): boolean {
@@ -260,7 +278,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
       await this.mp.mountCardPaymentBrick({
         containerId: 'brick-tarjeta',
         // Con el primer pago por fuera, la tarjeta cobra recién el mes que viene y solo el monto mensual.
-        amount: this.esPagoManual() ? plan.monto : (plan.montoPrimerCobro ?? plan.monto),
+        amount: this.esPagoManual() ? this.precioMes(plan, 2) : this.montoPrimerCobro(plan),
         emailPagador: email,
         submitLabel: this.esPagoManual() ? 'Crear negocio y guardar tarjeta' : 'Crear negocio y cobrar',
         onSubmit: (data) => this.crearConTarjeta(data.token),

@@ -143,3 +143,46 @@
   background: color-mix(in srgb, #888 20%, transparent);
   color: #888;
 }
+
+.promo {
+  margin: 12px 0 4px;
+  padding: 11px 13px;
+  border-radius: var(--radius-md, 12px);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.promo-titulo {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  span:last-child {
+    color: var(--color-accent);
+  }
+}
+
+.promo-barra {
+  display: flex;
+  gap: 3px;
+  margin: 8px 0;
+
+  span {
+    flex: 1;
+    height: 7px;
+    border-radius: 2px;
+    background: color-mix(in srgb, currentColor 18%, transparent);
+
+    &.hecho {
+      background: var(--color-accent);
+    }
+  }
+}
+
+.promo-texto {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}

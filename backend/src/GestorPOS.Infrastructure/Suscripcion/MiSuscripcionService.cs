@@ -58,7 +58,8 @@ public class MiSuscripcionService : IMiSuscripcionService
             ProximoReintento: estado?.ProximoReintento,
             EmailPagador: email,
             Cobros: cobrosMp.OrderByDescending(c => c.Fecha ?? DateTime.MinValue).ToList(),
-            PrimerPagoManual: pago is not null);
+            PrimerPagoManual: pago is not null,
+            PlanNombre: cobros.PlanNombre, MontoNormal: cobros.MontoNormal, Promo: cobros.Promo);
     }
 
     public async Task CambiarTarjetaAsync(CambiarTarjetaRequest request, CancellationToken ct = default)

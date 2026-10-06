@@ -9,6 +9,11 @@ public record FluxoSuscripcionResultado(
 /// <summary>Link de pago de una suscripción de Fluxo; InitPoint viene solo mientras siga pendiente.</summary>
 public record FluxoLinkPago(string Estado, string? InitPoint);
 
+/// <summary>Promoción en curso de una suscripción (solo mientras no terminó): precio promocional, mes en que está
+/// (MesActual de MesesPromo), y cuándo pasa al precio normal.</summary>
+public record FluxoPromo(
+    decimal MontoPromo, int MesesPromo, int MesActual, decimal MontoNormal, DateTime? UltimoCobroPromo, DateTime? NormalDesde);
+
 /// <summary>Estado de una suscripción, si alguna vez se confirmó (aunque después se haya cancelado) y si
 /// Mercado Pago ya aprobó el primer cobro. AjusteMontoPendiente: el primer cobro se aprobó pero falta bajar
 /// la suscripción al monto mensual.</summary>
@@ -16,7 +21,8 @@ public record FluxoEstadoSuscripcion(
     string Estado, bool Confirmada, bool PrimerCobroAprobado = false, bool AjusteMontoPendiente = false,
     bool CobroRechazado = false, string? MotivoRechazo = null, DateTime? ProximoReintento = null,
     decimal MontoMensual = 0, decimal MontoProximoCobro = 0, DateTime? ProximoCobro = null,
-    DateTime? FechaInicio = null, DateTime? FechaCancelacion = null);
+    DateTime? FechaInicio = null, DateTime? FechaCancelacion = null,
+    int MpPlanId = 0, string? PlanNombre = null, FluxoPromo? Promo = null);
 
 /// <summary>Un cobro de la suscripción. Estado: aprobado, rechazado, pendiente o cancelado; el motivo viene en español.</summary>
 public record FluxoCobro(
@@ -25,11 +31,11 @@ public record FluxoCobro(
 /// <summary>Historial de cobros y próximo cobro (si la suscripción sigue autorizada).</summary>
 public record FluxoCobros(
     string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<FluxoCobro> Cobros,
-    bool TarjetaEditable = false);
+    bool TarjetaEditable = false, int MpPlanId = 0, string? PlanNombre = null, decimal MontoNormal = 0, FluxoPromo? Promo = null);
 
 public record FluxoPlan(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
-    decimal? MontoPrimerCobro = null);
+    decimal? MontoPrimerCobro = null, decimal? MontoPromo = null, int? MesesPromo = null);
 
 /// <summary>Integración con Fluxo (el motor de cobros/suscripciones que factura a los negocios
 /// que usan GestorPOS).</summary>
@@ -56,6 +62,10 @@ public interface IFluxoService
     /// <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> con un mensaje apto para mostrar
     /// si Mercado Pago no acepta la tarjeta o Fluxo no responde.</summary>
     Task CambiarTarjetaAsync(int suscripcionId, string cardTokenId, CancellationToken ct = default);
+
+    /// <summary>Cambia el plan de una suscripción activa (rige desde el próximo cobro). Tira
+    /// <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> con un mensaje apto para mostrar.</summary>
+    Task CambiarPlanAsync(int suscripcionId, int mpPlanId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FluxoPlan>> ListarPlanesAsync(CancellationToken ct = default);
 

@@ -110,6 +110,11 @@
                         <mat-icon>gavel</mat-icon>
                       </button>
                     }
+                    @if (puedeCambiarPlan(negocio)) {
+                      <button type="button" class="boton-cobros" (click)="cambiarPlan(negocio, $event)" aria-label="Cambiar el plan de este negocio" title="Cambiar plan">
+                        <mat-icon>swap_horiz</mat-icon>
+                      </button>
+                    }
                     @if (tieneCobros(negocio)) {
                       <button type="button" class="boton-cobros" (click)="verCobros(negocio, $event)" aria-label="Ver los cobros de este negocio" title="Ver cobros">
                         <mat-icon>receipt_long</mat-icon>

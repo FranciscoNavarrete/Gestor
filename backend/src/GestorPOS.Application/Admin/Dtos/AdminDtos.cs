@@ -76,7 +76,11 @@ public record MovimientoAdminDto(
 
 /// <summary>Historial de cobros de un negocio (viene de Mercado Pago, vía Fluxo).</summary>
 public record CobrosNegocioDto(
-    string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<CobroNegocioDto> Cobros);
+    string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto, IReadOnlyList<CobroNegocioDto> Cobros,
+    int MpPlanId = 0, string? PlanNombre = null, decimal MontoNormal = 0,
+    GestorPOS.Application.Common.Interfaces.FluxoPromo? Promo = null);
+
+public record CambiarPlanRequest(int MpPlanId);
 
 public record CobroNegocioDto(
     DateTime? Fecha, decimal Monto, string Estado, string? Motivo, int Intento, DateTime? ProximoReintento, bool EsPrimerCobro);
@@ -98,7 +102,7 @@ public record CrearNegocioRequest(
 
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
-    decimal? MontoPrimerCobro = null);
+    decimal? MontoPrimerCobro = null, decimal? MontoPromo = null, int? MesesPromo = null);
 
 public record AdminUsuarioDto(Guid Id, string Email, string Nombre, string Rol, bool Activo, DateTime CreadoUtc);
 

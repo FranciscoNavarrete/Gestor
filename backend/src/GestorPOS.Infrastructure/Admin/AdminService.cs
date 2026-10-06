@@ -187,7 +187,7 @@ public class AdminService : IAdminService
     {
         var planes = await _fluxo.ListarPlanesAsync(ct);
         return planes
-            .Select(p => new FluxoPlanDto(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro))
+            .Select(p => new FluxoPlanDto(p.MpPlanId, p.Nombre, p.Monto, p.Moneda, p.TipoFrecuencia, p.Frecuencia, p.DiasGratis, p.MontoPrimerCobro, p.MontoPromo, p.MesesPromo))
             .ToList();
     }
 
@@ -378,7 +378,29 @@ public class AdminService : IAdminService
         var cobros = await _fluxo.ObtenerCobrosAsync(tenant.FluxoSuscripcionId.Value, ct);
         return new CobrosNegocioDto(
             cobros.Estado, cobros.MontoMensual, cobros.ProximoCobro, cobros.ProximoMonto,
-            cobros.Cobros.Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro)).ToList());
+            cobros.Cobros.Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro)).ToList(),
+            cobros.MpPlanId, cobros.PlanNombre, cobros.MontoNormal, cobros.Promo);
+    }
+
+    public async Task<TenantResumenDto> CambiarPlanAsync(Guid tenantId, CambiarPlanRequest request, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+        if (tenant.FluxoSuscripcionId is null)
+            throw new AppException("Este negocio no tiene una suscripción.");
+
+        var antes = await _fluxo.ObtenerCobrosAsync(tenant.FluxoSuscripcionId.Value, ct);
+        var planes = await _fluxo.ListarPlanesAsync(ct);
+        var plan = planes.FirstOrDefault(p => p.MpPlanId == request.MpPlanId)
+            ?? throw new AppException("El plan elegido no existe o no está activo.");
+
+        await _fluxo.CambiarPlanAsync(tenant.FluxoSuscripcionId.Value, plan.MpPlanId, ct);
+
+        var detalle = $"{antes.PlanNombre ?? "Plan anterior"} → {plan.Nombre}"
+            + (plan.MontoPromo is not null && plan.MesesPromo is not null ? $" (promo {plan.MesesPromo} meses)" : string.Empty);
+        await RegistrarMovimientoAsync("negocio.cambio_plan", "negocio", tenant.Id, tenant.Nombre, detalle, ct);
+        await _db.SaveChangesAsync(ct);
+
+        return await ArmarResumenAsync(tenant, ct);
     }
 
     public async Task<IReadOnlyList<AceptacionTerminosDto>> ObtenerTerminosAsync(Guid tenantId, CancellationToken ct = default)

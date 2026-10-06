@@ -26,11 +26,27 @@
   <div class="columnas">
     <mat-card class="card">
       <mat-card-content>
-        <h3 class="titulo">Tu plan</h3>
+        <h3 class="titulo">Tu plan{{ s.planNombre ? ': ' + s.planNombre : '' }}</h3>
         <p class="monto">{{ dinero(s.montoMensual) }}<span class="por-mes"> por mes</span></p>
         <p class="linea">
           <span [class]="'chip ' + etiquetaEstado(s).clase">{{ etiquetaEstado(s).texto }}</span>
         </p>
+        @if (s.promo; as p) {
+          <div class="promo">
+            <p class="promo-titulo"><span>Promoción</span><span>Mes {{ p.mesActual }} de {{ p.mesesPromo }}</span></p>
+            <div class="promo-barra" role="img" [attr.aria-label]="'Mes ' + p.mesActual + ' de ' + p.mesesPromo">
+              @for (n of mesesDePromo(p); track n) {
+                <span [class.hecho]="n <= p.mesActual"></span>
+              }
+            </div>
+            <p class="promo-texto">
+              Pagás {{ dinero(p.montoPromo) }} por mes
+              @if (p.ultimoCobroPromo) { hasta el {{ p.ultimoCobroPromo | date: 'dd/MM' : '-0300' }}. }
+              @if (p.normalDesde) { Desde el {{ p.normalDesde | date: 'dd/MM' : '-0300' }} el abono pasa a {{ dinero(p.montoNormal) }}. }
+              @else { Después el abono pasa a {{ dinero(p.montoNormal) }}. }
+            </p>
+          </div>
+        }
         @if (s.proximoCobro && s.estado === 'authorized') {
           <p class="linea secundaria">{{ s.cobroRechazado ? 'Próximo intento' : 'Próximo cobro' }}</p>
           <p class="linea destacada">{{ s.proximoCobro | date: 'dd/MM' : '-0300' }} · {{ dinero(s.proximoMonto ?? s.montoMensual) }}</p>

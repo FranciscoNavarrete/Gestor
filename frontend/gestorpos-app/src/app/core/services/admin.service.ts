@@ -36,6 +36,12 @@ export class AdminService {
     });
   }
 
+  cambiarPlan(tenantId: string, mpPlanId: number): Observable<TenantResumen> {
+    return this.http.put<TenantResumen>(`${environment.apiUrl}/admin/tenants/${tenantId}/plan`, { mpPlanId }, {
+      headers: this.headers(),
+    });
+  }
+
   confirmarPago(tenantId: string, request: ConfirmarPagoRequest): Observable<TenantResumen> {
     return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants/${tenantId}/confirmar-pago`, request, {
       headers: this.headers(),

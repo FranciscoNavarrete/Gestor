@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>Cambiar plan de {{ data.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (actual(); as a) {
+    <p class="subtitulo">
+      Hoy: {{ a.planNombre || 'Plan actual' }} · {{ dinero(a.montoMensual) }} por mes
+      @if (a.promo; as p) { · promo mes {{ p.mesActual }} de {{ p.mesesPromo }} }
+    </p>
+
+    @if (opciones().length === 0) {
+      <p class="subtitulo">No hay otros planes activos para elegir.</p>
+    } @else {
+      <div class="planes" role="radiogroup" aria-label="Plan nuevo">
+        @for (plan of opciones(); track plan.mpPlanId) {
+          <button type="button" class="plan" role="radio" [attr.aria-checked]="elegidoId() === plan.mpPlanId"
+                  [class.activo]="elegidoId() === plan.mpPlanId" (click)="elegidoId.set(plan.mpPlanId)">
+            {{ etiqueta(plan) }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (elegido(); as plan) {
+      <dl class="resumen">
+        <dt>Cuándo cambia</dt>
+        <dd>En el próximo cobro{{ a.proximoCobro ? ' (' + (a.proximoCobro | date: 'dd/MM' : '-0300') + ')' : '' }}</dd>
+        <dt>Próximo cobro</dt>
+        <dd>{{ dinero(montoProximo()) }}</dd>
+        @if (hayPromo()) {
+          <dt>Meses con promo</dt>
+          <dd>{{ plan.mesesPromo }} desde el cambio</dd>
+          <dt>Después</dt>
+          <dd>{{ dinero(plan.monto) }} por mes</dd>
+        }
+      </dl>
+      <p class="nota">No se cobra ni se devuelve nada ahora. La tarjeta y la fecha de cobro no cambian.</p>
+    }
+  }
+
+  @if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+    @if (!actual()) {
+      <button mat-stroked-button type="button" (click)="cargar()"><mat-icon>refresh</mat-icon> Reintentar</button>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="false">Cancelar</button>
+  <button mat-flat-button type="button" (click)="cambiar()" [disabled]="!elegido() || guardando()">
+    {{ guardando() ? 'Cambiando…' : 'Cambiar plan' }}
+  </button>
+</mat-dialog-actions>

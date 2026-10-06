@@ -44,10 +44,21 @@
           </mat-form-field>
 
           @if (planSeleccionado(); as plan) {
-            @if (tienePrimerCobroDistinto(plan)) {
+            @if (tienePrimerCobroDistinto(plan) || tienePromo(plan)) {
               <div class="cobro-inicial">
-                <p class="cobro-inicial-titulo">Alta + 1er mes: {{ dinero(plan.montoPrimerCobro!) }}</p>
-                <p class="cobro-inicial-detalle">Después: {{ dinero(plan.monto) }} por mes</p>
+                @if (plan.montoPrimerCobro != null) {
+                  <p class="cobro-inicial-titulo">Alta + 1er mes: {{ dinero(plan.montoPrimerCobro) }}</p>
+                }
+                @if (tienePromo(plan)) {
+                  <p class="cobro-inicial-detalle">
+                    Promoción: {{ dinero(plan.montoPromo!) }} por mes durante {{ plan.mesesPromo }} meses
+                    @if (plan.montoPrimerCobro == null) { (incluye el primero) }
+                    @else { (después del alta) }
+                  </p>
+                  <p class="cobro-inicial-detalle">Después: {{ dinero(plan.monto) }} por mes</p>
+                } @else {
+                  <p class="cobro-inicial-detalle">Después: {{ dinero(plan.monto) }} por mes</p>
+                }
                 <p class="cobro-inicial-detalle">Se autoriza una sola vez y Mercado Pago cobra todo solo.</p>
               </div>
             }
@@ -120,9 +131,12 @@
                 <mat-icon>check</mat-icon>
                 <span>
                   @if (tienePrimerCobroDistinto(plan)) {
-                    Alta + 1er mes de {{ dinero(plan.montoPrimerCobro!) }} y luego {{ dinero(plan.monto) }} por mes con tarjeta.
+                    Alta + 1er mes de {{ dinero(plan.montoPrimerCobro!) }} y luego {{ dinero(precioMes(plan, 2)) }} por mes con tarjeta.
                   } @else {
-                    Abono de {{ dinero(plan.monto) }} por mes con tarjeta.
+                    Abono de {{ dinero(precioMes(plan, 1)) }} por mes con tarjeta.
+                  }
+                  @if (tienePromo(plan)) {
+                    Es una promoción de {{ plan.mesesPromo }} meses: después el abono pasa a {{ dinero(plan.monto) }} por mes.
                   }
                 </span>
               </p>

@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
+import { CambiarPlanDialog } from '../../../core/dialogs/cambiar-plan-dialog/cambiar-plan-dialog';
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
 import { TerminosRegistroDialog } from '../../../core/dialogs/terminos-registro-dialog/terminos-registro-dialog';
 import { ConfirmarPagoDialog } from '../../../core/dialogs/confirmar-pago-dialog/confirmar-pago-dialog';
@@ -229,6 +230,23 @@ export class Negocios implements OnInit, OnDestroy {
   // Los cobros solo existen cuando la suscripción ya se autorizó alguna vez.
   tieneCobros(negocio: TenantResumen): boolean {
     return !!negocio.fluxoSuscripcionId && !!negocio.fluxoEstado && negocio.fluxoEstado !== 'pending';
+  }
+
+  // Solo el operador, y solo con la suscripción activa: el plan nuevo rige desde el próximo cobro.
+  puedeCambiarPlan(negocio: TenantResumen): boolean {
+    return this.adminAuth.esOperador() && negocio.fluxoEstado === 'authorized';
+  }
+
+  cambiarPlan(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog
+      .open(CambiarPlanDialog, { data: { tenantId: negocio.id, nombre: negocio.nombre }, width: '480px', maxWidth: '94vw' })
+      .afterClosed()
+      .subscribe((cambiado) => {
+        if (!cambiado) return;
+        this.snackBar.open('Plan cambiado. Rige desde el próximo cobro.', 'OK', { duration: 3500 });
+        this.cargarNegocios(true);
+      });
   }
 
   verTerminos(negocio: TenantResumen, event: Event): void {

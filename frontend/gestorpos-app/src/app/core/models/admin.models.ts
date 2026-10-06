@@ -27,6 +27,16 @@ export interface ConfirmarPagoRequest {
   monto?: number | null;
 }
 
+/** Promoción en curso de una suscripción (solo mientras no terminó): mesActual de mesesPromo, y cuándo pasa al precio normal. */
+export interface PromoSuscripcion {
+  montoPromo: number;
+  mesesPromo: number;
+  mesActual: number;
+  montoNormal: number;
+  ultimoCobroPromo: string | null;
+  normalDesde: string | null;
+}
+
 export interface FluxoPlan {
   mpPlanId: number;
   nombre: string;
@@ -36,6 +46,9 @@ export interface FluxoPlan {
   frecuencia: number;
   diasGratis: number;
   montoPrimerCobro?: number | null;
+  /** Promoción: precio por mes durante los primeros mesesPromo meses; después rige monto. */
+  montoPromo?: number | null;
+  mesesPromo?: number | null;
 }
 
 export interface TenantResumen {
@@ -80,6 +93,10 @@ export interface CobrosNegocio {
   proximoCobro: string | null;
   proximoMonto: number | null;
   cobros: CobroNegocio[];
+  mpPlanId?: number;
+  planNombre?: string | null;
+  montoNormal?: number;
+  promo?: PromoSuscripcion | null;
 }
 
 export interface LiquidacionItem {
