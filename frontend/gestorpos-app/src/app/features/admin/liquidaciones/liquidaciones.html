@@ -1,5 +1,50 @@
 <div class="pagina">
   @if (adminAuth.esOperador()) {
+    <div class="vistas" role="group" aria-label="Sección">
+      <button type="button" class="vista" [class.activo]="vista() === 'liquidar'" (click)="cambiarVista('liquidar')">Liquidar</button>
+      <button type="button" class="vista" [class.activo]="vista() === 'efectivo'" (click)="cambiarVista('efectivo')">Efectivo</button>
+    </div>
+  }
+
+  @if (adminAuth.esOperador() && vista() === 'efectivo') {
+    @if (cargando() && !efectivo()) {
+      <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+    } @else if (error()) {
+      <mat-card class="card"><mat-card-content><p class="error">{{ error() }}</p></mat-card-content></mat-card>
+    } @else if (efectivo(); as e) {
+      <mat-card class="card">
+        <mat-card-content>
+          <h3 class="titulo-seccion">Efectivo en poder de los vendedores</h3>
+          @if (e.vendedores.length === 0) {
+            <p class="vacio">Todavía ningún vendedor cobró efectivo.</p>
+          } @else {
+            @for (v of e.vendedores; track v.vendedorId) {
+              <div class="efectivo-fila">
+                <div class="efectivo-info">
+                  <span class="nombre">{{ v.nombre }}</span>
+                  <span class="resumen">
+                    Cobró {{ dinero(v.cobrado) }} · entregó {{ dinero(v.entregado) }} · descontado {{ dinero(v.compensado) }}
+                  </span>
+                </div>
+                <div class="efectivo-lado">
+                  <strong class="total">{{ dinero(v.enPoder) }}</strong>
+                  <span class="resumen">a su cargo</span>
+                </div>
+                <div class="efectivo-acciones">
+                  @if (v.enPoder > 0) {
+                    <button mat-flat-button type="button" (click)="registrarEntrega(v)">Registrar entrega</button>
+                  }
+                  <button mat-stroked-button type="button" (click)="verMovimientosEfectivo(v)">Ver</button>
+                </div>
+              </div>
+            }
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+
+  @if (adminAuth.esOperador() && vista() === 'liquidar') {
     <div class="meses" role="group" aria-label="Mes a liquidar">
       @for (m of meses; track m.etiqueta) {
         <button
@@ -45,6 +90,10 @@
                 <strong class="total">{{ dinero(v.comision + v.bono) }}</strong>
               </div>
 
+              @if (v.efectivoEnPoder > 0) {
+                <p class="nota efectivo-nota">Tiene {{ dinero(v.efectivoEnPoder) }} en efectivo a su cargo: se descuenta al liquidar.</p>
+              }
+
               @if (v.ventasSinLiquidar > 0) {
                 <div class="fila">
                   <span class="chip chip-gris">Sin liquidar</span>
@@ -56,13 +105,18 @@
               @for (l of v.liquidaciones; track l.id) {
                 <div class="fila">
                   @if (l.estado === 'Pagada') {
-                    <span class="chip chip-ok">Pagada el {{ l.fechaPago | date: 'dd/MM' }}</span>
+                    <span class="chip chip-ok">{{ l.neto < 0 ? 'Entregado' : 'Pagada' }} el {{ l.fechaPago | date: 'dd/MM' }}</span>
                   } @else {
-                    <span class="chip chip-aviso">Pendiente de pago</span>
+                    <span class="chip chip-aviso">{{ l.neto < 0 ? 'Pendiente de entrega' : 'Pendiente de pago' }}</span>
                   }
-                  <span class="fila-texto">{{ l.ventas }} {{ l.ventas === 1 ? 'venta' : 'ventas' }} · {{ dinero(l.total) }}</span>
+                  <span class="fila-texto">
+                    {{ l.ventas }} {{ l.ventas === 1 ? 'venta' : 'ventas' }} · {{ dinero(l.total) }}
+                    @if (l.efectivoCompensado > 0) {
+                      · efectivo −{{ dinero(l.efectivoCompensado) }} · <strong>{{ l.neto < 0 ? 'debe ' + dinero(-l.neto) : 'neto ' + dinero(l.neto) }}</strong>
+                    }
+                  </span>
                   @if (l.estado === 'Pendiente') {
-                    <button mat-flat-button type="button" (click)="abrir('pagar', v, l)">Marcar pagada</button>
+                    <button mat-flat-button type="button" (click)="abrir('pagar', v, l)">{{ l.neto < 0 ? 'Marcar entregado' : 'Marcar pagada' }}</button>
                   }
                   <button mat-stroked-button type="button" (click)="abrir('ver', v, l)">Ver</button>
                 </div>
@@ -99,6 +153,17 @@
       </mat-card>
     } @else {
       <div class="lista">
+        @if (miEfectivo(); as ef) {
+          @if (ef.enPoder > 0) {
+            <mat-card class="card vendedor">
+              <mat-card-content>
+                <span class="resumen">Efectivo que tenés a tu cargo</span>
+                <strong class="total grande">{{ dinero(ef.enPoder) }}</strong>
+                <span class="resumen">{{ ef.cobros }} {{ ef.cobros === 1 ? 'cobro' : 'cobros' }} · se descuenta de tu liquidación</span>
+              </mat-card-content>
+            </mat-card>
+          }
+        }
         @for (l of misPagos(); track l.id) {
           <mat-card class="card vendedor">
             <mat-card-content>
@@ -108,7 +173,7 @@
                   <span class="resumen">{{ l.ventas }} {{ l.ventas === 1 ? 'venta' : 'ventas' }} · comisión {{ dinero(l.totalComision) }}@if (l.totalBono > 0) { + bono {{ dinero(l.totalBono) }} }</span>
                 </div>
                 <div class="lado">
-                  <strong class="total">{{ dinero(l.total) }}</strong>
+                  <strong class="total">{{ dinero(l.efectivoCompensado > 0 ? l.neto : l.total) }}</strong>
                   @if (l.estado === 'Pagada') {
                     <span class="chip chip-ok">Pagada el {{ l.fechaPago | date: 'dd/MM' }}</span>
                   } @else {
@@ -124,6 +189,11 @@
                       <span>{{ i.nombre }}<small>Alta {{ i.fechaAltaUtc | date: 'dd/MM' : '-0300' }}@if (i.bono > 0) { · bono {{ dinero(i.bono) }} }</small></span>
                       <span>{{ dinero(i.comision) }}</span>
                     </div>
+                  }
+                  @if (l.efectivoCompensado > 0) {
+                    <div class="item"><span>Comisión y bono</span><span>{{ dinero(l.total) }}</span></div>
+                    <div class="item"><span>Efectivo que tenías a tu cargo</span><span class="neg">−{{ dinero(l.efectivoCompensado) }}</span></div>
+                    <div class="item"><strong>{{ l.neto < 0 ? 'Debés entregar' : 'Te pagamos' }}</strong><strong>{{ dinero(l.neto < 0 ? -l.neto : l.neto) }}</strong></div>
                   }
                   @if (l.nota) { <p class="nota">Nota: {{ l.nota }}</p> }
                 </div>

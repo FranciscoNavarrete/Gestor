@@ -19,7 +19,7 @@ public record LiquidacionItemDto(Guid TenantId, string Nombre, DateTime FechaAlt
 public record LiquidacionDto(
     Guid Id, Guid VendedorId, string VendedorNombre, int Anio, int Mes, string Estado, DateTime FechaCierreUtc,
     DateOnly? FechaPago, string? Nota, int Ventas, decimal TotalComision, decimal TotalBono, decimal Total,
-    IReadOnlyList<LiquidacionItemDto> Items);
+    IReadOnlyList<LiquidacionItemDto> Items, decimal EfectivoCompensado = 0, decimal Neto = 0);
 
 /// <summary>Un vendedor en el cierre de un mes. Ventas/Comision/Bono son de todas sus ventas cobradas del mes
 /// (liquidadas y no); "SinLiquidar" es lo que todavía no está en ninguna liquidación; EsperandoCobro son ventas
@@ -27,13 +27,26 @@ public record LiquidacionDto(
 public record LiquidacionVendedorDto(
     Guid VendedorId, string Nombre, int Ventas, decimal Comision, decimal Bono,
     int VentasSinLiquidar, decimal ComisionSinLiquidar, decimal BonoSinLiquidar, int EsperandoCobro,
-    IReadOnlyList<LiquidacionDto> Liquidaciones);
+    IReadOnlyList<LiquidacionDto> Liquidaciones, decimal EfectivoEnPoder = 0);
 
 public record LiquidacionesMesDto(int Anio, int Mes, IReadOnlyList<LiquidacionVendedorDto> Vendedores);
 
 public record PrevisualizacionLiquidacionDto(
     Guid VendedorId, string VendedorNombre, int Anio, int Mes, IReadOnlyList<LiquidacionItemDto> Items,
-    decimal TotalComision, decimal TotalBono, decimal Total, int EsperandoCobro);
+    decimal TotalComision, decimal TotalBono, decimal Total, int EsperandoCobro,
+    decimal EfectivoEnPoder = 0, decimal Neto = 0);
+
+/// <summary>Efectivo de un vendedor: lo que cobró, entregó y se le descontó, y lo que tiene hoy a su cargo.</summary>
+public record EfectivoVendedorDto(
+    Guid VendedorId, string Nombre, int Cobros, decimal Cobrado, decimal Entregado, decimal Compensado, decimal EnPoder);
+
+public record EfectivoResumenDto(IReadOnlyList<EfectivoVendedorDto> Vendedores);
+
+/// <summary>Tipo: Cobro, Entrega o Compensacion. Anulable solo para las entregas (y solo el operador).</summary>
+public record EfectivoMovimientoDto(
+    Guid Id, string Tipo, DateOnly Fecha, decimal Monto, string Detalle, string? RegistradoPor, bool Anulable);
+
+public record RegistrarEntregaRequest(Guid VendedorId, decimal Monto, DateOnly? Fecha = null, string? Nota = null);
 
 public record LiquidarRequest(Guid VendedorId, int Anio, int Mes);
 

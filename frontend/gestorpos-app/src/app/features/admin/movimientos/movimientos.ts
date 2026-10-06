@@ -35,6 +35,8 @@ const ACCIONES: Record<string, { verbo: string; icono: string; tono: Tono }> = {
   'usuario.activado': { verbo: 'reactivó al usuario', icono: 'how_to_reg', tono: 'ok' },
   'usuario.desactivado': { verbo: 'desactivó al usuario', icono: 'person_off', tono: 'peligro' },
   'pago.confirmado': { verbo: 'confirmó el pago de', icono: 'paid', tono: 'ok' },
+  'efectivo.entrega': { verbo: 'registró una entrega de efectivo de', icono: 'payments', tono: 'ok' },
+  'efectivo.entrega_anulada': { verbo: 'anuló una entrega de efectivo de', icono: 'undo', tono: 'aviso' },
   'liquidacion.cerrada': { verbo: 'liquidó las comisiones de', icono: 'request_quote', tono: 'info' },
   'liquidacion.pagada': { verbo: 'marcó como pagadas las comisiones de', icono: 'paid', tono: 'ok' },
   'liquidacion.anulada': { verbo: 'anuló la liquidación de', icono: 'undo', tono: 'aviso' },

@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>Efectivo de {{ data.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+  } @else if (movimientos().length === 0) {
+    <p class="subtitulo">Todavía no hay movimientos de efectivo.</p>
+  } @else {
+    @for (m of movimientos(); track m.id) {
+      <div class="fila">
+        <span class="fecha">{{ m.fecha | date: 'dd/MM' }}</span>
+        <span class="detalle">
+          <strong>{{ etiqueta(m.tipo) }} {{ dinero(m.monto) }}</strong>
+          <small>{{ m.detalle }}@if (m.registradoPor) { · {{ m.registradoPor }} }</small>
+        </span>
+        @if (m.anulable) {
+          <button mat-button type="button" class="peligro" (click)="anular(m)">
+            {{ confirmando() === m.id ? 'Confirmar' : 'Anular' }}
+          </button>
+        }
+      </div>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="cambio()">Cerrar</button>
+</mat-dialog-actions>

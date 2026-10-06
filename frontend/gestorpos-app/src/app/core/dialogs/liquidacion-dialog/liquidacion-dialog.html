@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>
   @switch (data.modo) {
     @case ('liquidar') { Liquidar a {{ data.vendedorNombre }} }
-    @case ('pagar') { Marcar como pagada }
+    @case ('pagar') { {{ neto < 0 ? 'Marcar como entregado' : 'Marcar como pagada' }} }
     @default { Liquidación de {{ data.vendedorNombre }} }
   }
 </h2>
@@ -9,7 +9,7 @@
 <mat-dialog-content class="contenido">
   <p class="subtitulo">
     @if (data.modo === 'pagar') {
-      {{ data.vendedorNombre }} · {{ periodo }} · {{ dinero(total) }}
+      {{ data.vendedorNombre }} · {{ periodo }} · {{ neto < 0 ? 'debe entregar ' : '' }}{{ dinero(absoluto(neto)) }}
     } @else {
       {{ periodo }} · {{ items.length }} {{ items.length === 1 ? 'venta' : 'ventas' }} con el primer cobro aprobado
     }
@@ -57,10 +57,20 @@
         }
       </div>
 
-      <div class="total"><span>Total a pagar</span><span>{{ dinero(total) }}</span></div>
+      <div class="total"><span>Comisión y bono</span><span>{{ dinero(total) }}</span></div>
+      @if (efectivo > 0) {
+        <div class="item efectivo">
+          <span>Efectivo que tiene a su cargo</span>
+          <span class="menos">−{{ dinero(efectivo) }}</span>
+        </div>
+        <div class="total neto">
+          <span>{{ neto < 0 ? 'Debe entregar al operador' : 'A pagar al vendedor' }}</span>
+          <span [class.debe]="neto < 0">{{ dinero(absoluto(neto)) }}</span>
+        </div>
+      }
 
       @if (data.modo === 'liquidar' && items.length > 0) {
-        <p class="aviso">Al liquidar, estos importes quedan congelados. Si después se cancela alguno de estos clientes, no cambia lo liquidado.</p>
+        <p class="aviso">Al liquidar, estos importes quedan congelados. Si después se cancela alguno de estos clientes, no cambia lo liquidado.@if (efectivo > 0) { El efectivo descontado deja de figurar a su cargo. }</p>
         @if ((previsualizacion()?.esperandoCobro ?? 0) > 0) {
           <p class="subtitulo">
             Hay {{ previsualizacion()?.esperandoCobro }} {{ previsualizacion()?.esperandoCobro === 1 ? 'venta' : 'ventas' }} de este mes esperando su primer cobro: no se incluyen.
@@ -91,7 +101,7 @@
       </button>
     } @else {
       <button mat-flat-button type="button" (click)="pagar()" [disabled]="guardando() || !fechaPago">
-        {{ guardando() ? 'Guardando…' : 'Confirmar pago' }}
+        {{ guardando() ? 'Guardando…' : neto < 0 ? 'Confirmar entrega' : 'Confirmar pago' }}
       </button>
     }
   }

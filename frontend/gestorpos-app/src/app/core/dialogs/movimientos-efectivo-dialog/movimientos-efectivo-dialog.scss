@@ -1,0 +1,56 @@
+.contenido {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.error {
+  margin: 0;
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.85rem;
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  font-size: 0.85rem;
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.fecha {
+  opacity: 0.65;
+}
+
+.detalle {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  small {
+    font-size: 0.72rem;
+    opacity: 0.65;
+  }
+}
+
+.peligro {
+  color: #e53935;
+}

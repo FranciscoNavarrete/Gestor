@@ -17,7 +17,9 @@ public class LiquidacionConfiguration : IEntityTypeConfiguration<Liquidacion>
         builder.Property(l => l.Estado).HasConversion<string>().HasMaxLength(20);
         builder.Property(l => l.TotalComision).HasPrecision(18, 2);
         builder.Property(l => l.TotalBono).HasPrecision(18, 2);
+        builder.Property(l => l.EfectivoCompensado).HasPrecision(18, 2);
         builder.Ignore(l => l.Total);
+        builder.Ignore(l => l.Neto);
         builder.HasIndex(l => new { l.VendedorId, l.Anio, l.Mes });
 
         builder.HasMany(l => l.Items).WithOne().HasForeignKey(i => i.LiquidacionId).OnDelete(DeleteBehavior.Cascade);

@@ -24,14 +24,20 @@ public class Liquidacion
     public decimal TotalComision { get; private set; }
     public decimal TotalBono { get; private set; }
 
+    /// <summary>Efectivo que el vendedor tenía a su cargo y se descontó de esta liquidación.</summary>
+    public decimal EfectivoCompensado { get; private set; }
+
     public IReadOnlyList<LiquidacionItem> Items => _items;
     public decimal Total => TotalComision + TotalBono;
+
+    /// <summary>Lo que se le paga al vendedor; si es negativo, es lo que tiene que entregar.</summary>
+    public decimal Neto => Total - EfectivoCompensado;
 
     private Liquidacion() { }
 
     public static Liquidacion Crear(
         Guid vendedorId, string vendedorNombre, int anio, int mes, Guid cerradaPorId, string cerradaPorNombre,
-        IEnumerable<LiquidacionItem> items)
+        IEnumerable<LiquidacionItem> items, decimal efectivoCompensado = 0)
     {
         var liquidacion = new Liquidacion
         {
@@ -42,6 +48,7 @@ public class Liquidacion
             CerradaPorId = cerradaPorId,
             CerradaPorNombre = cerradaPorNombre,
         };
+        liquidacion.EfectivoCompensado = efectivoCompensado;
         liquidacion._items.AddRange(items);
         liquidacion.TotalComision = liquidacion._items.Sum(i => i.Comision);
         liquidacion.TotalBono = liquidacion._items.Sum(i => i.Bono);

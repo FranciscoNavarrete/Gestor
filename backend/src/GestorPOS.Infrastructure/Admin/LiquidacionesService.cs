@@ -17,13 +17,16 @@ public class LiquidacionesService : ILiquidacionesService
     private readonly AppDbContext _db;
     private readonly ICurrentAdminContext _currentAdmin;
     private readonly IFluxoService _fluxo;
+    private readonly IEfectivoService _efectivo;
     private readonly TarifaComision _tarifa;
 
-    public LiquidacionesService(AppDbContext db, ICurrentAdminContext currentAdmin, IFluxoService fluxo, IConfiguration config)
+    public LiquidacionesService(
+        AppDbContext db, ICurrentAdminContext currentAdmin, IFluxoService fluxo, IEfectivoService efectivo, IConfiguration config)
     {
         _db = db;
         _currentAdmin = currentAdmin;
         _fluxo = fluxo;
+        _efectivo = efectivo;
         _tarifa = TarifaComisionConfiguracion.Leer(config);
     }
 
@@ -45,6 +48,10 @@ public class LiquidacionesService : ILiquidacionesService
         var asignaciones = CalculadoraComisiones.Asignar(
             ventas.Where(v => v.Cobrada).Select(v => new VentaConfirmada(v.TenantId, v.VendedorId, v.FechaAltaUtc)), _tarifa, yaLiquidadas);
 
+        var efectivoPorVendedor = new Dictionary<Guid, decimal>();
+        foreach (var id in idsVendedores)
+            efectivoPorVendedor[id] = await _efectivo.EnPoderAsync(id, ct);
+
         var filas = idsVendedores.Select(vendedorId =>
         {
             var propias = liquidaciones.Where(l => l.VendedorId == vendedorId).OrderBy(l => l.FechaCierreUtc).ToList();
@@ -61,7 +68,8 @@ public class LiquidacionesService : ILiquidacionesService
                 ComisionSinLiquidar: comisionNueva,
                 BonoSinLiquidar: bonoNuevo,
                 EsperandoCobro: ventas.Count(v => v.VendedorId == vendedorId && v.EsperandoCobro),
-                Liquidaciones: propias.Select(ADto).ToList());
+                Liquidaciones: propias.Select(ADto).ToList(),
+                EfectivoEnPoder: efectivoPorVendedor.GetValueOrDefault(vendedorId));
         })
         .OrderByDescending(f => f.Comision + f.Bono).ThenBy(f => f.Nombre)
         .ToList();
@@ -74,9 +82,12 @@ public class LiquidacionesService : ILiquidacionesService
         ValidarMesTerminado(anio, mes);
         var (items, esperando) = await ItemsPorLiquidarAsync(vendedorId, anio, mes, ct);
         var nombre = await NombreDeVendedorAsync(vendedorId, ct);
+        var enPoder = await _efectivo.EnPoderAsync(vendedorId, ct);
+        var total = items.Sum(i => i.Comision + i.Bono);
         return new PrevisualizacionLiquidacionDto(
             vendedorId, nombre, anio, mes, items.Select(AItemDto).ToList(),
-            items.Sum(i => i.Comision), items.Sum(i => i.Bono), items.Sum(i => i.Comision + i.Bono), esperando);
+            items.Sum(i => i.Comision), items.Sum(i => i.Bono), total, esperando,
+            EfectivoEnPoder: enPoder, Neto: total - enPoder);
     }
 
     public async Task<LiquidacionDto> LiquidarAsync(LiquidarRequest request, CancellationToken ct = default)
@@ -88,12 +99,22 @@ public class LiquidacionesService : ILiquidacionesService
 
         var vendedorNombre = await NombreDeVendedorAsync(request.VendedorId, ct);
         var adminNombre = await NombreDeAdminActualAsync(ct);
+        // El efectivo que el vendedor tiene a su cargo se descuenta de lo que se le paga (o, si supera su comisión,
+        // queda como lo que debe entregar). Desde acá ya no figura a su cargo.
+        var enPoder = Math.Max(await _efectivo.EnPoderAsync(request.VendedorId, ct), 0);
         var liquidacion = Liquidacion.Crear(
-            request.VendedorId, vendedorNombre, request.Anio, request.Mes, _currentAdmin.AdminId, adminNombre, items);
+            request.VendedorId, vendedorNombre, request.Anio, request.Mes, _currentAdmin.AdminId, adminNombre, items, enPoder);
 
         _db.Liquidaciones.Add(liquidacion);
+        if (enPoder > 0)
+        {
+            var hoyAr = DateOnly.FromDateTime(CalculadoraComisiones.AHoraArgentina(DateTime.UtcNow));
+            _db.MovimientosEfectivo.Add(MovimientoEfectivo.Compensacion(
+                request.VendedorId, enPoder, hoyAr, liquidacion.Id, _currentAdmin.AdminId, adminNombre));
+        }
         RegistrarMovimiento("liquidacion.cerrada", request.VendedorId, vendedorNombre, adminNombre,
-            $"{Periodo(request.Anio, request.Mes)} · {liquidacion.Items.Count} ventas · {Dinero(liquidacion.Total)}");
+            $"{Periodo(request.Anio, request.Mes)} · {liquidacion.Items.Count} ventas · {Dinero(liquidacion.Total)}"
+            + (enPoder > 0 ? $" · efectivo descontado {Dinero(enPoder)}" : string.Empty));
 
         try
         {
@@ -139,6 +160,9 @@ public class LiquidacionesService : ILiquidacionesService
             throw new AppException("Una liquidación pagada no se puede anular.");
 
         var adminNombre = await NombreDeAdminActualAsync(ct);
+        // Al anular, el efectivo que se había descontado vuelve a estar a cargo del vendedor.
+        var compensaciones = await _db.MovimientosEfectivo.Where(m => m.LiquidacionId == id).ToListAsync(ct);
+        _db.MovimientosEfectivo.RemoveRange(compensaciones);
         _db.Liquidaciones.Remove(liquidacion);
         RegistrarMovimiento("liquidacion.anulada", liquidacion.VendedorId, liquidacion.VendedorNombre, adminNombre,
             $"{Periodo(liquidacion.Anio, liquidacion.Mes)} · {Dinero(liquidacion.Total)}");
@@ -248,7 +272,8 @@ public class LiquidacionesService : ILiquidacionesService
 
     private static LiquidacionDto ADto(Liquidacion l) =>
         new(l.Id, l.VendedorId, l.VendedorNombre, l.Anio, l.Mes, l.Estado.ToString(), l.FechaCierreUtc, l.FechaPago, l.Nota,
-            l.Items.Count, l.TotalComision, l.TotalBono, l.Total, l.Items.OrderBy(i => i.Orden).Select(AItemDto).ToList());
+            l.Items.Count, l.TotalComision, l.TotalBono, l.Total, l.Items.OrderBy(i => i.Orden).Select(AItemDto).ToList(),
+            l.EfectivoCompensado, l.Neto);
 
     // Medianoche de un día de Argentina, expresada en UTC (Argentina es UTC-3).
     private static DateTime InicioDelDiaEnUtc(DateOnly dia) =>

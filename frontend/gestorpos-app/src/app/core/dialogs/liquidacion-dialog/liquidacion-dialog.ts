@@ -69,6 +69,22 @@ export class LiquidacionDialog implements OnInit {
     return this.data.modo === 'liquidar' ? (this.previsualizacion()?.total ?? 0) : (this.data.liquidacion?.total ?? 0);
   }
 
+  /** Efectivo que el vendedor tiene a su cargo y se descuenta de esta liquidación. */
+  get efectivo(): number {
+    return this.data.modo === 'liquidar'
+      ? (this.previsualizacion()?.efectivoEnPoder ?? 0)
+      : (this.data.liquidacion?.efectivoCompensado ?? 0);
+  }
+
+  /** Lo que se le paga al vendedor; si es negativo, es lo que tiene que entregar. */
+  get neto(): number {
+    return this.total - this.efectivo;
+  }
+
+  absoluto(valor: number): number {
+    return Math.abs(valor);
+  }
+
   cargarPrevisualizacion(): void {
     this.cargando.set(true);
     this.error.set(null);

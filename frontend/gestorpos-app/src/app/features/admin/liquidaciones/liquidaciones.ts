@@ -5,8 +5,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { EntregaEfectivoDialog } from '../../../core/dialogs/entrega-efectivo-dialog/entrega-efectivo-dialog';
 import { LiquidacionDialog, ModoLiquidacion } from '../../../core/dialogs/liquidacion-dialog/liquidacion-dialog';
-import { Liquidacion, LiquidacionVendedor, LiquidacionesMes } from '../../../core/models/admin.models';
+import { MovimientosEfectivoDialog } from '../../../core/dialogs/movimientos-efectivo-dialog/movimientos-efectivo-dialog';
+import { EfectivoResumen, EfectivoVendedor, Liquidacion, LiquidacionVendedor, LiquidacionesMes } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
@@ -34,6 +36,10 @@ export class LiquidacionesAdmin implements OnInit {
   readonly meses: MesElegible[] = this.armarMeses();
   readonly mesElegido = signal<MesElegible>(this.meses[0]);
 
+  // El operador alterna entre liquidar el mes y ver el efectivo que tiene cada vendedor.
+  readonly vista = signal<'liquidar' | 'efectivo'>('liquidar');
+  readonly efectivo = signal<EfectivoResumen | null>(null);
+
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
   readonly cierre = signal<LiquidacionesMes | null>(null);
@@ -52,6 +58,11 @@ export class LiquidacionesAdmin implements OnInit {
     });
   }
 
+  cambiarVista(vista: 'liquidar' | 'efectivo'): void {
+    this.vista.set(vista);
+    this.cargar();
+  }
+
   elegirMes(mes: MesElegible): void {
     this.mesElegido.set(mes);
     this.cargar();
@@ -60,6 +71,20 @@ export class LiquidacionesAdmin implements OnInit {
   cargar(): void {
     this.cargando.set(true);
     this.error.set(null);
+
+    if (this.adminAuth.esOperador() && this.vista() === 'efectivo') {
+      this.adminService.obtenerEfectivo().subscribe({
+        next: (resumen) => {
+          this.efectivo.set(resumen);
+          this.cargando.set(false);
+        },
+        error: (err) => {
+          this.cargando.set(false);
+          this.error.set(extraerMensajeError(err));
+        },
+      });
+      return;
+    }
 
     if (this.adminAuth.esOperador()) {
       const { anio, mes } = this.mesElegido();
@@ -77,6 +102,10 @@ export class LiquidacionesAdmin implements OnInit {
       return;
     }
 
+    this.adminService.obtenerEfectivo().subscribe({
+      next: (resumen) => this.efectivo.set(resumen),
+      error: () => {},
+    });
     this.adminService.listarLiquidaciones().subscribe({
       next: (lista) => {
         this.misPagos.set(lista);
@@ -101,6 +130,33 @@ export class LiquidacionesAdmin implements OnInit {
       .subscribe((cambio) => {
         if (cambio) this.cargar();
       });
+  }
+
+  registrarEntrega(v: EfectivoVendedor): void {
+    this.dialog
+      .open(EntregaEfectivoDialog, {
+        data: { vendedorId: v.vendedorId, nombre: v.nombre, enPoder: v.enPoder },
+        width: '440px',
+        maxWidth: '94vw',
+      })
+      .afterClosed()
+      .subscribe((cambio) => {
+        if (cambio) this.cargar();
+      });
+  }
+
+  verMovimientosEfectivo(v: EfectivoVendedor): void {
+    this.dialog
+      .open(MovimientosEfectivoDialog, { data: { vendedorId: v.vendedorId, nombre: v.nombre }, width: '460px', maxWidth: '94vw' })
+      .afterClosed()
+      .subscribe((cambio) => {
+        if (cambio) this.cargar();
+      });
+  }
+
+  /** El efectivo propio del vendedor (el servidor le devuelve solo el suyo). */
+  miEfectivo(): EfectivoVendedor | null {
+    return this.efectivo()?.vendedores[0] ?? null;
   }
 
   alternar(id: string): void {

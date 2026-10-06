@@ -8,6 +8,9 @@ import {
   CrearAdminUsuarioRequest,
   ConfirmarPagoRequest,
   CrearNegocioRequest,
+  EfectivoMovimiento,
+  EfectivoResumen,
+  EfectivoVendedor,
   FluxoPlan,
   Liquidacion,
   LiquidacionesMes,
@@ -48,6 +51,28 @@ export class AdminService {
     return this.http.get<CobrosNegocio>(`${environment.apiUrl}/admin/tenants/${tenantId}/cobros`, {
       headers: this.headers(),
     });
+  }
+
+  obtenerEfectivo(): Observable<EfectivoResumen> {
+    return this.http.get<EfectivoResumen>(`${environment.apiUrl}/admin/efectivo`, { headers: this.headers() });
+  }
+
+  movimientosEfectivo(vendedorId: string): Observable<EfectivoMovimiento[]> {
+    return this.http.get<EfectivoMovimiento[]>(`${environment.apiUrl}/admin/efectivo/${vendedorId}/movimientos`, {
+      headers: this.headers(),
+    });
+  }
+
+  registrarEntrega(vendedorId: string, monto: number, fecha: string | null, nota: string | null): Observable<EfectivoVendedor> {
+    return this.http.post<EfectivoVendedor>(
+      `${environment.apiUrl}/admin/efectivo/entregas`,
+      { vendedorId, monto, fecha, nota },
+      { headers: this.headers() },
+    );
+  }
+
+  anularEntrega(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/admin/efectivo/entregas/${id}`, { headers: this.headers() });
   }
 
   obtenerLiquidacionesMes(anio: number, mes: number): Observable<LiquidacionesMes> {

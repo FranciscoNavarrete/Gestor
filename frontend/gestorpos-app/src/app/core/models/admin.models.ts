@@ -102,6 +102,9 @@ export interface Liquidacion {
   totalBono: number;
   total: number;
   items: LiquidacionItem[];
+  efectivoCompensado: number;
+  /** Lo que se le paga al vendedor; si es negativo, es lo que tiene que entregar. */
+  neto: number;
 }
 
 export interface LiquidacionVendedor {
@@ -115,6 +118,7 @@ export interface LiquidacionVendedor {
   bonoSinLiquidar: number;
   esperandoCobro: number;
   liquidaciones: Liquidacion[];
+  efectivoEnPoder: number;
 }
 
 export interface LiquidacionesMes {
@@ -133,6 +137,32 @@ export interface PrevisualizacionLiquidacion {
   totalBono: number;
   total: number;
   esperandoCobro: number;
+  efectivoEnPoder: number;
+  neto: number;
+}
+
+export interface EfectivoVendedor {
+  vendedorId: string;
+  nombre: string;
+  cobros: number;
+  cobrado: number;
+  entregado: number;
+  compensado: number;
+  enPoder: number;
+}
+
+export interface EfectivoResumen {
+  vendedores: EfectivoVendedor[];
+}
+
+export interface EfectivoMovimiento {
+  id: string;
+  tipo: 'Cobro' | 'Entrega' | 'Compensacion';
+  fecha: string;
+  monto: number;
+  detalle: string;
+  registradoPor: string | null;
+  anulable: boolean;
 }
 
 export interface ClienteEnRiesgo {

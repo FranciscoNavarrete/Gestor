@@ -15,11 +15,13 @@ public class AdminController : ControllerBase
     private readonly IMovimientosAdminService _movimientos;
     private readonly IResumenFinancieroService _resumenFinanciero;
     private readonly ILiquidacionesService _liquidaciones;
+    private readonly IEfectivoService _efectivo;
 
     public AdminController(
         IAdminService adminService, IReportesVentasService reportesVentas, IMovimientosAdminService movimientos,
-        IResumenFinancieroService resumenFinanciero, ILiquidacionesService liquidaciones)
+        IResumenFinancieroService resumenFinanciero, ILiquidacionesService liquidaciones, IEfectivoService efectivo)
     {
+        _efectivo = efectivo;
         _liquidaciones = liquidaciones;
         _adminService = adminService;
         _reportesVentas = reportesVentas;
@@ -81,6 +83,27 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<ReporteVentasDto>> ReporteVentas(
         [FromQuery] DateOnly desde, [FromQuery] DateOnly hasta, [FromQuery] Guid? vendedorId, CancellationToken ct)
         => Ok(await _reportesVentas.ObtenerVentasAsync(desde, hasta, vendedorId, ct));
+
+    [HttpGet("efectivo")]
+    public async Task<ActionResult<EfectivoResumenDto>> ResumenEfectivo(CancellationToken ct)
+        => Ok(await _efectivo.ResumenAsync(ct));
+
+    [HttpGet("efectivo/{vendedorId:guid}/movimientos")]
+    public async Task<ActionResult<IReadOnlyList<EfectivoMovimientoDto>>> MovimientosEfectivo(Guid vendedorId, CancellationToken ct)
+        => Ok(await _efectivo.MovimientosAsync(vendedorId, ct));
+
+    [HttpPost("efectivo/entregas")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<EfectivoVendedorDto>> RegistrarEntrega(RegistrarEntregaRequest request, CancellationToken ct)
+        => Ok(await _efectivo.RegistrarEntregaAsync(request, ct));
+
+    [HttpDelete("efectivo/entregas/{id:guid}")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<IActionResult> AnularEntrega(Guid id, CancellationToken ct)
+    {
+        await _efectivo.AnularEntregaAsync(id, ct);
+        return NoContent();
+    }
 
     [HttpGet("liquidaciones/resumen")]
     [Authorize(Policy = "AdminOperador")]
