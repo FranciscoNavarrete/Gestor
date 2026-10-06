@@ -1,0 +1,73 @@
+<h2 mat-dialog-title>Nueva suscripción para {{ data.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else {
+    <div [hidden]="tarjetaActiva()" class="campos">
+      <p class="subtitulo">Se conservan todos sus datos: productos, ventas, clientes y usuarios.</p>
+
+      <p class="etiqueta">Plan</p>
+      <div class="opciones" role="radiogroup" aria-label="Plan">
+        @for (p of planes(); track p.mpPlanId) {
+          <button type="button" class="opcion" role="radio" [attr.aria-checked]="planId() === p.mpPlanId"
+                  [class.activo]="planId() === p.mpPlanId" (click)="planId.set(p.mpPlanId)">{{ etiqueta(p) }}</button>
+        }
+      </div>
+
+      @if (tieneAlta()) {
+        <p class="etiqueta">¿Se cobra el alta de nuevo?</p>
+        <div class="segmento" role="group" aria-label="Alta">
+          <button type="button" [class.activo]="!incluirAlta()" (click)="incluirAlta.set(false)">No, solo el abono</button>
+          <button type="button" [class.activo]="incluirAlta()" (click)="incluirAlta.set(true)">Sí, alta + 1er mes</button>
+        </div>
+        <p class="ayuda">Por defecto no: ya pagó el alta cuando se sumó.</p>
+      }
+
+      <p class="etiqueta">Cómo se cobra</p>
+      <div class="segmento" role="group" aria-label="Forma de cobro">
+        <button type="button" [class.activo]="metodo() === 'link'" (click)="metodo.set('link')">Link de pago</button>
+        <button type="button" [class.activo]="metodo() === 'tarjeta'" (click)="metodo.set('tarjeta')">Tarjeta ahora</button>
+      </div>
+
+      <mat-form-field appearance="outline" class="email">
+        <mat-label>Email con el que se cobra</mat-label>
+        <input matInput type="email" [(ngModel)]="email" />
+        <mat-hint>
+          {{ metodo() === 'link' ? 'Tiene que ser el de su cuenta de Mercado Pago' : 'Es el email de la tarjeta' }}
+        </mat-hint>
+      </mat-form-field>
+
+      @if (plan(); as p) {
+        <dl class="resumen">
+          <dt>Primer cobro</dt>
+          <dd>{{ metodo() === 'link' ? 'Apenas autorice el link' : 'Hoy' }} · {{ dinero(montoPrimerCobro()) }}</dd>
+          <dt>Acceso</dt>
+          <dd>{{ metodo() === 'link' ? 'Vuelve apenas autoriza la suscripción' : 'Vuelve ahora' }}</dd>
+          <dt>Vendedor</dt>
+          <dd>Sin comisión nueva</dd>
+        </dl>
+      }
+    </div>
+
+    <div [hidden]="!tarjetaActiva()">
+      <p class="ayuda">Cargá la tarjeta del cliente. Los datos van directo a Mercado Pago.</p>
+      <div id="brick-nueva-suscripcion"></div>
+    </div>
+  }
+
+  @if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (tarjetaActiva()) {
+    <button mat-button type="button" (click)="cambiarDatos()">Cambiar datos</button>
+  } @else {
+    <button mat-button type="button" [mat-dialog-close]="null">Cancelar</button>
+    <button mat-flat-button type="button" (click)="crear()" [disabled]="cargando() || guardando()">
+      {{ guardando() ? 'Creando…' : metodo() === 'tarjeta' ? 'Continuar con la tarjeta' : 'Crear suscripción' }}
+    </button>
+  }
+</mat-dialog-actions>

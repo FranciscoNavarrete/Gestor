@@ -7,7 +7,7 @@ public record TenantResumenDto(
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null,
     string? FormaPrimerPago = null, string? PagoManualEstado = null, decimal? PagoManualMonto = null,
-    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null, DateTime? TerminosAceptadosEn = null);
+    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null, DateTime? TerminosAceptadosEn = null, string? EmailAdmin = null);
 
 /// <summary>Confirmación del operador de un pago recibido por transferencia (o tarjeta u otro). Metodo:
 /// Transferencia, Tarjeta u Otro (o Efectivo). Monto y fecha son opcionales: por defecto el monto esperado y hoy.</summary>
@@ -81,6 +81,11 @@ public record CobrosNegocioDto(
     GestorPOS.Application.Common.Interfaces.FluxoPromo? Promo = null);
 
 public record CambiarPlanRequest(int MpPlanId);
+
+/// <summary>Suscripción nueva para un negocio que ya existía (la anterior se canceló y ya no tiene acceso). Por defecto cobra
+/// solo el abono; con <c>IncluirAlta</c> el primer cobro lleva el alta. <c>EmailPagador</c> es opcional: si no viene se usa el
+/// email del dueño del negocio. Con <c>CardToken</c> la suscripción sale autorizada; sin él se devuelve un link de pago.</summary>
+public record NuevaSuscripcionRequest(int MpPlanId, string? CardToken = null, bool IncluirAlta = false, string? EmailPagador = null);
 
 public record CobroNegocioDto(
     DateTime? Fecha, decimal Monto, string Estado, string? Motivo, int Intento, DateTime? ProximoReintento, bool EsPrimerCobro);

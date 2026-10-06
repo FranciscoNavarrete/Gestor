@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
+import { NuevaSuscripcionDialog } from '../../../core/dialogs/nueva-suscripcion-dialog/nueva-suscripcion-dialog';
 import { CambiarPlanDialog } from '../../../core/dialogs/cambiar-plan-dialog/cambiar-plan-dialog';
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
 import { TerminosRegistroDialog } from '../../../core/dialogs/terminos-registro-dialog/terminos-registro-dialog';
@@ -230,6 +231,33 @@ export class Negocios implements OnInit, OnDestroy {
   // Los cobros solo existen cuando la suscripción ya se autorizó alguna vez.
   tieneCobros(negocio: TenantResumen): boolean {
     return !!negocio.fluxoSuscripcionId && !!negocio.fluxoEstado && negocio.fluxoEstado !== 'pending';
+  }
+
+  // Un negocio que ya perdió el acceso porque su suscripción se canceló (o que nunca tuvo una) se puede volver a suscribir.
+  puedeNuevaSuscripcion(negocio: TenantResumen): boolean {
+    return !negocio.activo && !negocio.pendienteActivacion
+      && (!negocio.fluxoSuscripcionId || negocio.fluxoEstado === 'cancelled');
+  }
+
+  nuevaSuscripcion(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog
+      .open(NuevaSuscripcionDialog, {
+        data: { tenantId: negocio.id, nombre: negocio.nombre, emailAdmin: negocio.emailAdmin ?? null },
+        width: '520px',
+        maxWidth: '94vw',
+      })
+      .afterClosed()
+      .subscribe((creado: TenantResumen | null | undefined) => {
+        if (!creado) return;
+        this.cargarNegocios(true);
+        if (creado.fluxoInitPoint) {
+          // Por link: se muestra enseguida para pasárselo al cliente; el acceso vuelve cuando lo autorice.
+          this.dialog.open(LinkPagoDialog, { data: { tenantId: creado.id, nombre: creado.nombre }, width: '420px', maxWidth: '92vw' });
+        } else {
+          this.snackBar.open('Suscripción creada. El negocio ya tiene acceso.', 'OK', { duration: 4000 });
+        }
+      });
   }
 
   // Solo el operador, y solo con la suscripción activa: el plan nuevo rige desde el próximo cobro.

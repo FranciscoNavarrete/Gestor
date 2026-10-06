@@ -9,6 +9,7 @@ import {
   CrearAdminUsuarioRequest,
   ConfirmarPagoRequest,
   CrearNegocioRequest,
+  NuevaSuscripcionRequest,
   EfectivoMovimiento,
   EfectivoResumen,
   EfectivoVendedor,
@@ -32,6 +33,12 @@ export class AdminService {
 
   crearNegocio(request: CrearNegocioRequest): Observable<TenantResumen> {
     return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants`, request, {
+      headers: this.headers(),
+    });
+  }
+
+  nuevaSuscripcion(tenantId: string, request: NuevaSuscripcionRequest): Observable<TenantResumen> {
+    return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants/${tenantId}/nueva-suscripcion`, request, {
       headers: this.headers(),
     });
   }

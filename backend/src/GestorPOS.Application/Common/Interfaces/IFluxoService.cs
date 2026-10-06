@@ -45,10 +45,11 @@ public interface IFluxoService
     /// no devuelve un link de pago válido (caído, email sin cuenta real en Mercado Pago, etc.) —
     /// un negocio sin forma de cobrarle no tiene que llegar a crearse en GestorPOS. Con
     /// <paramref name="cardTokenId"/> (token de tarjeta generado en el navegador) no hay link: la
-    /// suscripción se crea autorizada, y se tira AppException si Mercado Pago rechaza la tarjeta.</summary>
+    /// suscripción se crea autorizada, y se tira AppException si Mercado Pago rechaza la tarjeta. Con
+    /// <paramref name="sinAlta"/> el primer cobro es solo el abono (suscripción nueva de un negocio que ya existía).</summary>
     Task<FluxoSuscripcionResultado> IniciarSuscripcionAsync(
         string nombre, string apellido, string email, int? mpPlanId, string? cardTokenId = null,
-        bool primerPagoManual = false, CancellationToken ct = default);
+        bool primerPagoManual = false, bool sinAlta = false, CancellationToken ct = default);
 
     /// <summary>Tira <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> si Fluxo no
     /// responde o no encuentra la suscripción, con un mensaje apto para mostrar.</summary>

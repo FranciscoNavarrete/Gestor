@@ -1,6 +1,7 @@
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Infrastructure.Admin;
 using GestorPOS.Application.Admin;
+using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -76,13 +77,31 @@ public class CorteAccesoPorSuscripcionService
         var estados = await _fluxo.ObtenerConfirmacionesAsync(pendientes.Select(t => t.FluxoSuscripcionId!.Value), ct);
         if (estados is null) return 0;
 
-        var confirmados = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, pendientes.Select(t => t.Id), ct);
+        // Espera el primer pago quien tiene una transferencia sin confirmar; quien no tiene ningún pago manual pendiente
+        // (p. ej. un negocio con una suscripción nueva por link) solo espera que el cliente autorice la suscripción.
+        var idsPendientes = pendientes.Select(t => t.Id).ToList();
+        var esperaPagoManual = (await _db.PagosManuales
+                .Where(p => idsPendientes.Contains(p.TenantId) && p.Estado == EstadoPagoManual.Pendiente)
+                .Select(p => p.TenantId)
+                .ToListAsync(ct))
+            .ToHashSet();
         var activados = 0;
 
         foreach (var tenant in pendientes)
         {
-            if (!confirmados.Contains(tenant.Id)) continue;
+            if (esperaPagoManual.Contains(tenant.Id)) continue;
             if (!estados.TryGetValue(tenant.FluxoSuscripcionId!.Value, out var estado) || !estado.Confirmada) continue;
+
+            // Si el negocio había perdido el acceso (suscripción cancelada), se le devuelve a sus usuarios.
+            try
+            {
+                await AccesoNegocio.RestaurarUsuariosAsync(_db, tenant.Id, aplicar: true, ct);
+            }
+            catch (AppException ex)
+            {
+                _logger.LogWarning("No se pudo activar el negocio {Nombre}: {Mensaje}", tenant.Nombre, ex.Message);
+                continue;
+            }
 
             tenant.ConfirmarActivacion();
             _db.MovimientosAdmin.Add(MovimientoAdmin.Crear(

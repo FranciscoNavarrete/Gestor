@@ -11,6 +11,10 @@ public class Tenant : BaseEntity
     /// <summary>El negocio se creó pero todavía no se cumplió todo para usarlo: falta confirmar el primer pago
     /// y/o que el cliente autorice su suscripción. Mientras tanto no tiene acceso, y se activa solo.</summary>
     public bool PendienteActivacion { get; private set; }
+
+    /// <summary>Ya se había contado como venta cobrada (comisión del vendedor) antes de que se le diera una suscripción
+    /// nueva: la venta sigue contando aunque la suscripción nueva todavía no haya cobrado.</summary>
+    public bool VentaPreviaCobrada { get; private set; }
     public string? Telefono { get; private set; }
     public byte[]? LogoData { get; private set; }
     public string? LogoContentType { get; private set; }
@@ -55,6 +59,8 @@ public class Tenant : BaseEntity
         Activo = true;
         PendienteActivacion = false;
     }
+
+    public void MarcarVentaPreviaCobrada() => VentaPreviaCobrada = true;
 
     public void AsignarVendedor(Guid? vendedorId) => VendedorId = vendedorId;
 

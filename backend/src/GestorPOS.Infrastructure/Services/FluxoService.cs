@@ -24,7 +24,7 @@ public class FluxoService : IFluxoService
 
     public async Task<FluxoSuscripcionResultado> IniciarSuscripcionAsync(
         string nombre, string apellido, string email, int? mpPlanId, string? cardTokenId = null,
-        bool primerPagoManual = false, CancellationToken ct = default)
+        bool primerPagoManual = false, bool sinAlta = false, CancellationToken ct = default)
     {
         var baseUrl = _config["Fluxo:BaseUrl"];
         var apiKey = _config["Fluxo:VendedorApiKey"];
@@ -41,7 +41,7 @@ public class FluxoService : IFluxoService
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/vendedor/suscripciones/iniciar");
             request.Headers.Add("X-Vendedor-Api-Key", apiKey);
-            request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId, cardTokenId, primerPagoManual });
+            request.Content = JsonContent.Create(new { nombre, apellido, email, mpPlanId, cardTokenId, primerPagoManual, sinAlta });
 
             var response = await _http.SendAsync(request, ct);
             // Fluxo devuelve el mismo cuerpo {exitoso, mensaje, contenido} tanto en 200 como en

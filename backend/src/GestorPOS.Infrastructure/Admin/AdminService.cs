@@ -64,7 +64,7 @@ public class AdminService : IAdminService
         }
 
         var fluxo = await _fluxo.IniciarSuscripcionAsync(
-            nombrePila, apellido, emailNormalizado, request.MpPlanId, cardToken, primerPago is not null, ct);
+            nombrePila, apellido, emailNormalizado, request.MpPlanId, cardToken, primerPago is not null, false, ct);
 
         var tenant = Tenant.Crear(request.NombreNegocio, slug);
 
@@ -247,6 +247,11 @@ public class AdminService : IAdminService
             .GroupBy(a => a.TenantId)
             .ToDictionary(g => g.Key, g => g.Min(a => a.FechaUtc));
 
+        var duenos = (await _db.Usuarios.IgnoreQueryFilters().AsNoTracking()
+                .Where(u => idsTenants.Contains(u.TenantId)).OrderBy(u => u.FechaCreacion).ToListAsync(ct))
+            .GroupBy(u => u.TenantId)
+            .ToDictionary(g => g.Key, g => (g.FirstOrDefault(u => u.Rol == RolUsuario.Admin) ?? g.First()) is { } d ? d.EmailOriginalLiberado() ?? d.Email : null);
+
         return tenants
             .Select(t => new TenantResumenDto(
                 t.Id, t.Nombre, t.Slug, t.Activo, t.FechaCreacion,
@@ -276,7 +281,8 @@ public class AdminService : IAdminService
                 FluxoProximoCobro: t.FluxoSuscripcionId is null
                     ? null
                     : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.ProximoCobro,
-                TerminosAceptadosEn: terminosPorTenant.TryGetValue(t.Id, out var aceptadoEn) ? aceptadoEn : null))
+                TerminosAceptadosEn: terminosPorTenant.TryGetValue(t.Id, out var aceptadoEn) ? aceptadoEn : null,
+                EmailAdmin: duenos.GetValueOrDefault(t.Id)))
             .ToList();
     }
 
@@ -321,28 +327,8 @@ public class AdminService : IAdminService
         // Al desactivar se liberó el email y se cortó el acceso de los usuarios; al reactivar hay que
         // devolverles ambas cosas, si no el cliente no podría entrar con su email de siempre. Si otro
         // negocio ya tomó ese email, no se reactiva (y no se toca nada).
-        var usuarios = await _db.Usuarios.IgnoreQueryFilters()
-            .Where(u => u.TenantId == tenantId)
-            .ToListAsync(ct);
-        var aRestaurar = usuarios
-            .Select(u => (Usuario: u, Original: u.EmailOriginalLiberado()))
-            .Where(x => x.Original is not null)
-            .ToList();
-
-        foreach (var (usuario, original) in aRestaurar)
-        {
-            var enUso = await _db.Usuarios.IgnoreQueryFilters()
-                .AnyAsync(x => x.Email == original && x.Id != usuario.Id, ct);
-            if (enUso)
-                throw new AppException($"No se puede reactivar el negocio: el email {original} ya lo usa otro negocio.");
-        }
-
+        await AccesoNegocio.RestaurarUsuariosAsync(_db, tenantId, aplicar: true, ct);
         tenant.Activar();
-        foreach (var (usuario, original) in aRestaurar)
-        {
-            usuario.RestaurarEmail(original!);
-            usuario.Activar();
-        }
 
         await RegistrarMovimientoAsync("negocio.activado", "negocio", tenant.Id, tenant.Nombre, null, ct);
         await _db.SaveChangesAsync(ct);
@@ -380,6 +366,79 @@ public class AdminService : IAdminService
             cobros.Estado, cobros.MontoMensual, cobros.ProximoCobro, cobros.ProximoMonto,
             cobros.Cobros.Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro)).ToList(),
             cobros.MpPlanId, cobros.PlanNombre, cobros.MontoNormal, cobros.Promo);
+    }
+
+    public async Task<TenantResumenDto> NuevaSuscripcionAsync(Guid tenantId, NuevaSuscripcionRequest request, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        // Un Vendedor solo puede hacerlo con los negocios que él mismo cargó.
+        if (!_currentAdmin.EsOperador && tenant.VendedorId != _currentAdmin.AdminId)
+            throw new AppException("El negocio no existe.");
+
+        // Solo cuando ya perdió el acceso: con la suscripción cancelada pero acceso vigente, el sistema lo cortaría igual
+        // si el cliente nunca autoriza la nueva, así que se espera a que se corte.
+        if (tenant.Activo)
+            throw new AppException("Este negocio todavía tiene acceso. La nueva suscripción se puede crear cuando se corte el acceso.");
+        if (tenant.PendienteActivacion)
+            throw new AppException("Este negocio ya espera su primer pago o la autorización de su suscripción.");
+        if (request.MpPlanId <= 0)
+            throw new AppException("Elegí un plan.");
+
+        FluxoEstadoSuscripcion? anterior = null;
+        if (tenant.FluxoSuscripcionId is { } anteriorId)
+        {
+            var estados = await _fluxo.ObtenerConfirmacionesAsync([anteriorId], ct)
+                ?? throw new AppException("No se pudo verificar la suscripción del negocio. Probá de nuevo en un momento.");
+            anterior = estados.GetValueOrDefault(anteriorId);
+            if (anterior is not null && anterior.Estado != "cancelled")
+                throw new AppException("La suscripción de este negocio no está cancelada: no hace falta crear una nueva.");
+        }
+
+        // Antes de crear nada en Fluxo se verifica que se le pueda devolver el acceso a los usuarios.
+        await AccesoNegocio.RestaurarUsuariosAsync(_db, tenantId, aplicar: false, ct);
+
+        var dueno = await DuenoDelNegocioAsync(tenantId, ct)
+            ?? throw new AppException("Este negocio no tiene usuarios.");
+        var emailDueno = dueno.EmailOriginalLiberado() ?? dueno.Email;
+        var email = string.IsNullOrWhiteSpace(request.EmailPagador) ? emailDueno : request.EmailPagador.Trim().ToLowerInvariant();
+        var cardToken = string.IsNullOrWhiteSpace(request.CardToken) ? null : request.CardToken.Trim();
+        var (nombrePila, apellido) = SepararNombreApellido(dueno.Nombre);
+
+        var fluxo = await _fluxo.IniciarSuscripcionAsync(
+            nombrePila, apellido, email, request.MpPlanId, cardToken, false, !request.IncluirAlta, ct);
+
+        // Si ya había contado como venta cobrada, sigue contando aunque la suscripción nueva todavía no haya cobrado.
+        if (anterior is not null)
+        {
+            var conPagoManual = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, [tenant.Id], ct);
+            if (VentaCobrada.Es(anterior, conPagoManual.Contains(tenant.Id))) tenant.MarcarVentaPreviaCobrada();
+        }
+
+        tenant.AsignarFluxo(fluxo.ClienteId, fluxo.SuscripcionId);
+        if (fluxo.Estado == "authorized")
+        {
+            await AccesoNegocio.RestaurarUsuariosAsync(_db, tenantId, aplicar: true, ct);
+            tenant.ConfirmarActivacion();
+        }
+        else
+        {
+            // Con link de pago el acceso vuelve apenas el cliente autoriza la suscripción (lo hace el proceso de fondo).
+            tenant.EsperarActivacion();
+        }
+
+        await RegistrarMovimientoAsync("negocio.nueva_suscripcion", "negocio", tenant.Id, tenant.Nombre,
+            $"Suscripción nueva {(cardToken is not null ? "con tarjeta" : "con link de pago")}{(request.IncluirAlta ? ", con alta" : ", sin alta")}", ct);
+        await _db.SaveChangesAsync(ct);
+
+        return (await ArmarResumenAsync(tenant, ct)) with { FluxoInitPoint = fluxo.InitPoint };
+    }
+
+    // El usuario Admin más antiguo del negocio (el dueño); si no hay ninguno, el primer usuario.
+    private async Task<Usuario?> DuenoDelNegocioAsync(Guid tenantId, CancellationToken ct)
+    {
+        var usuarios = await _db.Usuarios.IgnoreQueryFilters().Where(u => u.TenantId == tenantId).OrderBy(u => u.FechaCreacion).ToListAsync(ct);
+        return usuarios.FirstOrDefault(u => u.Rol == RolUsuario.Admin) ?? usuarios.FirstOrDefault();
     }
 
     public async Task<TenantResumenDto> CambiarPlanAsync(Guid tenantId, CambiarPlanRequest request, CancellationToken ct = default)
@@ -445,7 +504,8 @@ public class AdminService : IAdminService
             fluxoEstado?.CobroRechazado == true, fluxoEstado?.MotivoRechazo,
             FormaPrimerPago: pagoManual?.Metodo.ToString(), PagoManualEstado: pagoManual?.Estado.ToString(),
             PagoManualMonto: pagoManual?.Monto, PendienteActivacion: tenant.PendienteActivacion,
-            FluxoProximoCobro: fluxoEstado?.ProximoCobro, TerminosAceptadosEn: terminosAceptadosEn);
+            FluxoProximoCobro: fluxoEstado?.ProximoCobro, TerminosAceptadosEn: terminosAceptadosEn,
+            EmailAdmin: (await DuenoDelNegocioAsync(tenant.Id, ct)) is { } d ? d.EmailOriginalLiberado() ?? d.Email : null);
     }
 
     private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>

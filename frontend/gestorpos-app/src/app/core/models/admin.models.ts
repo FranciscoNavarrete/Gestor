@@ -75,6 +75,16 @@ export interface TenantResumen {
   pendienteActivacion?: boolean;
   /** Cuándo el dueño aceptó los términos vigentes; null si todavía no. */
   terminosAceptadosEn?: string | null;
+  /** Email del dueño del negocio. */
+  emailAdmin?: string | null;
+}
+
+export interface NuevaSuscripcionRequest {
+  mpPlanId: number;
+  cardToken?: string | null;
+  /** Por defecto false: el primer cobro es solo el abono, sin el alta. */
+  incluirAlta?: boolean;
+  emailPagador?: string | null;
 }
 
 export interface CobroNegocio {

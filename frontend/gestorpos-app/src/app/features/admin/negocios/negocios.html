@@ -102,6 +102,9 @@
                         Términos pendientes
                       </button>
                     }
+                    @if (puedeNuevaSuscripcion(negocio)) {
+                      <button type="button" class="boton-confirmar" (click)="nuevaSuscripcion(negocio, $event)">Nueva suscripción</button>
+                    }
                     @if (puedeConfirmarPago(negocio)) {
                       <button type="button" class="boton-confirmar" (click)="confirmarPago(negocio, $event)">Confirmar pago</button>
                     }
