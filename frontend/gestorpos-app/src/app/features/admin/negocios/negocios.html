@@ -72,9 +72,12 @@
                   <div class="negocio-info">
                     <span class="negocio-nombre">{{ negocio.nombre }}</span>
                     <span class="negocio-detalle">
-                      {{ negocio.activo ? 'Activo' : 'Inactivo' }}
+                      {{ negocio.pendienteActivacion ? 'Sin acceso' : negocio.activo ? 'Activo' : 'Inactivo' }}
                       @if (negocio.vendedorNombre) {
                         · {{ negocio.vendedorNombre }}
+                      }
+                      @if (negocio.formaPrimerPago) {
+                        · 1er pago en {{ negocio.formaPrimerPago.toLowerCase() }}
                       }
                     </span>
                   </div>
@@ -93,6 +96,9 @@
                       } @else {
                         <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
                       }
+                    }
+                    @if (puedeConfirmarPago(negocio)) {
+                      <button type="button" class="boton-confirmar" (click)="confirmarPago(negocio, $event)">Confirmar pago</button>
                     }
                     @if (tieneCobros(negocio)) {
                       <button type="button" class="boton-cobros" (click)="verCobros(negocio, $event)" aria-label="Ver los cobros de este negocio" title="Ver cobros">

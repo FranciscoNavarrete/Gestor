@@ -1,4 +1,5 @@
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Infrastructure.Admin;
 using GestorPOS.Application.Admin;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Persistence;
@@ -41,6 +42,7 @@ public class CorteAccesoPorSuscripcionService
             return 0;
         }
 
+        var pagosManuales = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, activos.Select(t => t.Id), ct);
         var ahora = DateTime.UtcNow;
         var desactivados = 0;
 
@@ -49,7 +51,7 @@ public class CorteAccesoPorSuscripcionService
             if (!estados.TryGetValue(tenant.FluxoSuscripcionId!.Value, out var estado) || estado.Estado != "cancelled")
                 continue;
 
-            if (AccesoVigenteHasta(estado) is { } hasta && hasta > ahora)
+            if (AccesoVigenteHasta(estado, pagosManuales.Contains(tenant.Id)) is { } hasta && hasta > ahora)
                 continue;
 
             await DesactivarAsync(tenant, ct);
@@ -62,10 +64,42 @@ public class CorteAccesoPorSuscripcionService
         return desactivados;
     }
 
+    /// <summary>Activa los negocios que esperaban su activación y ya cumplen todo: el primer pago confirmado y la
+    /// suscripción autorizada (p. ej. el cliente recién abrió el link). Devuelve cuántos activó.</summary>
+    public async Task<int> ActivarPendientesAsync(CancellationToken ct = default)
+    {
+        var pendientes = await _db.Tenants.IgnoreQueryFilters()
+            .Where(t => t.PendienteActivacion && t.FluxoSuscripcionId != null)
+            .ToListAsync(ct);
+        if (pendientes.Count == 0) return 0;
+
+        var estados = await _fluxo.ObtenerConfirmacionesAsync(pendientes.Select(t => t.FluxoSuscripcionId!.Value), ct);
+        if (estados is null) return 0;
+
+        var confirmados = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, pendientes.Select(t => t.Id), ct);
+        var activados = 0;
+
+        foreach (var tenant in pendientes)
+        {
+            if (!confirmados.Contains(tenant.Id)) continue;
+            if (!estados.TryGetValue(tenant.FluxoSuscripcionId!.Value, out var estado) || !estado.Confirmada) continue;
+
+            tenant.ConfirmarActivacion();
+            _db.MovimientosAdmin.Add(MovimientoAdmin.Crear(
+                Guid.Empty, "Sistema", "Sistema", "negocio.activado", "negocio", tenant.Id, tenant.Nombre,
+                "Primer pago confirmado y suscripción autorizada"));
+            _logger.LogInformation("Negocio {Nombre} activado: pago confirmado y suscripción autorizada.", tenant.Nombre);
+            activados++;
+        }
+
+        if (activados > 0) await _db.SaveChangesAsync(ct);
+        return activados;
+    }
+
     /// <summary>Hasta cuándo sigue vigente el acceso de una suscripción cancelada; null si ya no lo está
     /// (nunca pagó, o ya pasó la fecha de su próximo cobro).</summary>
-    public static DateTime? AccesoVigenteHasta(FluxoEstadoSuscripcion estado) =>
-        estado.Estado == "cancelled" && estado.PrimerCobroAprobado ? estado.ProximoCobro : null;
+    public static DateTime? AccesoVigenteHasta(FluxoEstadoSuscripcion estado, bool pagoManualConfirmado = false) =>
+        estado.Estado == "cancelled" && (estado.PrimerCobroAprobado || pagoManualConfirmado) ? estado.ProximoCobro : null;
 
     private async Task DesactivarAsync(Tenant tenant, CancellationToken ct)
     {

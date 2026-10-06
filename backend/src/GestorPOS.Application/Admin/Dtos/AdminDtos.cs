@@ -5,7 +5,13 @@ public record TenantResumenDto(
     Guid? VendedorId, string? VendedorNombre,
     int? FluxoClienteId = null, int? FluxoSuscripcionId = null, string? FluxoInitPoint = null,
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
-    bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null);
+    bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null,
+    string? FormaPrimerPago = null, string? PagoManualEstado = null, decimal? PagoManualMonto = null,
+    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null);
+
+/// <summary>Confirmación del operador de un pago recibido por transferencia (o tarjeta u otro). Metodo:
+/// Transferencia, Tarjeta u Otro (o Efectivo). Monto y fecha son opcionales: por defecto el monto esperado y hoy.</summary>
+public record ConfirmarPagoRequest(string Metodo, DateOnly? FechaRecepcion = null, string? Nota = null, decimal? Monto = null);
 
 public record LiquidacionItemDto(Guid TenantId, string Nombre, DateTime FechaAltaUtc, int Orden, decimal Comision, decimal Bono);
 
@@ -73,7 +79,8 @@ public record TenantFeatureDto(Guid Id, string Clave, bool Habilitado);
 /// ignora lo que venga acá; si es Operador, puede elegir a qué vendedor atribuirlo (o ninguno).</summary>
 public record CrearNegocioRequest(
     string NombreNegocio, string NombreAdmin, string Email, string Password,
-    Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null);
+    Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null,
+    string? PrimerPago = null, decimal? PrimerPagoMonto = null, string? PrimerPagoNota = null);
 
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,

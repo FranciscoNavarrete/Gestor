@@ -15,7 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { QrDialog } from '../../../core/dialogs/qr-dialog/qr-dialog';
-import { AdminUsuario, FluxoPlan, TenantResumen } from '../../../core/models/admin.models';
+import { AdminUsuario, CrearNegocioRequest, FluxoPlan, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { MpService } from '../../../core/services/mp.service';
@@ -54,6 +54,8 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     password: ['', [Validators.required, Validators.minLength(6)]],
     vendedorId: this.fb.control<string | null>(null),
     mpPlanId: this.fb.control<number | null>(null, [Validators.required]),
+    primerPagoMonto: this.fb.control<number | null>(null),
+    primerPagoNota: this.fb.nonNullable.control(''),
   });
 
   readonly vendedores = signal<AdminUsuario[]>([]);
@@ -65,6 +67,28 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   readonly guardando = signal(false);
   readonly metodoCobro = signal<'link' | 'tarjeta'>('link');
+
+  // Primer pago: con Mercado Pago (como siempre) o recibido por fuera (efectivo del vendedor / transferencia al
+  // operador). En los dos últimos la suscripción mensual (tarjeta o link) es obligatoria igual.
+  readonly primerPago = signal<'mercadopago' | 'efectivo' | 'transferencia'>('mercadopago');
+  readonly esPagoManual = computed(() => this.primerPago() !== 'mercadopago');
+  readonly explicacionCobro = computed(() => {
+    const tarjeta = this.metodoCobro() === 'tarjeta';
+    switch (this.primerPago()) {
+      case 'efectivo':
+        return tarjeta
+          ? 'El negocio queda activo ahora. El efectivo queda a tu cargo y se descuenta de tu liquidación.'
+          : 'El negocio queda sin acceso hasta que el cliente abra el link y autorice su suscripción. El efectivo queda a tu cargo.';
+      case 'transferencia':
+        return tarjeta
+          ? 'El negocio queda sin acceso hasta que el operador confirme la transferencia.'
+          : 'El negocio queda sin acceso hasta que el operador confirme la transferencia y el cliente abra el link.';
+      default:
+        return tarjeta
+          ? 'El cliente carga la tarjeta acá mismo, sin necesidad de cuenta de Mercado Pago. La tarjeta la escribe él, no vos.'
+          : 'Le pasás un link o QR y el cliente paga con su cuenta de Mercado Pago (el email tiene que coincidir con el de esa cuenta).';
+    }
+  });
   readonly tarjetaActiva = signal(false);
   readonly error = signal<string | null>(null);
   readonly ultimoCreado = signal<TenantResumen | null>(null);
@@ -118,6 +142,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   crear(): void {
     if (this.form.invalid || this.guardando()) return;
+    if (!this.validarPrimerPago()) return;
 
     if (this.metodoCobro() === 'tarjeta') {
       void this.continuarConTarjeta();
@@ -131,7 +156,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
     const { email, password } = this.form.getRawValue();
 
-    this.adminService.crearNegocio(this.form.getRawValue()).subscribe({
+    this.adminService.crearNegocio(this.armarRequest()).subscribe({
       next: (negocio) => {
         this.guardando.set(false);
         this.alCrearse(negocio, email, password);
@@ -145,6 +170,55 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     });
   }
 
+  elegirPrimerPago(valor: 'mercadopago' | 'efectivo' | 'transferencia'): void {
+    if (this.guardando() || this.tarjetaActiva()) return;
+    this.primerPago.set(valor);
+    if (valor !== 'mercadopago') this.completarMontoPrimerPago();
+  }
+
+  alElegirPlan(): void {
+    if (this.esPagoManual()) this.completarMontoPrimerPago();
+  }
+
+  // Sugiere el monto del primer pago del plan (alta + 1er mes); se puede cambiar.
+  private completarMontoPrimerPago(): void {
+    const plan = this.planSeleccionado();
+    if (plan) this.form.controls.primerPagoMonto.setValue(plan.montoPrimerCobro ?? plan.monto);
+  }
+
+  private validarPrimerPago(): boolean {
+    if (!this.esPagoManual()) return true;
+    const monto = this.form.controls.primerPagoMonto.value;
+    if (!monto || monto <= 0) {
+      this.error.set('Ingresá el monto del primer pago.');
+      return false;
+    }
+    return true;
+  }
+
+  private armarRequest(cardToken?: string): CrearNegocioRequest {
+    const base = this.form.getRawValue();
+    const manual = this.esPagoManual();
+    return {
+      ...base,
+      cardToken: cardToken ?? null,
+      primerPago: manual ? (this.primerPago() === 'efectivo' ? 'Efectivo' : 'Transferencia') : null,
+      primerPagoMonto: manual ? base.primerPagoMonto : null,
+      primerPagoNota: manual ? base.primerPagoNota.trim() || null : null,
+    };
+  }
+
+  textoPendiente(creado: TenantResumen): string {
+    const esperaPago = creado.pagoManualEstado === 'Pendiente';
+    const esperaLink = creado.fluxoEstado === 'pending';
+    if (esperaPago) {
+      return esperaLink
+        ? 'Sin acceso hasta que el operador confirme la transferencia y el cliente abra el link.'
+        : 'Sin acceso hasta que el operador confirme la transferencia.';
+    }
+    return 'Sin acceso hasta que el cliente abra el link y autorice su suscripción.';
+  }
+
   elegirMetodoCobro(metodo: 'link' | 'tarjeta'): void {
     if (this.guardando() || this.tarjetaActiva()) return;
     this.metodoCobro.set(metodo);
@@ -152,6 +226,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   async continuarConTarjeta(): Promise<void> {
     if (this.form.invalid || this.guardando()) return;
+    if (!this.validarPrimerPago()) return;
 
     const { email, mpPlanId } = this.form.getRawValue();
     const plan = this.planes().find((p) => p.mpPlanId === mpPlanId);
@@ -169,9 +244,10 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     try {
       await this.mp.mountCardPaymentBrick({
         containerId: 'brick-tarjeta',
-        amount: plan.montoPrimerCobro ?? plan.monto,
+        // Con el primer pago por fuera, la tarjeta cobra recién el mes que viene y solo el monto mensual.
+        amount: this.esPagoManual() ? plan.monto : (plan.montoPrimerCobro ?? plan.monto),
         emailPagador: email,
-        submitLabel: 'Crear negocio y cobrar',
+        submitLabel: this.esPagoManual() ? 'Crear negocio y guardar tarjeta' : 'Crear negocio y cobrar',
         onSubmit: (data) => this.crearConTarjeta(data.token),
         onError: () => this.error.set('Mercado Pago no pudo procesar los datos de la tarjeta. Revisalos y probá de nuevo.'),
       });
@@ -192,7 +268,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
     this.guardando.set(true);
     this.error.set(null);
-    const request = { ...this.form.getRawValue(), cardToken };
+    const request = this.armarRequest(cardToken);
 
     return new Promise<void>((resolve, reject) => {
       this.adminService.crearNegocio(request).subscribe({

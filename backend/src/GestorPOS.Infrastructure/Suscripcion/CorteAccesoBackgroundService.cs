@@ -38,6 +38,7 @@ public class CorteAccesoBackgroundService : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
                 var servicio = scope.ServiceProvider.GetRequiredService<CorteAccesoPorSuscripcionService>();
+                await servicio.ActivarPendientesAsync(stoppingToken);
                 await servicio.EjecutarAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

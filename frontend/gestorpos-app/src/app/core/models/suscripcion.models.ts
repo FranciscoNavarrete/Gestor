@@ -19,4 +19,5 @@ export interface MiSuscripcion {
   proximoReintento: string | null;
   emailPagador: string;
   cobros: CobroSuscripcion[];
+  primerPagoManual?: boolean;
 }

@@ -202,15 +202,17 @@ public class LiquidacionesService : ILiquidacionesService
         var estados = await _fluxo.ObtenerConfirmacionesAsync(negocios.Select(t => t.FluxoSuscripcionId!.Value), ct)
             ?? throw new AppException("No se pudo consultar a Fluxo para armar la liquidación. Probá de nuevo en un momento.");
 
+        var conPagoManual = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, negocios.Select(t => t.Id), ct);
+
         return negocios
             .Where(t => estados.ContainsKey(t.FluxoSuscripcionId!.Value))
             .Select(t =>
             {
                 var e = estados[t.FluxoSuscripcionId!.Value];
-                var cobrada = e.Confirmada && e.PrimerCobroAprobado;
+                var cobrada = VentaCobrada.Es(e, conPagoManual.Contains(t.Id));
                 return new VentaDelMes(
                     t.Id, t.Nombre, t.VendedorId!.Value, t.FechaCreacion, cobrada,
-                    EsperandoCobro: e.Confirmada && !e.PrimerCobroAprobado && e.Estado != "cancelled");
+                    EsperandoCobro: e.Confirmada && !cobrada && e.Estado != "cancelled");
             })
             .ToList();
     }

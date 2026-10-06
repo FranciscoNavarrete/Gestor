@@ -30,6 +30,23 @@ public class MiSuscripcionService : IMiSuscripcionService
 
         var email = await _db.Usuarios.Where(u => u.Id == _tenant.UsuarioId).Select(u => u.Email).FirstOrDefaultAsync(ct) ?? string.Empty;
 
+        // El primer pago hecho por fuera de Mercado Pago figura como un pago más.
+        var pago = await _db.PagosManuales.AsNoTracking()
+            .Where(p => p.TenantId == _tenant.TenantId && p.Estado == GestorPOS.Domain.Entities.EstadoPagoManual.Confirmado)
+            .OrderBy(p => p.FechaRegistroUtc)
+            .FirstOrDefaultAsync(ct);
+        var cobrosMp = cobros.Cobros
+            .Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro))
+            .ToList();
+        if (pago is not null)
+        {
+            var fecha = pago.FechaRecepcion?.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(12))).AddHours(3)
+                        ?? pago.FechaConfirmacionUtc;
+            cobrosMp.Add(new CobroNegocioDto(
+                fecha is null ? null : DateTime.SpecifyKind(fecha.Value, DateTimeKind.Utc), pago.Monto, "aprobado",
+                pago.Metodo.ToString(), 0, null, true));
+        }
+
         return new MiSuscripcionDto(
             Estado: cobros.Estado,
             MontoMensual: cobros.MontoMensual,
@@ -40,9 +57,8 @@ public class MiSuscripcionService : IMiSuscripcionService
             MotivoRechazo: estado?.MotivoRechazo,
             ProximoReintento: estado?.ProximoReintento,
             EmailPagador: email,
-            Cobros: cobros.Cobros
-                .Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro))
-                .ToList());
+            Cobros: cobrosMp.OrderByDescending(c => c.Fecha ?? DateTime.MinValue).ToList(),
+            PrimerPagoManual: pago is not null);
     }
 
     public async Task CambiarTarjetaAsync(CambiarTarjetaRequest request, CancellationToken ct = default)

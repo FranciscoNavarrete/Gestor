@@ -31,6 +31,8 @@ public class AuthService : IAuthService
             throw new AppException("Email o contraseña incorrectos.");
 
         var tenant = await _db.Tenants.FirstOrDefaultAsync(t => t.Id == usuario.TenantId, ct);
+        if (tenant is { Activo: false, PendienteActivacion: true })
+            throw new AppException("Tu cuenta está esperando la confirmación del pago. Apenas la recibamos vas a poder entrar. Si ya pagaste, avisale a tu vendedor.");
         if (tenant is null || !tenant.Activo)
             throw new AppException("El negocio asociado a esta cuenta no está disponible.");
 

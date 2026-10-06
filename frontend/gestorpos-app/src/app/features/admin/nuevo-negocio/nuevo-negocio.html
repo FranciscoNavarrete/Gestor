@@ -35,7 +35,7 @@
           <p class="seccion">Plan y vendedor</p>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Plan</mat-label>
-            <mat-select formControlName="mpPlanId" (openedChange)="alAbrirPlanes($event)">
+            <mat-select formControlName="mpPlanId" (openedChange)="alAbrirPlanes($event)" (selectionChange)="alElegirPlan()">
               @for (plan of planes(); track plan.mpPlanId) {
                 <mat-option [value]="plan.mpPlanId">{{ etiquetaPlan(plan) }}</mat-option>
               }
@@ -53,7 +53,39 @@
             }
           }
 
-          <p class="seccion">Cómo se cobra</p>
+          <p class="seccion">Primer pago</p>
+          <mat-button-toggle-group
+            class="metodo-cobro"
+            [value]="primerPago()"
+            [disabled]="tarjetaActiva() || guardando()"
+            (change)="elegirPrimerPago($event.value)"
+            aria-label="Primer pago"
+          >
+            <mat-button-toggle value="mercadopago">Mercado Pago</mat-button-toggle>
+            <mat-button-toggle value="efectivo">Efectivo</mat-button-toggle>
+            <mat-button-toggle value="transferencia">Transferencia</mat-button-toggle>
+          </mat-button-toggle-group>
+
+          @if (esPagoManual()) {
+            <p class="ayuda-cobro">
+              @if (primerPago() === 'efectivo') {
+                Lo recibiste vos: queda a tu cargo.
+              } @else {
+                Lo recibe el operador, que lo confirma desde la lista de negocios.
+              }
+            </p>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Monto recibido</mat-label>
+              <input matInput type="number" min="1" formControlName="primerPagoMonto" />
+              <mat-hint>Alta + 1er mes del plan</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Nota o comprobante (opcional)</mat-label>
+              <input matInput formControlName="primerPagoNota" maxlength="300" />
+            </mat-form-field>
+          }
+
+          <p class="seccion">{{ esPagoManual() ? 'Suscripción mensual (obligatoria)' : 'Cómo se cobra' }}</p>
           <mat-button-toggle-group
             class="metodo-cobro"
             [value]="metodoCobro()"
@@ -64,13 +96,7 @@
             <mat-button-toggle value="link">Link de pago</mat-button-toggle>
             <mat-button-toggle value="tarjeta">Tarjeta ahora</mat-button-toggle>
           </mat-button-toggle-group>
-          <p class="ayuda-cobro">
-            @if (metodoCobro() === 'link') {
-              Le pasás un link o QR y el cliente paga con su cuenta de Mercado Pago (el email tiene que coincidir con el de esa cuenta).
-            } @else {
-              El cliente carga la tarjeta acá mismo, sin necesidad de cuenta de Mercado Pago. La tarjeta la escribe él, no vos.
-            }
-          </p>
+          <p class="ayuda-cobro">{{ explicacionCobro() }}</p>
 
           @if (adminAuth.esOperador()) {
             <mat-form-field appearance="outline" class="full">
@@ -100,6 +126,11 @@
                 <mat-icon>check_circle</mat-icon>
                 Negocio "{{ creado.nombre }}" creado
               </p>
+              @if (creado.pendienteActivacion) {
+                <p class="ayuda-cobro">{{ textoPendiente(creado) }}</p>
+              } @else if (creado.formaPrimerPago) {
+                <p class="ayuda-cobro">Primer pago registrado: el negocio ya está activo.</p>
+              }
 
               @if (ultimoCreadoCredenciales(); as cred) {
                 <div class="dato-copiable">

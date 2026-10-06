@@ -48,8 +48,19 @@ public class AdminService : IAdminService
         if (cardToken is not null && request.MpPlanId is null)
             throw new AppException("Para cobrar con tarjeta hay que elegir un plan.");
 
+        // Primer pago por fuera de Mercado Pago (efectivo del vendedor o transferencia al operador): la suscripción
+        // mensual (tarjeta o link) es obligatoria igual y arranca un período después.
+        var primerPago = ParsearPrimerPago(request.PrimerPago);
+        if (primerPago is not null)
+        {
+            if (request.MpPlanId is null)
+                throw new AppException("Para registrar el primer pago hay que elegir un plan.");
+            if (request.PrimerPagoMonto is not > 0)
+                throw new AppException("Ingresá el monto del primer pago.");
+        }
+
         var fluxo = await _fluxo.IniciarSuscripcionAsync(
-            nombrePila, apellido, emailNormalizado, request.MpPlanId, cardToken, ct);
+            nombrePila, apellido, emailNormalizado, request.MpPlanId, cardToken, primerPago is not null, ct);
 
         var tenant = Tenant.Crear(request.NombreNegocio, slug);
 
@@ -71,9 +82,26 @@ public class AdminService : IAdminService
         var admin = Usuario.Crear(tenant.Id, request.NombreAdmin, emailNormalizado, passwordHash, RolUsuario.Admin);
         _db.Usuarios.Add(admin);
 
+        PagoManual? pago = null;
+        if (primerPago is not null)
+        {
+            var hoyAr = DateOnly.FromDateTime(CalculadoraComisiones.AHoraArgentina(DateTime.UtcNow));
+            pago = PagoManual.Registrar(
+                tenant.Id, request.PrimerPagoMonto!.Value, primerPago.Value, hoyAr, request.PrimerPagoNota,
+                _currentAdmin.AdminId, await NombreDeAdminActualAsync(ct), _currentAdmin.Rol);
+            _db.PagosManuales.Add(pago);
+
+            // Se activa cuando el primer pago está confirmado Y la suscripción autorizada; si falta algo, espera.
+            var suscripcionAutorizada = fluxo.Estado == "authorized";
+            if (!(pago.Estado == EstadoPagoManual.Confirmado && suscripcionAutorizada))
+                tenant.EsperarActivacion();
+        }
+
         var detalleAlta = new List<string>
         {
-            request.MpPlanId is null ? "Sin plan" : cardToken is not null ? "Cobro con tarjeta" : "Cobro con link de pago",
+            request.MpPlanId is null ? "Sin plan"
+                : primerPago is not null ? $"Primer pago en {primerPago.Value.ToString().ToLowerInvariant()}, suscripción {(cardToken is not null ? "con tarjeta" : "con link de pago")}"
+                : cardToken is not null ? "Cobro con tarjeta" : "Cobro con link de pago",
         };
         if (_currentAdmin.EsOperador && vendedorId is not null) detalleAlta.Add("con vendedor asignado");
         await RegistrarMovimientoAsync("negocio.alta", "negocio", tenant.Id, tenant.Nombre, string.Join(" · ", detalleAlta), ct);
@@ -86,7 +114,64 @@ public class AdminService : IAdminService
 
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, vendedorId, vendedorNombre,
-            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo.InitPoint, fluxo.Estado);
+            tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo.InitPoint, fluxo.Estado,
+            FormaPrimerPago: pago?.Metodo.ToString(), PagoManualEstado: pago?.Estado.ToString(),
+            PagoManualMonto: pago?.Monto, PendienteActivacion: tenant.PendienteActivacion);
+    }
+
+    private static MetodoPagoManual? ParsearPrimerPago(string? valor)
+    {
+        if (string.IsNullOrWhiteSpace(valor)) return null;
+        // Al dar de alta solo se puede recibir en efectivo (lo recibe quien da el alta) o por transferencia (al operador).
+        return Enum.TryParse<MetodoPagoManual>(valor, true, out var metodo) && metodo is MetodoPagoManual.Efectivo or MetodoPagoManual.Transferencia
+            ? metodo
+            : throw new AppException("El primer pago tiene que ser en efectivo o por transferencia.");
+    }
+
+    private async Task<string> NombreDeAdminActualAsync(CancellationToken ct) =>
+        await _db.AdminUsuarios.Where(a => a.Id == _currentAdmin.AdminId).Select(a => a.Nombre).FirstOrDefaultAsync(ct) ?? "Admin";
+
+    public async Task<TenantResumenDto> ConfirmarPagoAsync(Guid tenantId, ConfirmarPagoRequest request, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+        var pago = await _db.PagosManuales
+            .Where(p => p.TenantId == tenantId && p.Estado == EstadoPagoManual.Pendiente)
+            .OrderBy(p => p.FechaRegistroUtc)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new AppException("Este negocio no tiene un pago pendiente de confirmar.");
+
+        if (!Enum.TryParse<MetodoPagoManual>(request.Metodo, true, out var metodo))
+            throw new AppException("La forma de pago no es válida.");
+        var monto = request.Monto ?? pago.Monto;
+        if (monto <= 0)
+            throw new AppException("El monto tiene que ser mayor a cero.");
+        var hoy = DateOnly.FromDateTime(CalculadoraComisiones.AHoraArgentina(DateTime.UtcNow));
+        var fecha = request.FechaRecepcion ?? hoy;
+        if (fecha > hoy)
+            throw new AppException("La fecha de recepción no puede ser mayor a hoy.");
+        if (request.Nota is { Length: > 300 })
+            throw new AppException("La nota no puede superar los 300 caracteres.");
+
+        var adminNombre = await NombreDeAdminActualAsync(ct);
+        pago.Confirmar(monto, metodo, fecha, request.Nota, _currentAdmin.AdminId, adminNombre);
+        await RegistrarMovimientoAsync("pago.confirmado", "negocio", tenant.Id, tenant.Nombre,
+            $"{metodo} · ${Math.Round(monto).ToString("N0", new System.Globalization.CultureInfo("es-AR"))}", ct);
+
+        // Con el pago confirmado, el negocio se activa si la suscripción ya está autorizada; si falta que el
+        // cliente abra el link, se activa solo apenas lo haga.
+        if (tenant.PendienteActivacion && tenant.FluxoSuscripcionId is { } suscripcionId)
+        {
+            var estados = await _fluxo.ObtenerConfirmacionesAsync([suscripcionId], ct);
+            if (estados?.GetValueOrDefault(suscripcionId)?.Confirmada == true)
+            {
+                tenant.ConfirmarActivacion();
+                await RegistrarMovimientoAsync("negocio.activado", "negocio", tenant.Id, tenant.Nombre,
+                    "Pago confirmado y suscripción autorizada", ct);
+            }
+        }
+
+        await _db.SaveChangesAsync(ct);
+        return await ArmarResumenAsync(tenant, ct);
     }
 
     public async Task<IReadOnlyList<FluxoPlanDto>> ListarPlanesFluxoAsync(CancellationToken ct = default)
@@ -140,6 +225,12 @@ public class AdminService : IAdminService
         var estadosPorSuscripcion = await _fluxo.ObtenerConfirmacionesAsync(suscripcionIds, ct)
             ?? new Dictionary<int, FluxoEstadoSuscripcion>();
 
+        var idsTenants = tenants.Select(t => t.Id).ToList();
+        var pagosPorTenant = (await _db.PagosManuales.AsNoTracking()
+                .Where(p => idsTenants.Contains(p.TenantId)).ToListAsync(ct))
+            .GroupBy(p => p.TenantId)
+            .ToDictionary(g => g.Key, g => g.OrderBy(p => p.FechaRegistroUtc).First());
+
         return tenants
             .Select(t => new TenantResumenDto(
                 t.Id, t.Nombre, t.Slug, t.Activo, t.FechaCreacion,
@@ -159,7 +250,16 @@ public class AdminService : IAdminService
                     : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.MotivoRechazo,
                 FluxoAccesoHasta: t.Activo && t.FluxoSuscripcionId is not null
                     && estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value) is { } est
-                    ? CorteAccesoPorSuscripcionService.AccesoVigenteHasta(est) : null))
+                    ? CorteAccesoPorSuscripcionService.AccesoVigenteHasta(
+                        est, pagosPorTenant.GetValueOrDefault(t.Id)?.Estado == EstadoPagoManual.Confirmado)
+                    : null,
+                FormaPrimerPago: pagosPorTenant.GetValueOrDefault(t.Id)?.Metodo.ToString(),
+                PagoManualEstado: pagosPorTenant.GetValueOrDefault(t.Id)?.Estado.ToString(),
+                PagoManualMonto: pagosPorTenant.GetValueOrDefault(t.Id)?.Monto,
+                PendienteActivacion: t.PendienteActivacion,
+                FluxoProximoCobro: t.FluxoSuscripcionId is null
+                    ? null
+                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.ProximoCobro))
             .ToList();
     }
 
@@ -187,6 +287,9 @@ public class AdminService : IAdminService
     public async Task<TenantResumenDto> ActivarTenantAsync(Guid tenantId, CancellationToken ct = default)
     {
         var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        if (tenant.PendienteActivacion)
+            throw new AppException("Este negocio espera la confirmación del primer pago y de la suscripción: se activa solo apenas se cumplan las dos cosas.");
 
         // Un negocio con la suscripción cancelada no se reactiva: el sistema lo volvería a desactivar y,
         // además, no hay con qué cobrarle. Primero hay que darle una suscripción nueva.
@@ -274,11 +377,17 @@ public class AdminService : IAdminService
             fluxoEstado = estados?.GetValueOrDefault(tenant.FluxoSuscripcionId.Value);
         }
 
+        var pagoManual = await _db.PagosManuales.AsNoTracking()
+            .Where(p => p.TenantId == tenant.Id).OrderBy(p => p.FechaRegistroUtc).FirstOrDefaultAsync(ct);
+
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, tenant.VendedorId, vendedorNombre,
             tenant.FluxoClienteId, tenant.FluxoSuscripcionId, null, fluxoEstado?.Estado,
             fluxoEstado?.PrimerCobroAprobado == true, fluxoEstado?.AjusteMontoPendiente == true,
-            fluxoEstado?.CobroRechazado == true, fluxoEstado?.MotivoRechazo);
+            fluxoEstado?.CobroRechazado == true, fluxoEstado?.MotivoRechazo,
+            FormaPrimerPago: pagoManual?.Metodo.ToString(), PagoManualEstado: pagoManual?.Estado.ToString(),
+            PagoManualMonto: pagoManual?.Monto, PendienteActivacion: tenant.PendienteActivacion,
+            FluxoProximoCobro: fluxoEstado?.ProximoCobro);
     }
 
     private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>

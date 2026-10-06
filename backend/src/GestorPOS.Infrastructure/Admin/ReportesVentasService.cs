@@ -61,13 +61,14 @@ public class ReportesVentasService : IReportesVentasService
         if (estados is null)
             throw new AppException("No se pudo consultar a Fluxo para armar el reporte. Probá de nuevo en un momento.");
 
+        var conPagoManual = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, negocios.Select(t => t.Id), ct);
         var conEstado = negocios
             .Where(t => estados.ContainsKey(t.FluxoSuscripcionId!.Value))
             .Select(t => (Negocio: t, Estado: estados[t.FluxoSuscripcionId!.Value]))
             .ToList();
 
         var comisiones = CalculadoraComisiones.Asignar(
-            conEstado.Where(x => EstaCobrada(x.Estado))
+            conEstado.Where(x => EstaCobrada(x.Estado, conPagoManual.Contains(x.Negocio.Id)))
                 .Select(x => new VentaConfirmada(x.Negocio.Id, x.Negocio.VendedorId!.Value, x.Negocio.FechaCreacion)),
             _tarifa);
 
@@ -85,11 +86,11 @@ public class ReportesVentasService : IReportesVentasService
             .Select(x =>
             {
                 var vendedor = x.Negocio.VendedorId!.Value;
-                var cobrada = EstaCobrada(x.Estado);
+                var cobrada = EstaCobrada(x.Estado, conPagoManual.Contains(x.Negocio.Id));
                 return new ReporteVentaItemDto(
                     x.Negocio.Id, x.Negocio.Nombre, x.Negocio.FechaCreacion,
                     vendedor, nombres.GetValueOrDefault(vendedor, "Vendedor"),
-                    ClasificarEstado(x.Estado),
+                    ClasificarEstado(x.Estado, conPagoManual.Contains(x.Negocio.Id)),
                     cobrada ? comisiones[x.Negocio.Id].Comision : null,
                     cobrada && comisiones[x.Negocio.Id].Bono > 0 ? comisiones[x.Negocio.Id].Bono : null);
             })
@@ -110,7 +111,7 @@ public class ReportesVentasService : IReportesVentasService
         // Progreso hacia el bono: ventas cobradas de cada vendedor en el mes de "hasta" (mes completo).
         var mesHasta = (hasta.Year, hasta.Month);
         var ventasDelMes = conEstado
-            .Where(x => EstaCobrada(x.Estado))
+            .Where(x => EstaCobrada(x.Estado, conPagoManual.Contains(x.Negocio.Id)))
             .Where(x =>
             {
                 var local = CalculadoraComisiones.AHoraArgentina(x.Negocio.FechaCreacion);
@@ -135,12 +136,12 @@ public class ReportesVentasService : IReportesVentasService
     }
 
     // La venta cuenta (y paga comisión) recién cuando Mercado Pago aprobó el primer cobro.
-    private static bool EstaCobrada(FluxoEstadoSuscripcion estado) => estado.Confirmada && estado.PrimerCobroAprobado;
+    private static bool EstaCobrada(FluxoEstadoSuscripcion estado, bool pagoManual) => VentaCobrada.Es(estado, pagoManual);
 
     private static bool EsperaCobro(ReporteVentaItemDto item) => item.Estado is "pendiente" or "esperando";
 
-    private static string ClasificarEstado(FluxoEstadoSuscripcion estado) =>
-        (estado.Confirmada, estado.PrimerCobroAprobado, estado.Estado) switch
+    private static string ClasificarEstado(FluxoEstadoSuscripcion estado, bool pagoManual) =>
+        (estado.Confirmada, estado.PrimerCobroAprobado || pagoManual, estado.Estado) switch
         {
             (true, true, "cancelled") => "baja",
             (true, true, _) => "suscripto",

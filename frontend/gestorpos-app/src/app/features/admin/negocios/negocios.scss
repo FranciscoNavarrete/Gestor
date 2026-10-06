@@ -131,6 +131,19 @@
   }
 }
 
+.boton-confirmar {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-on, #fff);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .badge-ajuste {
   background: color-mix(in srgb, #f5a623 18%, transparent);
   color: #f5a623;

@@ -7,6 +7,10 @@ public class Tenant : BaseEntity
     public string Nombre { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public bool Activo { get; private set; } = true;
+
+    /// <summary>El negocio se creó pero todavía no se cumplió todo para usarlo: falta confirmar el primer pago
+    /// y/o que el cliente autorice su suscripción. Mientras tanto no tiene acceso, y se activa solo.</summary>
+    public bool PendienteActivacion { get; private set; }
     public string? Telefono { get; private set; }
     public byte[]? LogoData { get; private set; }
     public string? LogoContentType { get; private set; }
@@ -33,8 +37,24 @@ public class Tenant : BaseEntity
         };
     }
 
-    public void Desactivar() => Activo = false;
+    public void Desactivar()
+    {
+        Activo = false;
+        PendienteActivacion = false;
+    }
     public void Activar() => Activo = true;
+
+    public void EsperarActivacion()
+    {
+        Activo = false;
+        PendienteActivacion = true;
+    }
+
+    public void ConfirmarActivacion()
+    {
+        Activo = true;
+        PendienteActivacion = false;
+    }
 
     public void AsignarVendedor(Guid? vendedorId) => VendedorId = vendedorId;
 

@@ -12,6 +12,17 @@ export interface CrearNegocioRequest {
   vendedorId?: string | null;
   mpPlanId?: number | null;
   cardToken?: string | null;
+  /** Primer pago recibido por fuera de Mercado Pago: 'Efectivo' (lo recibe quien da el alta) o 'Transferencia'. */
+  primerPago?: 'Efectivo' | 'Transferencia' | null;
+  primerPagoMonto?: number | null;
+  primerPagoNota?: string | null;
+}
+
+export interface ConfirmarPagoRequest {
+  metodo: 'Transferencia' | 'Tarjeta' | 'Otro' | 'Efectivo';
+  fechaRecepcion?: string | null;
+  nota?: string | null;
+  monto?: number | null;
 }
 
 export interface FluxoPlan {
@@ -42,6 +53,11 @@ export interface TenantResumen {
   fluxoCobroRechazado?: boolean;
   fluxoMotivoRechazo?: string | null;
   fluxoAccesoHasta?: string | null;
+  fluxoProximoCobro?: string | null;
+  formaPrimerPago?: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro' | null;
+  pagoManualEstado?: 'Pendiente' | 'Confirmado' | null;
+  pagoManualMonto?: number | null;
+  pendienteActivacion?: boolean;
 }
 
 export interface CobroNegocio {

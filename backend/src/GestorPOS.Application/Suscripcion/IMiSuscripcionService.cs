@@ -7,7 +7,7 @@ namespace GestorPOS.Application.Suscripcion;
 public record MiSuscripcionDto(
     string Estado, decimal MontoMensual, DateTime? ProximoCobro, decimal? ProximoMonto,
     bool TarjetaEditable, bool CobroRechazado, string? MotivoRechazo, DateTime? ProximoReintento,
-    string EmailPagador, IReadOnlyList<CobroNegocioDto> Cobros);
+    string EmailPagador, IReadOnlyList<CobroNegocioDto> Cobros, bool PrimerPagoManual = false);
 
 public record CambiarTarjetaRequest(string CardToken);
 

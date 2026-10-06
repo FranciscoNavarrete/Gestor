@@ -13,6 +13,7 @@ import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/sl
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
+import { ConfirmarPagoDialog } from '../../../core/dialogs/confirmar-pago-dialog/confirmar-pago-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
@@ -165,6 +166,15 @@ export class Negocios implements OnInit, OnDestroy {
 
   badgeSuscripcion(negocio: TenantResumen): { texto: string; clase: string } | null {
     if (!negocio.fluxoEstado) return null;
+    // Primer pago por fuera de Mercado Pago: el negocio todavía no tiene acceso.
+    if (negocio.formaPrimerPago && negocio.pendienteActivacion) {
+      const esperaPago = negocio.pagoManualEstado === 'Pendiente';
+      const esperaLink = negocio.fluxoEstado === 'pending';
+      if (esperaPago) {
+        return { texto: esperaLink ? 'Esperando transferencia y link' : 'Esperando transferencia', clase: 'badge-esperando' };
+      }
+      if (esperaLink) return { texto: 'Esperando que el cliente abra el link', clase: 'badge-pendiente' };
+    }
     // Cancelada pero ya pagada: el negocio sigue usándose hasta la fecha de su próximo cobro.
     if (negocio.fluxoEstado === 'cancelled' && negocio.fluxoAccesoHasta) {
       const hasta = new Date(negocio.fluxoAccesoHasta).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' });
@@ -176,10 +186,43 @@ export class Negocios implements OnInit, OnDestroy {
         clase: 'badge-rechazado',
       };
     }
+    if (negocio.formaPrimerPago && negocio.pagoManualEstado === 'Confirmado' && negocio.fluxoEstado === 'authorized') {
+      const renueva = negocio.fluxoProximoCobro
+        ? new Date(negocio.fluxoProximoCobro).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })
+        : null;
+      return { texto: renueva ? `Suscripto · renueva ${renueva}` : 'Suscripto', clase: 'badge-suscripto' };
+    }
     if (negocio.fluxoEstado === 'authorized' && !negocio.fluxoPrimerCobroAprobado) {
       return { texto: 'Esperando 1er cobro', clase: 'badge-esperando' };
     }
     return Negocios.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;
+  }
+
+  // Una transferencia recibida la confirma el operador: recién ahí el negocio puede activarse.
+  puedeConfirmarPago(negocio: TenantResumen): boolean {
+    return this.adminAuth.esOperador() && negocio.pagoManualEstado === 'Pendiente';
+  }
+
+  confirmarPago(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog
+      .open(ConfirmarPagoDialog, {
+        data: {
+          tenantId: negocio.id,
+          nombre: negocio.nombre,
+          monto: negocio.pagoManualMonto ?? 0,
+          proximoCobro: negocio.fluxoProximoCobro ?? null,
+          faltaLink: negocio.fluxoEstado === 'pending',
+        },
+        width: '440px',
+        maxWidth: '94vw',
+      })
+      .afterClosed()
+      .subscribe((confirmado) => {
+        if (!confirmado) return;
+        this.snackBar.open('Pago confirmado.', 'OK', { duration: 3000 });
+        this.cargarNegocios(true);
+      });
   }
 
   // Los cobros solo existen cuando la suscripción ya se autorizó alguna vez.

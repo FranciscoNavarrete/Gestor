@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>Confirmar pago</h2>
+
+<mat-dialog-content class="contenido">
+  <p class="subtitulo">{{ data.nombre }} · alta + 1er mes</p>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Monto recibido</mat-label>
+    <input matInput type="number" min="1" [(ngModel)]="monto" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Fecha de recepción</mat-label>
+    <input matInput type="date" [(ngModel)]="fecha" [max]="hoy" />
+  </mat-form-field>
+
+  <div class="metodos" role="group" aria-label="Forma de pago">
+    @for (m of metodos; track m) {
+      <button type="button" class="metodo" [class.activo]="metodo === m" [attr.aria-pressed]="metodo === m" (click)="metodo = m">{{ m }}</button>
+    }
+  </div>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Comprobante o nota (opcional)</mat-label>
+    <input matInput [(ngModel)]="nota" maxlength="300" />
+  </mat-form-field>
+
+  <p class="aviso">
+    @if (data.faltaLink) {
+      Al confirmar, el negocio se activa apenas el cliente abra el link y autorice su suscripción.
+    } @else if (data.proximoCobro) {
+      Al confirmar, el negocio se activa hoy y la suscripción cobra por primera vez el {{ data.proximoCobro | date: 'dd/MM' : '-0300' }}.
+    } @else {
+      Al confirmar, el negocio se activa hoy.
+    }
+  </p>
+
+  @if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="false">Cancelar</button>
+  <button mat-flat-button type="button" (click)="confirmar()" [disabled]="guardando()">
+    {{ guardando() ? 'Confirmando…' : 'Confirmar' }}
+  </button>
+</mat-dialog-actions>

@@ -6,6 +6,7 @@ import {
   AdminUsuario,
   CobrosNegocio,
   CrearAdminUsuarioRequest,
+  ConfirmarPagoRequest,
   CrearNegocioRequest,
   FluxoPlan,
   Liquidacion,
@@ -27,6 +28,12 @@ export class AdminService {
 
   crearNegocio(request: CrearNegocioRequest): Observable<TenantResumen> {
     return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants`, request, {
+      headers: this.headers(),
+    });
+  }
+
+  confirmarPago(tenantId: string, request: ConfirmarPagoRequest): Observable<TenantResumen> {
+    return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants/${tenantId}/confirmar-pago`, request, {
       headers: this.headers(),
     });
   }

@@ -15,6 +15,7 @@ public interface IAdminService
     Task<TenantResumenDto> DesactivarTenantAsync(Guid tenantId, CancellationToken ct = default);
     Task<TenantResumenDto> ActivarTenantAsync(Guid tenantId, CancellationToken ct = default);
     Task<LinkPagoDto> ObtenerLinkPagoAsync(Guid tenantId, CancellationToken ct = default);
+    Task<TenantResumenDto> ConfirmarPagoAsync(Guid tenantId, ConfirmarPagoRequest request, CancellationToken ct = default);
     Task<CobrosNegocioDto> ObtenerCobrosAsync(Guid tenantId, CancellationToken ct = default);
 
     Task<IReadOnlyList<AdminUsuarioDto>> ListarUsuariosAsync(CancellationToken ct = default);

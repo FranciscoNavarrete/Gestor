@@ -32,9 +32,10 @@ public class ResumenFinancieroService : IResumenFinancieroService
         var estados = await _fluxo.ObtenerConfirmacionesAsync(negocios.Select(n => n.SuscripcionId), ct)
             ?? throw new AppException("No se pudo consultar a Fluxo para armar el resumen. Probá de nuevo en un momento.");
 
+        var conPagoManual = await VentaCobrada.ConPagoManualConfirmadoAsync(_db, negocios.Select(n => n.Id), ct);
         var filas = negocios
             .Where(n => estados.ContainsKey(n.SuscripcionId))
-            .Select(n => (n.Id, n.Nombre, E: estados[n.SuscripcionId]))
+            .Select(n => (n.Id, n.Nombre, E: estados[n.SuscripcionId], Pagado: VentaCobrada.Es(estados[n.SuscripcionId], conPagoManual.Contains(n.Id))))
             .ToList();
 
         var ahoraUtc = DateTime.UtcNow;
@@ -47,8 +48,8 @@ public class ResumenFinancieroService : IResumenFinancieroService
         }
 
         // Activo = autorizada y con el primer cobro ya aprobado. Un cobro mensual rechazado sigue siendo cliente activo.
-        var activos = filas.Where(f => f.E.Estado == "authorized" && f.E.PrimerCobroAprobado).ToList();
-        var esperando = filas.Where(f => f.E.Estado == "authorized" && !f.E.PrimerCobroAprobado && !f.E.CobroRechazado).ToList();
+        var activos = filas.Where(f => f.E.Estado == "authorized" && f.Pagado).ToList();
+        var esperando = filas.Where(f => f.E.Estado == "authorized" && !f.Pagado && !f.E.CobroRechazado).ToList();
         var rechazados = filas.Where(f => f.E.Estado == "authorized" && f.E.CobroRechazado).ToList();
         var detenidos = filas.Where(f => f.E.Estado is "paused" or "suspended").ToList();
 
@@ -57,15 +58,15 @@ public class ResumenFinancieroService : IResumenFinancieroService
             .Where(f => !f.E.CobroRechazado && f.E.ProximoCobro is { } p && p >= ahoraUtc && p <= limite)
             .Sum(f => f.E.MontoProximoCobro);
 
-        var altasMes = filas.Count(f => f.E.PrimerCobroAprobado && EnMes(f.E.FechaInicio, ahoraAr.Year, ahoraAr.Month));
-        var bajasMes = filas.Count(f => f.E.PrimerCobroAprobado && f.E.Estado == "cancelled"
+        var altasMes = filas.Count(f => f.Pagado && EnMes(f.E.FechaInicio, ahoraAr.Year, ahoraAr.Month));
+        var bajasMes = filas.Count(f => f.Pagado && f.E.Estado == "cancelled"
                                         && EnMes(f.E.FechaCancelacion, ahoraAr.Year, ahoraAr.Month));
         var baseBajas = activos.Count + bajasMes;
         var porcentajeBajas = baseBajas == 0 ? 0m : Math.Round(100m * bajasMes / baseBajas, 1);
 
         var enRiesgo = rechazados
             .Select(f => new ClienteEnRiesgoDto(
-                f.Id, f.Nombre, f.E.PrimerCobroAprobado ? "rechazado" : "primer-cobro",
+                f.Id, f.Nombre, f.Pagado ? "rechazado" : "primer-cobro",
                 f.E.MotivoRechazo, f.E.MontoProximoCobro, f.E.ProximoReintento))
             .Concat(detenidos.Select(f => new ClienteEnRiesgoDto(
                 f.Id, f.Nombre, f.E.Estado == "paused" ? "pausado" : "suspendido", null, f.E.MontoMensual, null)))
@@ -76,7 +77,7 @@ public class ResumenFinancieroService : IResumenFinancieroService
         var altasPorMes = Enumerable.Range(0, MesesDeAltas)
             .Select(i => new DateTime(ahoraAr.Year, ahoraAr.Month, 1).AddMonths(-(MesesDeAltas - 1 - i)))
             .Select(m => new AltasMesDto(m.Year, m.Month,
-                filas.Count(f => f.E.PrimerCobroAprobado && EnMes(f.E.FechaInicio, m.Year, m.Month))))
+                filas.Count(f => f.Pagado && EnMes(f.E.FechaInicio, m.Year, m.Month))))
             .ToList();
 
         return new ResumenFinancieroDto(

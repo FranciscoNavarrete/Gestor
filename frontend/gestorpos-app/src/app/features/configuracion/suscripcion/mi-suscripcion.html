@@ -36,6 +36,12 @@
           <p class="linea destacada">{{ s.proximoCobro | date: 'dd/MM' : '-0300' }} · {{ dinero(s.proximoMonto ?? s.montoMensual) }}</p>
         }
 
+        @if (s.primerPagoManual && s.proximoCobro && s.estado === 'authorized') {
+          <p class="linea secundaria">
+            Tu primer mes está pagado hasta el {{ s.proximoCobro | date: 'dd/MM' : '-0300' }}. Desde ahí se cobra con tu tarjeta.
+          </p>
+        }
+
         @if (s.tarjetaEditable) {
           <button mat-flat-button type="button" class="boton" (click)="cambiarTarjeta.emit()">Cambiar tarjeta</button>
         } @else if (s.estado !== 'cancelled') {

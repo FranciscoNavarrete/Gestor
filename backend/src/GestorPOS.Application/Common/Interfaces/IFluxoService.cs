@@ -42,7 +42,7 @@ public interface IFluxoService
     /// suscripción se crea autorizada, y se tira AppException si Mercado Pago rechaza la tarjeta.</summary>
     Task<FluxoSuscripcionResultado> IniciarSuscripcionAsync(
         string nombre, string apellido, string email, int? mpPlanId, string? cardTokenId = null,
-        CancellationToken ct = default);
+        bool primerPagoManual = false, CancellationToken ct = default);
 
     /// <summary>Tira <see cref="GestorPOS.Application.Common.Exceptions.AppException"/> si Fluxo no
     /// responde o no encuentra la suscripción, con un mensaje apto para mostrar.</summary>
