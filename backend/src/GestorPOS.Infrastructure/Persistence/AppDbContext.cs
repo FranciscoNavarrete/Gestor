@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<MovimientoAdmin> MovimientosAdmin => Set<MovimientoAdmin>();
     public DbSet<Liquidacion> Liquidaciones => Set<Liquidacion>();
     public DbSet<PagoManual> PagosManuales => Set<PagoManual>();
+    public DbSet<AceptacionTerminos> AceptacionesTerminos => Set<AceptacionTerminos>();
     public DbSet<MovimientoEfectivo> MovimientosEfectivo => Set<MovimientoEfectivo>();
     public DbSet<LiquidacionItem> LiquidacionItems => Set<LiquidacionItem>();
     public DbSet<Tenant> Tenants => Set<Tenant>();

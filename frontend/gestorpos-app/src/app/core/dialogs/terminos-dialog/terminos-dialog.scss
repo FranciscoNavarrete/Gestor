@@ -1,0 +1,31 @@
+.contenido {
+  min-width: 0;
+
+  h3 {
+    margin: 16px 0 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    opacity: 0.85;
+  }
+
+  .version {
+    opacity: 0.6;
+    font-size: 0.75rem;
+  }
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.error {
+  color: #e5484d;
+}

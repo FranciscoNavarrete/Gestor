@@ -15,6 +15,7 @@ export class AuthService {
   readonly nombreNegocio = computed(() => this.authState()?.nombreNegocio ?? '');
   readonly nombreUsuario = computed(() => this.authState()?.nombreUsuario ?? '');
   readonly token = computed(() => this.authState()?.token ?? null);
+  readonly terminosPendientes = computed(() => this.authState()?.terminosPendientes === true);
   private readonly features = computed(() => new Set(this.authState()?.features ?? []));
 
   constructor(private readonly http: HttpClient) {}
@@ -38,6 +39,12 @@ export class AuthService {
     const actual = this.authState();
     if (!actual) return;
     this.guardarSesion({ ...actual, nombreNegocio: nombre });
+  }
+
+  marcarTerminosAceptados(): void {
+    const actual = this.authState();
+    if (!actual) return;
+    this.guardarSesion({ ...actual, terminosPendientes: false });
   }
 
   private guardarSesion(auth: AuthResponse): void {

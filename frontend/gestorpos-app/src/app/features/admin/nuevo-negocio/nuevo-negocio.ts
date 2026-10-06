@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +16,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { QrDialog } from '../../../core/dialogs/qr-dialog/qr-dialog';
+import { TerminosDialog } from '../../../core/dialogs/terminos-dialog/terminos-dialog';
+import { Terminos } from '../../../core/models/terminos.models';
+import { TerminosService } from '../../../core/services/terminos.service';
 import { AdminUsuario, CrearNegocioRequest, FluxoPlan, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
@@ -28,6 +32,7 @@ import { extraerMensajeError } from '../../../core/utils/error.util';
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -45,6 +50,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly clipboard = inject(Clipboard);
   private readonly mp = inject(MpService);
+  private readonly terminosService = inject(TerminosService);
   protected readonly adminAuth = inject(AdminAuthService);
 
   readonly form = this.fb.nonNullable.group({
@@ -56,7 +62,11 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     mpPlanId: this.fb.control<number | null>(null, [Validators.required]),
     primerPagoMonto: this.fb.control<number | null>(null),
     primerPagoNota: this.fb.nonNullable.control(''),
+    // Quien da el alta confirma que el cliente conoce los términos; el cliente los acepta él mismo al ingresar.
+    terminosExplicados: this.fb.nonNullable.control(false, [Validators.requiredTrue]),
   });
+
+  readonly terminos = signal<Terminos | null>(null);
 
   readonly vendedores = signal<AdminUsuario[]>([]);
   readonly planes = signal<FluxoPlan[]>([]);
@@ -96,6 +106,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarPlanes();
+    this.terminosService.vigentes().subscribe({ next: (t) => this.terminos.set(t), error: () => {} });
     if (this.adminAuth.esOperador()) this.cargarVendedores();
   }
 
@@ -124,6 +135,10 @@ export class NuevoNegocio implements OnInit, OnDestroy {
   // aparezca sin tener que recargar la página.
   alAbrirPlanes(abierto: boolean): void {
     if (abierto) this.cargarPlanes();
+  }
+
+  verTerminos(): void {
+    this.dialog.open(TerminosDialog, { width: '560px', maxWidth: '94vw' });
   }
 
   private cargarVendedores(): void {

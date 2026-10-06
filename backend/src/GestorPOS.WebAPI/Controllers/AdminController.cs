@@ -35,7 +35,8 @@ public class AdminController : ControllerBase
 
     [HttpPost("tenants")]
     public async Task<ActionResult<TenantResumenDto>> CrearNegocio(CrearNegocioRequest request, CancellationToken ct)
-        => Ok(await _adminService.CrearNegocioAsync(request, ct));
+        => Ok(await _adminService.CrearNegocioAsync(
+            request with { Ip = HttpContext.Connection.RemoteIpAddress?.ToString() }, ct));
 
     [HttpGet("fluxo/planes")]
     public async Task<ActionResult<IReadOnlyList<FluxoPlanDto>>> ListarPlanesFluxo(CancellationToken ct)
@@ -78,6 +79,10 @@ public class AdminController : ControllerBase
     [HttpGet("tenants/{tenantId:guid}/cobros")]
     public async Task<ActionResult<CobrosNegocioDto>> ObtenerCobros(Guid tenantId, CancellationToken ct)
         => Ok(await _adminService.ObtenerCobrosAsync(tenantId, ct));
+
+    [HttpGet("tenants/{tenantId:guid}/terminos")]
+    public async Task<ActionResult<IReadOnlyList<GestorPOS.Application.Terminos.AceptacionTerminosDto>>> ObtenerTerminos(Guid tenantId, CancellationToken ct)
+        => Ok(await _adminService.ObtenerTerminosAsync(tenantId, ct));
 
     [HttpGet("reportes/ventas")]
     public async Task<ActionResult<ReporteVentasDto>> ReporteVentas(

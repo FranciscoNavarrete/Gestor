@@ -2,6 +2,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AceptacionTerminos } from '../models/terminos.models';
 import {
   AdminUsuario,
   CobrosNegocio,
@@ -43,6 +44,12 @@ export class AdminService {
 
   obtenerLinkPago(tenantId: string): Observable<LinkPago> {
     return this.http.get<LinkPago>(`${environment.apiUrl}/admin/tenants/${tenantId}/link-pago`, {
+      headers: this.headers(),
+    });
+  }
+
+  obtenerTerminos(tenantId: string): Observable<AceptacionTerminos[]> {
+    return this.http.get<AceptacionTerminos[]>(`${environment.apiUrl}/admin/tenants/${tenantId}/terminos`, {
       headers: this.headers(),
     });
   }

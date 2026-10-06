@@ -1,11 +1,18 @@
 import { Routes } from '@angular/router';
 import { adminAuthGuard } from './core/guards/admin-auth.guard';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, sesionGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+  },
+  {
+    // El dueño del negocio acepta los términos antes de usar el sistema (authGuard lo manda acá hasta que lo haga).
+    path: 'terminos',
+    canActivate: [sesionGuard],
+    loadComponent: () =>
+      import('./features/terminos/terminos-aceptacion').then((m) => m.TerminosAceptacion),
   },
   {
     // Ruta interna, no vinculada desde ningún lado de la UI pública: acá entra el equipo de

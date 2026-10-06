@@ -1,0 +1,52 @@
+<div class="pagina">
+  <mat-card class="card">
+    <mat-card-header>
+      <mat-card-title class="font-display">Antes de empezar</mat-card-title>
+      <mat-card-subtitle>Leé y aceptá los términos para usar tu cuenta</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (cargando()) {
+        <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+      } @else if (errorCarga()) {
+        <p class="error">No se pudieron cargar los términos.</p>
+        <button mat-stroked-button type="button" (click)="cargar()">
+          <mat-icon>refresh</mat-icon>
+          Reintentar
+        </button>
+      } @else if (terminos(); as t) {
+        <div #texto class="texto" tabindex="0" (scroll)="alDesplazar()" aria-label="Términos y condiciones">
+          @for (seccion of t.secciones; track seccion.titulo) {
+            <h3>{{ seccion.titulo }}</h3>
+            <p>{{ seccion.texto }}</p>
+          }
+        </div>
+
+        @if (!leidoHastaElFinal()) {
+          <p class="ayuda"><mat-icon>arrow_downward</mat-icon> Desplazá hasta el final para continuar</p>
+        } @else {
+          <p class="ayuda">Versión {{ t.version }}</p>
+        }
+
+        <mat-checkbox [checked]="acepto()" [disabled]="!leidoHastaElFinal() || enviando()" (change)="acepto.set($event.checked)">
+          Leí y acepto los términos y condiciones y el uso de mis datos para prestar el servicio
+        </mat-checkbox>
+
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <button mat-flat-button color="primary" type="button" class="aceptar" [disabled]="!acepto() || enviando()" (click)="aceptar()">
+          @if (enviando()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Aceptar y continuar
+          }
+        </button>
+        <button mat-button type="button" class="salir" [disabled]="enviando()" (click)="salir()">
+          No acepto, salir
+        </button>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

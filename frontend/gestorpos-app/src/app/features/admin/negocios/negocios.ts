@@ -13,6 +13,7 @@ import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/sl
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
+import { TerminosRegistroDialog } from '../../../core/dialogs/terminos-registro-dialog/terminos-registro-dialog';
 import { ConfirmarPagoDialog } from '../../../core/dialogs/confirmar-pago-dialog/confirmar-pago-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
@@ -228,6 +229,11 @@ export class Negocios implements OnInit, OnDestroy {
   // Los cobros solo existen cuando la suscripción ya se autorizó alguna vez.
   tieneCobros(negocio: TenantResumen): boolean {
     return !!negocio.fluxoSuscripcionId && !!negocio.fluxoEstado && negocio.fluxoEstado !== 'pending';
+  }
+
+  verTerminos(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(TerminosRegistroDialog, { data: { tenantId: negocio.id, nombre: negocio.nombre }, width: '420px', maxWidth: '92vw' });
   }
 
   verCobros(negocio: TenantResumen, event: Event): void {

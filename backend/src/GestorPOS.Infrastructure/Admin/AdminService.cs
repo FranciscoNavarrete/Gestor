@@ -2,6 +2,7 @@ using GestorPOS.Application.Admin;
 using GestorPOS.Application.Admin.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Application.Terminos;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
@@ -28,6 +29,9 @@ public class AdminService : IAdminService
     public async Task<TenantResumenDto> CrearNegocioAsync(CrearNegocioRequest request, CancellationToken ct = default)
     {
         var emailNormalizado = request.Email.Trim().ToLowerInvariant();
+
+        if (!request.TerminosExplicados)
+            throw new AppException("Confirmá que el cliente conoce y acepta los términos y condiciones.");
 
         var emailEnUso = await _db.Usuarios.IgnoreQueryFilters()
             .AnyAsync(u => u.Email == emailNormalizado, ct);
@@ -81,6 +85,11 @@ public class AdminService : IAdminService
         var passwordHash = _passwordHasher.Hash(request.Password);
         var admin = Usuario.Crear(tenant.Id, request.NombreAdmin, emailNormalizado, passwordHash, RolUsuario.Admin);
         _db.Usuarios.Add(admin);
+
+        // Constancia de que quien da el alta le explicó las condiciones; el cliente las acepta él mismo al ingresar.
+        _db.AceptacionesTerminos.Add(AceptacionTerminos.Registrar(
+            tenant.Id, TerminosVigentes.Version, OrigenAceptacionTerminos.Vendedor,
+            _currentAdmin.AdminId, await NombreDeAdminActualAsync(ct), request.Ip));
 
         PagoManual? pago = null;
         if (primerPago is not null)
@@ -231,6 +240,13 @@ public class AdminService : IAdminService
             .GroupBy(p => p.TenantId)
             .ToDictionary(g => g.Key, g => g.OrderBy(p => p.FechaRegistroUtc).First());
 
+        var terminosPorTenant = (await _db.AceptacionesTerminos.AsNoTracking()
+                .Where(a => idsTenants.Contains(a.TenantId)
+                    && a.Origen == OrigenAceptacionTerminos.Cliente && a.Version == TerminosVigentes.Version)
+                .ToListAsync(ct))
+            .GroupBy(a => a.TenantId)
+            .ToDictionary(g => g.Key, g => g.Min(a => a.FechaUtc));
+
         return tenants
             .Select(t => new TenantResumenDto(
                 t.Id, t.Nombre, t.Slug, t.Activo, t.FechaCreacion,
@@ -259,7 +275,8 @@ public class AdminService : IAdminService
                 PendienteActivacion: t.PendienteActivacion,
                 FluxoProximoCobro: t.FluxoSuscripcionId is null
                     ? null
-                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.ProximoCobro))
+                    : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.ProximoCobro,
+                TerminosAceptadosEn: terminosPorTenant.TryGetValue(t.Id, out var aceptadoEn) ? aceptadoEn : null))
             .ToList();
     }
 
@@ -364,6 +381,21 @@ public class AdminService : IAdminService
             cobros.Cobros.Select(c => new CobroNegocioDto(c.Fecha, c.Monto, c.Estado, c.Motivo, c.Intento, c.ProximoReintento, c.EsPrimerCobro)).ToList());
     }
 
+    public async Task<IReadOnlyList<AceptacionTerminosDto>> ObtenerTerminosAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+
+        // Un Vendedor solo puede ver las constancias de los negocios que él mismo cargó.
+        if (!_currentAdmin.EsOperador && tenant.VendedorId != _currentAdmin.AdminId)
+            throw new AppException("El negocio no existe.");
+
+        return await _db.AceptacionesTerminos.AsNoTracking()
+            .Where(a => a.TenantId == tenantId)
+            .OrderByDescending(a => a.FechaUtc)
+            .Select(a => new AceptacionTerminosDto(a.Version, a.Origen.ToString(), a.UsuarioNombre, a.FechaUtc, a.Ip))
+            .ToListAsync(ct);
+    }
+
     private async Task<TenantResumenDto> ArmarResumenAsync(Tenant tenant, CancellationToken ct)
     {
         var vendedorNombre = tenant.VendedorId is null
@@ -380,6 +412,10 @@ public class AdminService : IAdminService
         var pagoManual = await _db.PagosManuales.AsNoTracking()
             .Where(p => p.TenantId == tenant.Id).OrderBy(p => p.FechaRegistroUtc).FirstOrDefaultAsync(ct);
 
+        var terminosAceptadosEn = await _db.AceptacionesTerminos.AsNoTracking()
+            .Where(a => a.TenantId == tenant.Id && a.Origen == OrigenAceptacionTerminos.Cliente && a.Version == TerminosVigentes.Version)
+            .OrderBy(a => a.FechaUtc).Select(a => (DateTime?)a.FechaUtc).FirstOrDefaultAsync(ct);
+
         return new TenantResumenDto(
             tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, tenant.VendedorId, vendedorNombre,
             tenant.FluxoClienteId, tenant.FluxoSuscripcionId, null, fluxoEstado?.Estado,
@@ -387,7 +423,7 @@ public class AdminService : IAdminService
             fluxoEstado?.CobroRechazado == true, fluxoEstado?.MotivoRechazo,
             FormaPrimerPago: pagoManual?.Metodo.ToString(), PagoManualEstado: pagoManual?.Estado.ToString(),
             PagoManualMonto: pagoManual?.Monto, PendienteActivacion: tenant.PendienteActivacion,
-            FluxoProximoCobro: fluxoEstado?.ProximoCobro);
+            FluxoProximoCobro: fluxoEstado?.ProximoCobro, TerminosAceptadosEn: terminosAceptadosEn);
     }
 
     private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>

@@ -17,6 +17,7 @@ public interface IAdminService
     Task<LinkPagoDto> ObtenerLinkPagoAsync(Guid tenantId, CancellationToken ct = default);
     Task<TenantResumenDto> ConfirmarPagoAsync(Guid tenantId, ConfirmarPagoRequest request, CancellationToken ct = default);
     Task<CobrosNegocioDto> ObtenerCobrosAsync(Guid tenantId, CancellationToken ct = default);
+    Task<IReadOnlyList<GestorPOS.Application.Terminos.AceptacionTerminosDto>> ObtenerTerminosAsync(Guid tenantId, CancellationToken ct = default);
 
     Task<IReadOnlyList<AdminUsuarioDto>> ListarUsuariosAsync(CancellationToken ct = default);
     Task<AdminUsuarioDto> CrearUsuarioAsync(CrearAdminUsuarioRequest request, CancellationToken ct = default);

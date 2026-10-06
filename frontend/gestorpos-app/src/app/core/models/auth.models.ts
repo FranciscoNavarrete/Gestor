@@ -11,4 +11,6 @@ export interface AuthResponse {
   nombreUsuario: string;
   rol: string;
   features: string[];
+  /** El dueño todavía no aceptó los términos vigentes: se le pide antes de dejarlo usar el sistema. */
+  terminosPendientes?: boolean;
 }

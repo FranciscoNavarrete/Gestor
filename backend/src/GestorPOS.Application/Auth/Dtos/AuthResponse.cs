@@ -7,4 +7,5 @@ public record AuthResponse(
     string NombreNegocio,
     string NombreUsuario,
     string Rol,
-    IReadOnlyList<string> Features);
+    IReadOnlyList<string> Features,
+    bool TerminosPendientes = false);

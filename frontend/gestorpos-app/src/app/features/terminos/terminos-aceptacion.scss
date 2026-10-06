@@ -1,0 +1,76 @@
+.pagina {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+
+  mat-card-title {
+    font-size: 1.4rem;
+  }
+
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+  }
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.texto {
+  max-height: 46vh;
+  overflow-y: auto;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 4px 14px 14px;
+
+  h3 {
+    margin: 14px 0 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    opacity: 0.85;
+  }
+}
+
+.ayuda {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.6;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.aceptar {
+  height: 46px;
+}

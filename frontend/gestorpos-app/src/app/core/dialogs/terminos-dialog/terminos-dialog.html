@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Términos y condiciones</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (error()) {
+    <p class="error">No se pudieron cargar los términos.</p>
+    <button mat-stroked-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  } @else if (terminos(); as t) {
+    <p class="version">Versión {{ t.version }}</p>
+    @for (seccion of t.secciones; track seccion.titulo) {
+      <h3>{{ seccion.titulo }}</h3>
+      <p>{{ seccion.texto }}</p>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

@@ -16,6 +16,8 @@ export interface CrearNegocioRequest {
   primerPago?: 'Efectivo' | 'Transferencia' | null;
   primerPagoMonto?: number | null;
   primerPagoNota?: string | null;
+  /** El vendedor/operador confirma que el cliente conoce los términos (obligatorio). */
+  terminosExplicados: boolean;
 }
 
 export interface ConfirmarPagoRequest {
@@ -58,6 +60,8 @@ export interface TenantResumen {
   pagoManualEstado?: 'Pendiente' | 'Confirmado' | null;
   pagoManualMonto?: number | null;
   pendienteActivacion?: boolean;
+  /** Cuándo el dueño aceptó los términos vigentes; null si todavía no. */
+  terminosAceptadosEn?: string | null;
 }
 
 export interface CobroNegocio {

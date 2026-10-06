@@ -2,6 +2,9 @@ using GestorPOS.Application.Auth;
 using GestorPOS.Application.Auth.Dtos;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Application.Terminos;
+using GestorPOS.Domain.Entities;
+using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,7 +44,12 @@ public class AuthService : IAuthService
             .Select(f => f.Clave)
             .ToListAsync(ct);
 
+        // Solo el dueño (Admin) acepta los términos; hasta que lo haga, el front le muestra esa pantalla antes de dejarlo usar el sistema.
+        var terminosPendientes = usuario.Rol == RolUsuario.Admin
+            && !await _db.AceptacionesTerminos.AnyAsync(a =>
+                a.TenantId == tenant.Id && a.Origen == OrigenAceptacionTerminos.Cliente && a.Version == TerminosVigentes.Version, ct);
+
         var (token, expira) = _jwtService.GenerarToken(usuario, features);
-        return new AuthResponse(token, expira, tenant.Id, tenant.Nombre, usuario.Nombre, usuario.Rol.ToString(), features);
+        return new AuthResponse(token, expira, tenant.Id, tenant.Nombre, usuario.Nombre, usuario.Rol.ToString(), features, terminosPendientes);
     }
 }

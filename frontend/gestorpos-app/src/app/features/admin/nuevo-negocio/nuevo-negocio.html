@@ -113,6 +113,31 @@
             </div>
           </div>
 
+          <p class="seccion">Términos y condiciones</p>
+          <div class="terminos-resumen">
+            @if (planSeleccionado(); as plan) {
+              <p class="terminos-punto">
+                <mat-icon>check</mat-icon>
+                <span>
+                  @if (tienePrimerCobroDistinto(plan)) {
+                    Alta + 1er mes de {{ dinero(plan.montoPrimerCobro!) }} y luego {{ dinero(plan.monto) }} por mes con tarjeta.
+                  } @else {
+                    Abono de {{ dinero(plan.monto) }} por mes con tarjeta.
+                  }
+                </span>
+              </p>
+            }
+            @for (punto of terminos()?.resumen ?? []; track punto) {
+              <p class="terminos-punto"><mat-icon>check</mat-icon><span>{{ punto }}</span></p>
+            }
+            <button mat-button type="button" class="terminos-leer" (click)="verTerminos()">
+              Leer términos completos{{ terminos() ? ' (versión ' + terminos()!.version + ')' : '' }}
+            </button>
+          </div>
+          <mat-checkbox formControlName="terminosExplicados" class="terminos-check">
+            El cliente leyó y acepta los términos y condiciones. Los va a aceptar él mismo al ingresar por primera vez.
+          </mat-checkbox>
+
           @if (error()) {
             <p class="error">{{ error() }}</p>
           }

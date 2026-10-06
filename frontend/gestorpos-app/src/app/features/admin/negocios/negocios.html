@@ -97,8 +97,18 @@
                         <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
                       }
                     }
+                    @if (!negocio.terminosAceptadosEn) {
+                      <button type="button" class="badge-suscripcion badge-pendiente badge-boton" (click)="verTerminos(negocio, $event)" title="El cliente todavía no aceptó los términos y condiciones. Se los pide al ingresar por primera vez.">
+                        Términos pendientes
+                      </button>
+                    }
                     @if (puedeConfirmarPago(negocio)) {
                       <button type="button" class="boton-confirmar" (click)="confirmarPago(negocio, $event)">Confirmar pago</button>
+                    }
+                    @if (negocio.terminosAceptadosEn) {
+                      <button type="button" class="boton-cobros" (click)="verTerminos(negocio, $event)" aria-label="Ver la aceptación de los términos de este negocio" title="Términos aceptados">
+                        <mat-icon>gavel</mat-icon>
+                      </button>
                     }
                     @if (tieneCobros(negocio)) {
                       <button type="button" class="boton-cobros" (click)="verCobros(negocio, $event)" aria-label="Ver los cobros de este negocio" title="Ver cobros">

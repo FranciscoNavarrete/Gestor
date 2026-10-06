@@ -7,7 +7,7 @@ public record TenantResumenDto(
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null,
     string? FormaPrimerPago = null, string? PagoManualEstado = null, decimal? PagoManualMonto = null,
-    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null);
+    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null, DateTime? TerminosAceptadosEn = null);
 
 /// <summary>Confirmación del operador de un pago recibido por transferencia (o tarjeta u otro). Metodo:
 /// Transferencia, Tarjeta u Otro (o Efectivo). Monto y fecha son opcionales: por defecto el monto esperado y hoy.</summary>
@@ -93,7 +93,8 @@ public record TenantFeatureDto(Guid Id, string Clave, bool Habilitado);
 public record CrearNegocioRequest(
     string NombreNegocio, string NombreAdmin, string Email, string Password,
     Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null,
-    string? PrimerPago = null, decimal? PrimerPagoMonto = null, string? PrimerPagoNota = null);
+    string? PrimerPago = null, decimal? PrimerPagoMonto = null, string? PrimerPagoNota = null,
+    bool TerminosExplicados = false, string? Ip = null);
 
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,

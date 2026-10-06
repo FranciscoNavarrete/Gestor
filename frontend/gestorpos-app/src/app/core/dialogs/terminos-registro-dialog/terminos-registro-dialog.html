@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Términos de {{ data.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+    <button mat-stroked-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  } @else {
+    @if (delCliente(); as c) {
+      <div class="estado ok">
+        <mat-icon>check_circle</mat-icon>
+        <span>El cliente aceptó la versión {{ c.version }}</span>
+      </div>
+      <dl>
+        <dt>Aceptó</dt><dd>{{ c.nombre }}</dd>
+        <dt>Fecha</dt><dd>{{ c.fechaUtc | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        @if (c.ip) { <dt>Dirección IP</dt><dd>{{ c.ip }}</dd> }
+      </dl>
+    } @else {
+      <div class="estado pendiente">
+        <mat-icon>schedule</mat-icon>
+        <span>El cliente todavía no aceptó los términos. Se los pide al ingresar por primera vez.</span>
+      </div>
+    }
+
+    @if (delVendedor(); as v) {
+      <p class="subtitulo">Confirmado en el alta</p>
+      <dl>
+        <dt>Por</dt><dd>{{ v.nombre }}</dd>
+        <dt>Fecha</dt><dd>{{ v.fechaUtc | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        <dt>Versión</dt><dd>{{ v.version }}</dd>
+      </dl>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

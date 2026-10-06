@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<ILiquidacionesService, LiquidacionesService>();
         services.AddScoped<GestorPOS.Application.Suscripcion.IMiSuscripcionService, GestorPOS.Infrastructure.Suscripcion.MiSuscripcionService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
+        services.AddScoped<GestorPOS.Application.Terminos.ITerminosService, GestorPOS.Infrastructure.Terminos.TerminosService>();
         services.AddScoped<ITareaService, TareaService>();
         services.AddHostedService<TareaRecordatorioBackgroundService>();
         services.AddScoped<GestorPOS.Infrastructure.Suscripcion.CorteAccesoPorSuscripcionService>();
