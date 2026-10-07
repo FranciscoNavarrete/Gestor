@@ -47,6 +47,7 @@
   <router-outlet></router-outlet>
 </main>
 
+<div class="bottom-scrim" aria-hidden="true"></div>
 <nav class="bottom-nav" aria-label="Secciones del panel">
   @for (item of itemsMovil(); track item.path) {
     <a class="nav-item" [routerLink]="item.path" routerLinkActive="active">

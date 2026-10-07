@@ -115,6 +115,7 @@
   <router-outlet></router-outlet>
 </main>
 
+<div class="bottom-scrim" [class.bottom-nav-con-lateral]="tieneMenuLateral" aria-hidden="true"></div>
 <nav class="bottom-nav" [class.bottom-nav-con-lateral]="tieneMenuLateral">
   @for (item of navItems; track item.path) {
     <a

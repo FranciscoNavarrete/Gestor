@@ -70,6 +70,19 @@
   display: none;
 }
 
+// Franja con el color de la pantalla detrás de la barra de abajo: el contenido que pasa por debajo no se ve
+// (ni dentro de la barra ni en el hueco que queda debajo). Termina en degradé para que no se note el corte.
+.bottom-scrim {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(92px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--mat-sys-surface) 22px);
+  z-index: 9;
+  pointer-events: none;
+}
+
 .bottom-nav {
   position: fixed;
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
@@ -82,13 +95,14 @@
   align-items: stretch;
   gap: 2px;
   padding: 6px;
-  background: var(--surface-glass);
+  background: color-mix(in srgb, var(--mat-sys-surface) 96%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.25);
   z-index: 10;
+
 
   .nav-item {
     flex: 1;
@@ -126,7 +140,8 @@
 // --- Escritorio / tablet ancha: menú lateral y contenido a la derecha ---
 @media (min-width: 900px) {
   .toolbar,
-  .bottom-nav {
+  .bottom-nav,
+  .bottom-scrim {
     display: none;
   }
 
