@@ -222,3 +222,79 @@
 .barra-mes {
   opacity: 0.65;
 }
+
+// Bloque de pendientes: atajos a los negocios que esperan una acción del operador.
+.pendientes {
+  margin-bottom: 16px;
+}
+
+.pendientes-titulo {
+  margin: 0 0 8px 2px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+.pendientes-lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+
+  @media (min-width: 700px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pendiente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0.7;
+
+  &.hay {
+    opacity: 1;
+    border-color: color-mix(in srgb, #f5a623 55%, transparent);
+
+    .pendiente-numero {
+      color: #f5a623;
+    }
+  }
+
+  &:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+.pendiente-numero {
+  min-width: 28px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pendiente-texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pendiente-nombre {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.pendiente-detalle {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}

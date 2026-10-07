@@ -99,6 +99,10 @@
     gap: 2px;
     padding: 8px 4px;
     text-decoration: none;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
     color: var(--mat-sys-on-surface-variant, #5f6368);
     font-size: 0.7rem;
     font-weight: 500;

@@ -46,6 +46,16 @@ export class AdminShell {
     return items;
   });
 
+  // En celular entran 4 accesos a la vista; el resto del operador se abre desde "Más".
+  private static readonly ACCESOS_MOVIL = 4;
+  readonly itemsMovil = computed(() => {
+    const todos = this.items();
+    return this.adminAuth.esOperador() ? todos.slice(0, AdminShell.ACCESOS_MOVIL) : todos;
+  });
+  readonly itemsMas = computed(() => (this.adminAuth.esOperador() ? this.items().slice(AdminShell.ACCESOS_MOVIL) : []));
+  readonly rutaActual = signal(this.router.url);
+  readonly masActivo = computed(() => this.itemsMas().some((i) => this.rutaActual().startsWith(i.path)));
+
   readonly inicial = computed(() => (this.adminAuth.nombre() || '?').charAt(0).toUpperCase());
 
   constructor() {
@@ -54,7 +64,10 @@ export class AdminShell {
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.titulo.set(this.leerTitulo()));
+      .subscribe(() => {
+        this.titulo.set(this.leerTitulo());
+        this.rutaActual.set(this.router.url);
+      });
   }
 
   cerrarSesion(): void {

@@ -7,6 +7,32 @@
     </button>
   </div>
 
+  <section class="pendientes" aria-label="Pendientes">
+    <p class="pendientes-titulo">Pendientes</p>
+    <div class="pendientes-lista">
+      <button type="button" class="pendiente" [class.hay]="pendientes().porConfirmar > 0" (click)="irANegocios('porConfirmar')">
+        <span class="pendiente-numero">{{ pendientes().porConfirmar }}</span>
+        <span class="pendiente-texto">
+          <span class="pendiente-nombre">Pagos por confirmar</span>
+          <span class="pendiente-detalle">
+            {{ pendientes().porConfirmar > 0 ? dinero(pendientes().montoPorConfirmar) + ' esperando tu confirmación' : 'Nada para confirmar' }}
+          </span>
+        </span>
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button type="button" class="pendiente" [class.hay]="pendientes().sinAutorizar > 0" (click)="irANegocios('sinAutorizar')">
+        <span class="pendiente-numero">{{ pendientes().sinAutorizar }}</span>
+        <span class="pendiente-texto">
+          <span class="pendiente-nombre">Suscripciones sin autorizar</span>
+          <span class="pendiente-detalle">
+            {{ pendientes().sinAutorizar > 0 ? 'El cliente todavía no abrió el link' : 'Todas autorizadas' }}
+          </span>
+        </span>
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </section>
+
   @if (cargando() && !resumen()) {
     <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
   } @else if (error()) {

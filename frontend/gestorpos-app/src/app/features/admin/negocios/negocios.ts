@@ -1,12 +1,14 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -24,7 +26,9 @@ import { AdminService } from '../../../core/services/admin.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
 import { RefrescoAutomatico } from '../../../core/utils/refresco-automatico';
 
-export type FiltroEstado = 'todos' | 'activos' | 'inactivos';
+export type FiltroEstado = 'todos' | 'activos' | 'inactivos' | 'porConfirmar' | 'sinAutorizar';
+
+const FILTROS_VALIDOS: FiltroEstado[] = ['todos', 'activos', 'inactivos', 'porConfirmar', 'sinAutorizar'];
 
 @Component({
   selector: 'app-negocios',
@@ -35,6 +39,7 @@ export type FiltroEstado = 'todos' | 'activos' | 'inactivos';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
   ],
@@ -45,6 +50,7 @@ export class Negocios implements OnInit, OnDestroy {
   private readonly adminService = inject(AdminService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly route = inject(ActivatedRoute);
   protected readonly adminAuth = inject(AdminAuthService);
 
   readonly negocios = signal<TenantResumen[]>([]);
@@ -56,15 +62,19 @@ export class Negocios implements OnInit, OnDestroy {
   readonly conteos = computed(() => {
     const todos = this.negocios();
     const activos = todos.filter((n) => n.activo).length;
-    return { todos: todos.length, activos, inactivos: todos.length - activos };
+    return {
+      todos: todos.length,
+      activos,
+      inactivos: todos.length - activos,
+      porConfirmar: todos.filter((n) => this.esPorConfirmar(n)).length,
+      sinAutorizar: todos.filter((n) => this.esSinAutorizar(n)).length,
+    };
   });
   readonly negociosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
     const estado = this.filtroEstado();
     return this.negocios().filter(
-      (n) =>
-        (estado === 'todos' || (estado === 'activos' ? n.activo : !n.activo)) &&
-        (!termino || n.nombre.toLowerCase().includes(termino)),
+      (n) => this.cumpleFiltro(n, estado) && (!termino || n.nombre.toLowerCase().includes(termino)),
     );
   });
 
@@ -77,7 +87,35 @@ export class Negocios implements OnInit, OnDestroy {
   readonly refresco = new RefrescoAutomatico(() => this.cargarNegocios(true));
 
   ngOnInit(): void {
+    // Desde el Resumen se llega con el filtro ya elegido (?filtro=porConfirmar).
+    const pedido = this.route.snapshot.queryParamMap.get('filtro') as FiltroEstado | null;
+    if (pedido && FILTROS_VALIDOS.includes(pedido)) this.filtroEstado.set(pedido);
     this.cargarNegocios();
+  }
+
+  // Una transferencia (o tarjeta u otro) recibida que el operador todavía no confirmó.
+  esPorConfirmar(negocio: TenantResumen): boolean {
+    return negocio.pagoManualEstado === 'Pendiente';
+  }
+
+  // El cliente todavía no abrió el link de pago ni autorizó su suscripción.
+  esSinAutorizar(negocio: TenantResumen): boolean {
+    return negocio.fluxoEstado === 'pending';
+  }
+
+  private cumpleFiltro(negocio: TenantResumen, filtro: FiltroEstado): boolean {
+    switch (filtro) {
+      case 'activos': return negocio.activo;
+      case 'inactivos': return !negocio.activo;
+      case 'porConfirmar': return this.esPorConfirmar(negocio);
+      case 'sinAutorizar': return this.esSinAutorizar(negocio);
+      default: return true;
+    }
+  }
+
+  // Alta o baja desde el menú de la tarjeta (en celular no hay interruptor).
+  alternarActivo(negocio: TenantResumen): void {
+    this.cambiarActivo(negocio);
   }
 
   ngOnDestroy(): void {
@@ -292,9 +330,9 @@ export class Negocios implements OnInit, OnDestroy {
     return this.adminAuth.esOperador() && negocio.fluxoAjustePendiente === true;
   }
 
-  cambiarActivo(negocio: TenantResumen, cambio: MatSlideToggleChange): void {
+  cambiarActivo(negocio: TenantResumen, cambio?: MatSlideToggleChange): void {
     if (this.cambiandoEstadoNegocioId()) {
-      cambio.source.checked = negocio.activo;
+      if (cambio) cambio.source.checked = negocio.activo;
       return;
     }
 
@@ -313,7 +351,7 @@ export class Negocios implements OnInit, OnDestroy {
         .afterClosed()
         .subscribe((confirmado) => {
           if (!confirmado) {
-            cambio.source.checked = true;
+            if (cambio) cambio.source.checked = true;
             return;
           }
           this.aplicarEstado(negocio, cambio, this.adminService.desactivarNegocio(negocio.id));
@@ -324,7 +362,7 @@ export class Negocios implements OnInit, OnDestroy {
     this.aplicarEstado(negocio, cambio, this.adminService.activarNegocio(negocio.id));
   }
 
-  private aplicarEstado(negocio: TenantResumen, cambio: MatSlideToggleChange, accion$: Observable<TenantResumen>): void {
+  private aplicarEstado(negocio: TenantResumen, cambio: MatSlideToggleChange | undefined, accion$: Observable<TenantResumen>): void {
     this.cambiandoEstadoNegocioId.set(negocio.id);
     accion$.subscribe({
       next: () => {
@@ -332,7 +370,7 @@ export class Negocios implements OnInit, OnDestroy {
         this.cargarNegocios(true);
       },
       error: (err) => {
-        cambio.source.checked = negocio.activo;
+        if (cambio) cambio.source.checked = negocio.activo;
         this.cambiandoEstadoNegocioId.set(null);
         this.snackBar.open(extraerMensajeError(err), 'OK', { duration: 6000 });
       },

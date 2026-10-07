@@ -48,10 +48,25 @@
 </main>
 
 <nav class="bottom-nav" aria-label="Secciones del panel">
-  @for (item of items(); track item.path) {
+  @for (item of itemsMovil(); track item.path) {
     <a class="nav-item" [routerLink]="item.path" routerLinkActive="active">
       <mat-icon>{{ item.icono }}</mat-icon>
       <span>{{ item.etiquetaCorta }}</span>
     </a>
   }
+  @if (itemsMas().length > 0) {
+    <button type="button" class="nav-item" [class.active]="masActivo()" [matMenuTriggerFor]="menuMas" aria-label="Más secciones">
+      <mat-icon>menu</mat-icon>
+      <span>Más</span>
+    </button>
+  }
 </nav>
+
+<mat-menu #menuMas="matMenu" yPosition="above" xPosition="before">
+  @for (item of itemsMas(); track item.path) {
+    <a mat-menu-item [routerLink]="item.path">
+      <mat-icon>{{ item.icono }}</mat-icon>
+      <span>{{ item.etiqueta }}</span>
+    </a>
+  }
+</mat-menu>

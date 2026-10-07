@@ -1,10 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ClienteEnRiesgo, ResumenFinanciero } from '../../../core/models/admin.models';
+import { ClienteEnRiesgo, ResumenFinanciero, TenantResumen } from '../../../core/models/admin.models';
 import { AdminService } from '../../../core/services/admin.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
 
@@ -25,11 +26,24 @@ const ETIQUETAS_RIESGO: Record<ClienteEnRiesgo['tipo'], string> = {
 })
 export class ResumenAdmin implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly router = inject(Router);
 
   readonly resumen = signal<ResumenFinanciero | null>(null);
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
   readonly actualizado = signal<Date | null>(null);
+
+  // Lo que espera una acción del operador: pagos por confirmar y suscripciones cuyo link nadie abrió.
+  readonly negocios = signal<TenantResumen[]>([]);
+  readonly pendientes = computed(() => {
+    const todos = this.negocios();
+    const porConfirmar = todos.filter((n) => n.pagoManualEstado === 'Pendiente');
+    return {
+      porConfirmar: porConfirmar.length,
+      montoPorConfirmar: porConfirmar.reduce((suma, n) => suma + (n.pagoManualMonto ?? 0), 0),
+      sinAutorizar: todos.filter((n) => n.fluxoEstado === 'pending').length,
+    };
+  });
 
   readonly maximoAltas = computed(() => Math.max(1, ...(this.resumen()?.altasPorMes ?? []).map((a) => a.altas)));
   readonly mesActual = new Date().getMonth() + 1;
@@ -38,7 +52,16 @@ export class ResumenAdmin implements OnInit {
     this.cargar();
   }
 
+  irANegocios(filtro: 'porConfirmar' | 'sinAutorizar'): void {
+    void this.router.navigate(['/admin/negocios'], { queryParams: { filtro } });
+  }
+
   cargar(): void {
+    // Un fallo acá no debe tapar el resto del resumen: simplemente no se muestran los pendientes.
+    this.adminService.listarNegocios().subscribe({
+      next: (negocios) => this.negocios.set(negocios),
+      error: () => this.negocios.set([]),
+    });
     this.cargando.set(true);
     this.error.set(null);
     this.adminService.obtenerResumen().subscribe({

@@ -59,6 +59,59 @@
 .negocio-info {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+// Los estados van debajo del nombre y bajan de renglón si no entran: nada se corta.
+.negocio-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.cta-movil {
+  display: none;
+  margin-top: 8px;
+
+  .boton-confirmar {
+    width: 100%;
+    padding: 8px 12px;
+  }
+}
+
+.acciones-escritorio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acciones-movil {
+  display: none;
+}
+
+// En celular las acciones van en un menú de tres puntos y el botón principal dentro de la tarjeta.
+@media (max-width: 699.98px) {
+  .acciones-escritorio {
+    display: none;
+  }
+
+  .acciones-movil {
+    display: inline-flex;
+  }
+
+  .cta-movil {
+    display: block;
+  }
+
+  .negocio-fila {
+    align-items: flex-start;
+  }
 }
 
 .negocio-nombre {
@@ -289,9 +342,22 @@
       opacity: 1;
     }
   }
+
+  // Los filtros de cosas por resolver se distinguen en amarillo.
+  &.filtro-aviso {
+    border-color: color-mix(in srgb, #f5a623 55%, transparent);
+    color: #f5a623;
+
+    &.activo {
+      border-color: #f5a623;
+      background: color-mix(in srgb, #f5a623 16%, transparent);
+      color: #f5a623;
+    }
+  }
 }
 
-.negocio-item.inactivo .negocio-info {
+// Un negocio inactivo se ve apagado, pero el botón de acción (confirmar pago, ver link) queda a pleno.
+.negocio-item.inactivo .negocio-info > :not(.cta-movil) {
   opacity: 0.55;
 }
 
