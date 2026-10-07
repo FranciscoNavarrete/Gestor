@@ -234,6 +234,11 @@ export class Negocios implements OnInit, OnDestroy {
       return { texto: renueva ? `Suscripto · renueva ${renueva}` : 'Suscripto', clase: 'badge-suscripto' };
     }
     if (negocio.fluxoEstado === 'authorized' && !negocio.fluxoPrimerCobroAprobado) {
+      // El negocio ya está activo: solo falta que Mercado Pago cobre en la fecha programada.
+      if (!negocio.formaPrimerPago && negocio.fluxoProximoCobro) {
+        const fecha = new Date(negocio.fluxoProximoCobro).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' });
+        return { texto: `1er cobro el ${fecha}`, clase: 'badge-esperando' };
+      }
       return { texto: 'Esperando 1er cobro', clase: 'badge-esperando' };
     }
     return Negocios.ESTADOS_SUSCRIPCION[negocio.fluxoEstado] ?? null;

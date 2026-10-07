@@ -33,6 +33,16 @@ export class MiSuscripcionVista {
     return '$' + Math.round(valor).toLocaleString('es-AR');
   }
 
+  // Antes del primer cobro, si ese cobro es mayor al mensual, la diferencia es el alta: se avisa para que no parezca un error.
+  // Devuelve null (no se muestra nada) si la suscripción no está activa, si el primer pago fue manual, si ya hubo un
+  // cobro aprobado o si el próximo cobro no supera al mensual.
+  montoAltaIncluida(s: MiSuscripcion): number | null {
+    if (s.estado !== 'authorized' || s.primerPagoManual) return null;
+    if (s.cobros.some((c) => c.estado === 'aprobado')) return null;
+    const diferencia = (s.proximoMonto ?? 0) - s.montoMensual;
+    return diferencia > 0 ? diferencia : null;
+  }
+
   mesesDePromo(p: PromoSuscripcion): number[] {
     return Array.from({ length: p.mesesPromo }, (_, i) => i + 1);
   }

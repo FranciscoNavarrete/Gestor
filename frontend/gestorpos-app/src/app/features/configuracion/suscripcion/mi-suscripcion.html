@@ -52,6 +52,12 @@
           <p class="linea destacada">{{ s.proximoCobro | date: 'dd/MM' : '-0300' }} · {{ dinero(s.proximoMonto ?? s.montoMensual) }}</p>
         }
 
+        @if (montoAltaIncluida(s); as alta) {
+          <p class="linea secundaria">
+            Incluye el alta de {{ dinero(alta) }} y el primer mes. Después pagás {{ dinero(s.montoMensual) }} por mes.
+          </p>
+        }
+
         @if (s.primerPagoManual && s.proximoCobro && s.estado === 'authorized') {
           <p class="linea secundaria">
             Tu primer mes está pagado hasta el {{ s.proximoCobro | date: 'dd/MM' : '-0300' }}. Desde ahí se cobra con tu tarjeta.
