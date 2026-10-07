@@ -39,7 +39,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.55;
-  margin: 12px 0 2px;
+  margin: 18px 0 2px;
 
   &:first-child {
     margin-top: 0;
@@ -140,6 +140,17 @@
 
   mat-button-toggle {
     flex: 1;
+    min-width: 0;
+  }
+}
+
+// En celular los tres botones del primer pago tienen que entrar enteros: sin la tilde, con menos relleno
+// y letra un poco menor (si no, "Transferencia" se cortaba).
+@media (max-width: 599.98px) {
+  :host ::ng-deep .metodo-cobro .mat-button-toggle-label-content {
+    padding: 0 6px;
+    font-size: 0.82rem;
+    white-space: nowrap;
   }
 }
 

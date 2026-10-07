@@ -40,7 +40,7 @@
                 <mat-option [value]="plan.mpPlanId">{{ etiquetaPlan(plan) }}</mat-option>
               }
             </mat-select>
-            <mat-hint>Lo que le vas a cobrar a este negocio por mes</mat-hint>
+            <mat-hint>Lo que le cobrás por mes</mat-hint>
           </mat-form-field>
 
           @if (planSeleccionado(); as plan) {
@@ -67,6 +67,7 @@
           <p class="seccion">Primer pago</p>
           <mat-button-toggle-group
             class="metodo-cobro"
+            [hideSingleSelectionIndicator]="true"
             [value]="primerPago()"
             [disabled]="tarjetaActiva() || guardando()"
             (change)="elegirPrimerPago($event.value)"
@@ -99,6 +100,7 @@
           <p class="seccion">{{ esPagoManual() ? 'Suscripción mensual (obligatoria)' : 'Cómo se cobra' }}</p>
           <mat-button-toggle-group
             class="metodo-cobro"
+            [hideSingleSelectionIndicator]="true"
             [value]="metodoCobro()"
             [disabled]="tarjetaActiva() || guardando()"
             (change)="elegirMetodoCobro($event.value)"
