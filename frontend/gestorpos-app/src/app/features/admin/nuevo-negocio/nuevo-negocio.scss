@@ -4,6 +4,13 @@
   margin: 0 auto;
 }
 
+// En celular las dos columnas se apilan: con una separación para que el título de la segunda no quede pegado al final de la primera.
+.columnas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 @media (min-width: 900px) {
   .pagina {
     max-width: 880px;
