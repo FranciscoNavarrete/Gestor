@@ -11,6 +11,8 @@ const DESTINO = path.join(DIST_DIR, 'admin.html');
 let html = fs.readFileSync(ORIGEN, 'utf8');
 html = html.replace('href="manifest.webmanifest"', 'href="admin-manifest.webmanifest"');
 html = html.replace('name="apple-mobile-web-app-title" content="GestorPOS"', 'name="apple-mobile-web-app-title" content="GestorPOS Admin"');
+// El ícono de "Agregar a inicio" en iPhone sale de este tag, no del manifest: el de admin va en grafito para no confundirlo con el de los clientes.
+html = html.replace('rel="apple-touch-icon" href="icons/icon-192x192.png"', 'rel="apple-touch-icon" href="icons/admin/icon-192x192.png"');
 
 fs.writeFileSync(DESTINO, html);
 console.log('admin.html generado en', DESTINO);
