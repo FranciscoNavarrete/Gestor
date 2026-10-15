@@ -22,3 +22,6 @@ frontend/**/.angular/
 
 # Notas/borradores locales — puede tener secrets (claves de QAS, etc.), nunca al repo
 scratch/
+
+# Videos, audios y material de presentación generados (pesan ~100 MB, no son parte del producto)
+.claude/entregas/
