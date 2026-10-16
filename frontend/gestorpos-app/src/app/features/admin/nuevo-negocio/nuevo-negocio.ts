@@ -58,6 +58,7 @@ export class NuevoNegocio implements OnInit, OnDestroy {
     nombreAdmin: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    telefono: ['', [Validators.required, Validators.pattern(/^(?:\D*\d){8,}\D*$/)]],
     vendedorId: this.fb.control<string | null>(null),
     mpPlanId: this.fb.control<number | null>(null, [Validators.required]),
     primerPagoMonto: this.fb.control<number | null>(null),

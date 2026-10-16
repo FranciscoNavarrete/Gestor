@@ -17,6 +17,15 @@
             <input matInput formControlName="nombreAdmin" />
           </mat-form-field>
 
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Teléfono del cliente</mat-label>
+            <input matInput type="tel" inputmode="tel" formControlName="telefono" placeholder="11 2345 6789" />
+            <mat-hint>Con código de área, para poder contactarlo</mat-hint>
+            @if (form.controls.telefono.touched && form.controls.telefono.invalid) {
+              <mat-error>Ingresá un teléfono válido (al menos 8 números)</mat-error>
+            }
+          </mat-form-field>
+
           <p class="seccion">Acceso del cliente</p>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Email (usuario de acceso)</mat-label>

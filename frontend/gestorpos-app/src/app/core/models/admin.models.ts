@@ -9,6 +9,8 @@ export interface CrearNegocioRequest {
   nombreAdmin: string;
   email: string;
   password: string;
+  /** Teléfono del cliente (obligatorio al dar de alta). */
+  telefono: string;
   vendedorId?: string | null;
   mpPlanId?: number | null;
   cardToken?: string | null;

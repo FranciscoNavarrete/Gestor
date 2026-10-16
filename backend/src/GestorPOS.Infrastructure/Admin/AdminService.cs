@@ -33,6 +33,11 @@ public class AdminService : IAdminService
         if (!request.TerminosExplicados)
             throw new AppException("Confirmá que el cliente conoce y acepta los términos y condiciones.");
 
+        // El teléfono del cliente es obligatorio al dar de alta: hace falta para contactarlo.
+        var telefono = request.Telefono?.Trim();
+        if (string.IsNullOrWhiteSpace(telefono) || telefono.Count(char.IsDigit) < 8)
+            throw new AppException("Ingresá el teléfono del cliente (con código de área).");
+
         var emailEnUso = await _db.Usuarios.IgnoreQueryFilters()
             .AnyAsync(u => u.Email == emailNormalizado, ct);
         if (emailEnUso)
@@ -67,6 +72,7 @@ public class AdminService : IAdminService
             nombrePila, apellido, emailNormalizado, request.MpPlanId, cardToken, primerPago is not null, false, ct);
 
         var tenant = Tenant.Crear(request.NombreNegocio, slug);
+        tenant.ActualizarDatos(request.NombreNegocio, telefono);
 
         // Un Vendedor solo se atribuye negocios a sí mismo, nunca a otro vendedor (aunque lo mande
         // en el body); el Operador sí puede elegir a quién atribuírselo, o dejarlo sin vendedor.

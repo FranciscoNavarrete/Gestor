@@ -103,7 +103,7 @@ public record CrearNegocioRequest(
     string NombreNegocio, string NombreAdmin, string Email, string Password,
     Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null,
     string? PrimerPago = null, decimal? PrimerPagoMonto = null, string? PrimerPagoNota = null,
-    bool TerminosExplicados = false, string? Ip = null);
+    bool TerminosExplicados = false, string? Ip = null, string? Telefono = null);
 
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
