@@ -42,6 +42,9 @@ const ACCIONES: Record<string, { verbo: string; icono: string; tono: Tono }> = {
   'liquidacion.cerrada': { verbo: 'liquidó las comisiones de', icono: 'request_quote', tono: 'info' },
   'liquidacion.pagada': { verbo: 'marcó como pagadas las comisiones de', icono: 'paid', tono: 'ok' },
   'liquidacion.anulada': { verbo: 'anuló la liquidación de', icono: 'undo', tono: 'aviso' },
+  'password.restablecida': { verbo: 'restableció la contraseña de', icono: 'key', tono: 'aviso' },
+  'grupo.creado': { verbo: 'creó el grupo de dueños', icono: 'group_add', tono: 'info' },
+  'negocio.grupo': { verbo: 'cambió el grupo de dueños del negocio', icono: 'group', tono: 'info' },
 };
 
 @Component({
@@ -93,6 +96,7 @@ export class MovimientosAdminPantalla implements OnInit, OnDestroy {
     { valor: 'negocio.cambio_plan', etiqueta: 'Cambios de plan' },
     { valor: 'feature', etiqueta: 'Funciones de negocios' },
     { valor: 'usuario', etiqueta: 'Usuarios del panel' },
+    { valor: 'password.restablecida', etiqueta: 'Contraseñas restablecidas' },
     { valor: 'liquidacion', etiqueta: 'Liquidaciones' },
   ];
 

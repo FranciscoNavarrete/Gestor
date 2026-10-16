@@ -1,5 +1,6 @@
 import { Component, input, output, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroupDirective, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +16,13 @@ function repetirIgual(control: AbstractControl): ValidationErrors | null {
   const nueva = control.get('nueva')?.value;
   const repetir = control.get('repetir')?.value;
   return repetir && nueva !== repetir ? { noCoincide: true } : null;
+}
+
+// El "no coinciden" es un error del formulario, no del campo: se lo marca en "Repetir" una vez que se tocó.
+class NoCoincideMatcher implements ErrorStateMatcher {
+  isErrorState(control: AbstractControl | null, form: FormGroupDirective | NgForm | null): boolean {
+    return !!control && control.touched && !!form?.form?.hasError('noCoincide');
+  }
 }
 
 /** Formulario de "contraseña actual / nueva / repetir". Quien lo usa le pasa cómo guardar (negocio o panel interno). */
@@ -34,6 +42,7 @@ export class CambiarPassword {
   readonly cambiada = output<void>();
 
   readonly largoMinimo = LARGO_MINIMO_PASSWORD;
+  readonly matcherRepetir = new NoCoincideMatcher();
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly ocultar = signal(true);
