@@ -39,3 +39,10 @@
   font-size: 0.8125rem;
   opacity: 0.7;
 }
+
+// Aire debajo del formulario para que el botón no quede pegado a la barra de navegación de abajo.
+.formulario {
+  height: 24px;
+  // La barra de navegación fija ocupa el borde de abajo en celular: se deja ese margen al desplazar.
+  scroll-margin-bottom: 120px;
+}

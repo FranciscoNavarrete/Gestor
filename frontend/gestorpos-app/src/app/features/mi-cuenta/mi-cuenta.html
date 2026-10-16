@@ -10,12 +10,13 @@
           <p class="ayuda">Cambiala cuando quieras.</p>
         </div>
         @if (!cambiando()) {
-          <button mat-stroked-button type="button" (click)="cambiando.set(true)">Cambiar</button>
+          <button mat-stroked-button type="button" (click)="abrirFormulario()">Cambiar</button>
         }
       </div>
       @if (cambiando()) {
         <app-cambiar-password [guardar]="guardar" (cambiada)="alCambiar()" />
         <button mat-button type="button" (click)="cambiando.set(false)">Cancelar</button>
+        <div #formulario class="formulario"></div>
       }
     </div>
   </mat-card-content>

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,6 +21,13 @@ export class MiCuenta {
   readonly nombreNegocio = this.authService.nombreNegocio;
   readonly rol = this.authService.auth;
   readonly cambiando = signal(false);
+  private readonly formulario = viewChild<ElementRef<HTMLElement>>('formulario');
+
+  // En celular el formulario queda debajo de la barra de abajo: al abrirlo se lo trae a la vista completo.
+  abrirFormulario(): void {
+    this.cambiando.set(true);
+    setTimeout(() => this.formulario()?.nativeElement.scrollIntoView({ block: 'end', behavior: 'smooth' }));
+  }
 
   readonly guardar = (actual: string, nueva: string) => this.authService.cambiarPassword(actual, nueva);
 
