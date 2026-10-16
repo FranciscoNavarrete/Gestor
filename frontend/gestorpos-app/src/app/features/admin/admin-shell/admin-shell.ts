@@ -72,7 +72,10 @@ export class AdminShell {
   }
 
   contactarSoporte(): void {
-    abrirSoporte(`Hola, soy ${this.adminAuth.nombre()} (${this.adminAuth.rol()}) y necesito ayuda con el panel de GestorPOS.`);
+    const nombre = this.adminAuth.nombre();
+    const rol = this.adminAuth.rol();
+    const quien = nombre === rol ? nombre : `${nombre} (${rol})`;
+    abrirSoporte(`Hola, soy ${quien} y necesito ayuda con el panel de GestorPOS.`);
   }
 
   cerrarSesion(): void {

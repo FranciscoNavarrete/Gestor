@@ -200,6 +200,15 @@
 .badge-grupo {
   background: color-mix(in srgb, var(--mat-sys-primary, #1a73e8) 14%, transparent);
   color: var(--mat-sys-primary, #1a73e8);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
 }
 
 .badge-ajuste {

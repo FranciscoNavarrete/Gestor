@@ -136,7 +136,7 @@
                         }
                       }
                       @if (adminAuth.esOperador() && negocio.grupoDuenoNombre) {
-                        <span class="badge-suscripcion badge-grupo" title="Grupo de dueño">Grupo {{ negocio.grupoDuenoNombre }}</span>
+                        <span class="badge-suscripcion badge-grupo" title="Grupo de dueño"><mat-icon>group</mat-icon>{{ negocio.grupoDuenoNombre }}</span>
                       }
                       @if (!negocio.terminosAceptadosEn) {
                         <button type="button" class="badge-suscripcion badge-pendiente badge-boton" (click)="verTerminos(negocio, $event)" title="El cliente todavía no aceptó los términos y condiciones. Se los pide al ingresar por primera vez.">
