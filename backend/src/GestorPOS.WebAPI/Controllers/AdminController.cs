@@ -43,6 +43,21 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<TenantResumenDto>> CrearNegocioSinCobro(CrearNegocioSinCobroRequest request, CancellationToken ct)
         => Ok(await _adminService.CrearNegocioSinCobroAsync(request, ct));
 
+    [HttpGet("grupos")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<IReadOnlyList<GrupoDuenoDto>>> ListarGrupos(CancellationToken ct)
+        => Ok(await _adminService.ListarGruposAsync(ct));
+
+    [HttpPost("grupos")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<GrupoDuenoDto>> CrearGrupo(CrearGrupoDuenoRequest request, CancellationToken ct)
+        => Ok(await _adminService.CrearGrupoAsync(request, ct));
+
+    [HttpPut("tenants/{tenantId:guid}/grupo")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<TenantResumenDto>> AsignarGrupo(Guid tenantId, AsignarGrupoRequest request, CancellationToken ct)
+        => Ok(await _adminService.AsignarGrupoAsync(tenantId, request, ct));
+
     [HttpGet("fluxo/planes")]
     public async Task<ActionResult<IReadOnlyList<FluxoPlanDto>>> ListarPlanesFluxo(CancellationToken ct)
         => Ok(await _adminService.ListarPlanesFluxoAsync(ct));

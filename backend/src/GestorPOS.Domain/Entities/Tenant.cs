@@ -22,6 +22,9 @@ public class Tenant : BaseEntity
     public byte[]? LogoData { get; private set; }
     public string? LogoContentType { get; private set; }
     public Guid? VendedorId { get; private set; }
+
+    /// <summary>Grupo de dueños al que pertenece el negocio (si el dueño tiene más de un local).</summary>
+    public Guid? GrupoDuenoId { get; private set; }
     public int? FluxoClienteId { get; private set; }
     public int? FluxoSuscripcionId { get; private set; }
 
@@ -66,6 +69,8 @@ public class Tenant : BaseEntity
     public void MarcarVentaPreviaCobrada() => VentaPreviaCobrada = true;
 
     public void AsignarNotaInterna(string? nota) => NotaInterna = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
+
+    public void AsignarGrupo(Guid? grupoId) => GrupoDuenoId = grupoId;
 
     public void AsignarVendedor(Guid? vendedorId) => VendedorId = vendedorId;
 

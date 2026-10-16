@@ -179,6 +179,50 @@ public class AdminService : IAdminService
             EmailAdmin: emailNormalizado, NotaInterna: tenant.NotaInterna, Telefono: tenant.Telefono);
     }
 
+    public async Task<IReadOnlyList<GrupoDuenoDto>> ListarGruposAsync(CancellationToken ct = default)
+    {
+        var grupos = await _db.GruposDuenos.AsNoTracking().OrderBy(g => g.Nombre).ToListAsync(ct);
+        var conteos = await _db.Tenants.IgnoreQueryFilters().AsNoTracking()
+            .Where(t => t.GrupoDuenoId != null)
+            .GroupBy(t => t.GrupoDuenoId!.Value)
+            .Select(g => new { g.Key, Cantidad = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Cantidad, ct);
+        return grupos.Select(g => new GrupoDuenoDto(g.Id, g.Nombre, g.Telefono, conteos.GetValueOrDefault(g.Id))).ToList();
+    }
+
+    public async Task<GrupoDuenoDto> CrearGrupoAsync(CrearGrupoDuenoRequest request, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Nombre))
+            throw new AppException("Ingresá el nombre del grupo.");
+        var nombre = request.Nombre.Trim();
+        if (await _db.GruposDuenos.AnyAsync(g => g.Nombre.ToLower() == nombre.ToLower(), ct))
+            throw new AppException("Ya existe un grupo con ese nombre.");
+
+        var grupo = GrupoDueno.Crear(nombre, request.Telefono);
+        _db.GruposDuenos.Add(grupo);
+        await RegistrarMovimientoAsync("grupo.creado", "grupo", grupo.Id, grupo.Nombre, null, ct);
+        await _db.SaveChangesAsync(ct);
+        return new GrupoDuenoDto(grupo.Id, grupo.Nombre, grupo.Telefono, 0);
+    }
+
+    public async Task<TenantResumenDto> AsignarGrupoAsync(Guid tenantId, AsignarGrupoRequest request, CancellationToken ct = default)
+    {
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+        GrupoDueno? grupo = null;
+        if (request.GrupoId is not null)
+        {
+            grupo = await _db.GruposDuenos.FirstOrDefaultAsync(g => g.Id == request.GrupoId, ct)
+                ?? throw new AppException("El grupo no existe.");
+        }
+
+        tenant.AsignarGrupo(grupo?.Id);
+        await RegistrarMovimientoAsync("negocio.grupo", "negocio", tenant.Id, tenant.Nombre,
+            grupo is null ? "Sacado de su grupo" : $"Agregado al grupo {grupo.Nombre}", ct);
+        await _db.SaveChangesAsync(ct);
+
+        return await ArmarResumenAsync(tenant, ct);
+    }
+
     private static MetodoPagoManual? ParsearPrimerPago(string? valor)
     {
         if (string.IsNullOrWhiteSpace(valor)) return null;
@@ -298,6 +342,10 @@ public class AdminService : IAdminService
             .GroupBy(a => a.TenantId)
             .ToDictionary(g => g.Key, g => g.Min(a => a.FechaUtc));
 
+        var grupoIds = tenants.Where(t => t.GrupoDuenoId != null).Select(t => t.GrupoDuenoId!.Value).Distinct().ToList();
+        var nombresPorGrupo = await _db.GruposDuenos.AsNoTracking()
+            .Where(g => grupoIds.Contains(g.Id)).ToDictionaryAsync(g => g.Id, g => g.Nombre, ct);
+
         var duenos = (await _db.Usuarios.IgnoreQueryFilters().AsNoTracking()
                 .Where(u => idsTenants.Contains(u.TenantId)).OrderBy(u => u.FechaCreacion).ToListAsync(ct))
             .GroupBy(u => u.TenantId)
@@ -334,7 +382,9 @@ public class AdminService : IAdminService
                     : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.ProximoCobro,
                 TerminosAceptadosEn: terminosPorTenant.TryGetValue(t.Id, out var aceptadoEn) ? aceptadoEn : null,
                 EmailAdmin: duenos.GetValueOrDefault(t.Id),
-                NotaInterna: t.NotaInterna, Telefono: t.Telefono))
+                NotaInterna: t.NotaInterna, Telefono: t.Telefono,
+                GrupoDuenoId: t.GrupoDuenoId,
+                GrupoDuenoNombre: t.GrupoDuenoId is null ? null : nombresPorGrupo.GetValueOrDefault(t.GrupoDuenoId.Value)))
             .ToList();
     }
 
@@ -557,7 +607,11 @@ public class AdminService : IAdminService
             FormaPrimerPago: pagoManual?.Metodo.ToString(), PagoManualEstado: pagoManual?.Estado.ToString(),
             PagoManualMonto: pagoManual?.Monto, PendienteActivacion: tenant.PendienteActivacion,
             FluxoProximoCobro: fluxoEstado?.ProximoCobro, TerminosAceptadosEn: terminosAceptadosEn,
-            EmailAdmin: (await DuenoDelNegocioAsync(tenant.Id, ct)) is { } d ? d.EmailOriginalLiberado() ?? d.Email : null);
+            EmailAdmin: (await DuenoDelNegocioAsync(tenant.Id, ct)) is { } d ? d.EmailOriginalLiberado() ?? d.Email : null,
+            NotaInterna: tenant.NotaInterna, Telefono: tenant.Telefono, GrupoDuenoId: tenant.GrupoDuenoId,
+            GrupoDuenoNombre: tenant.GrupoDuenoId is null
+                ? null
+                : await _db.GruposDuenos.AsNoTracking().Where(g => g.Id == tenant.GrupoDuenoId).Select(g => g.Nombre).FirstOrDefaultAsync(ct));
     }
 
     private async Task<Tenant> ObtenerTenantAsync(Guid tenantId, CancellationToken ct) =>

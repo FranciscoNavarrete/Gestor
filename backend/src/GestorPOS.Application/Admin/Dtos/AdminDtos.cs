@@ -8,7 +8,7 @@ public record TenantResumenDto(
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null,
     string? FormaPrimerPago = null, string? PagoManualEstado = null, decimal? PagoManualMonto = null,
     bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null, DateTime? TerminosAceptadosEn = null, string? EmailAdmin = null,
-    string? NotaInterna = null, string? Telefono = null);
+    string? NotaInterna = null, string? Telefono = null, Guid? GrupoDuenoId = null, string? GrupoDuenoNombre = null);
 
 /// <summary>Confirmación del operador de un pago recibido por transferencia (o tarjeta u otro). Metodo:
 /// Transferencia, Tarjeta u Otro (o Efectivo). Monto y fecha son opcionales: por defecto el monto esperado y hoy.</summary>
@@ -111,6 +111,14 @@ public record CrearNegocioRequest(
 /// términos él mismo al ingresar.</summary>
 public record CrearNegocioSinCobroRequest(
     string NombreNegocio, string NombreAdmin, string Telefono, string Email, string Password, string? Nota = null);
+
+/// <summary>Un grupo de dueños con la cantidad de negocios que tiene asignados.</summary>
+public record GrupoDuenoDto(Guid Id, string Nombre, string? Telefono, int Negocios);
+
+public record CrearGrupoDuenoRequest(string Nombre, string? Telefono = null);
+
+/// <summary>GrupoId null saca el negocio de su grupo.</summary>
+public record AsignarGrupoRequest(Guid? GrupoId);
 
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,

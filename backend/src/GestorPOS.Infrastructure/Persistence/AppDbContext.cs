@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<AdminUsuario> AdminUsuarios => Set<AdminUsuario>();
+    public DbSet<GrupoDueno> GruposDuenos => Set<GrupoDueno>();
     public DbSet<MovimientoAdmin> MovimientosAdmin => Set<MovimientoAdmin>();
     public DbSet<Liquidacion> Liquidaciones => Set<Liquidacion>();
     public DbSet<PagoManual> PagosManuales => Set<PagoManual>();

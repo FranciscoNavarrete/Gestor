@@ -303,6 +303,29 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                     b.ToTable("FacturasProveedor", (string)null);
                 });
 
+            modelBuilder.Entity("GestorPOS.Domain.Entities.GrupoDueno", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GruposDuenos");
+                });
+
             modelBuilder.Entity("GestorPOS.Domain.Entities.Liquidacion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -936,6 +959,9 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("FluxoSuscripcionId")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("GrupoDuenoId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("LogoContentType")
                         .HasMaxLength(50)
