@@ -25,6 +25,10 @@
       <mat-icon>settings</mat-icon>
       <span>Configuración</span>
     </a>
+    <button type="button" class="side-nav-item" (click)="contactarSoporte()">
+      <mat-icon>support_agent</mat-icon>
+      <span>Comunicate con soporte</span>
+    </button>
 
     <div class="side-nav-spacer"></div>
 
@@ -104,6 +108,10 @@
   <button mat-menu-item routerLink="/configuracion">
     <mat-icon>settings</mat-icon>
     <span>Configuración</span>
+  </button>
+  <button mat-menu-item (click)="contactarSoporte()">
+    <mat-icon>support_agent</mat-icon>
+    <span>Comunicate con soporte</span>
   </button>
   <button mat-menu-item (click)="cerrarSesion()" class="salir">
     <mat-icon>logout</mat-icon>

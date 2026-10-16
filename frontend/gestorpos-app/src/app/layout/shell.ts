@@ -11,6 +11,7 @@ import { FEATURE_MENU_LATERAL } from '../core/models/menu-lateral';
 import { FEATURE_TAREAS } from '../core/models/tareas-feature';
 import { AuthService } from '../core/services/auth.service';
 import { CarritoEnCursoService } from '../core/services/carrito-en-curso.service';
+import { abrirSoporte } from '../core/utils/soporte.util';
 
 @Component({
   selector: 'app-shell',
@@ -73,6 +74,10 @@ export class Shell {
       .subscribe((confirmado) => {
         if (confirmado) this.carritoEnCurso.cancelar();
       });
+  }
+
+  contactarSoporte(): void {
+    abrirSoporte(`Hola, soy de ${this.nombreNegocio()} y necesito ayuda con GestorPOS.`);
   }
 
   cerrarSesion(): void {

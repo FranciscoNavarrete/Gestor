@@ -36,6 +36,10 @@
     <p class="nombre">{{ adminAuth.nombre() }}</p>
     <p class="rol">Rol: {{ adminAuth.rol() }}</p>
   </div>
+  <button mat-menu-item (click)="contactarSoporte()">
+    <mat-icon>support_agent</mat-icon>
+    <span>Comunicate con soporte</span>
+  </button>
   <button mat-menu-item (click)="cerrarSesion()" class="salir">
     <mat-icon>logout</mat-icon>
     <span>Cerrar sesión</span>

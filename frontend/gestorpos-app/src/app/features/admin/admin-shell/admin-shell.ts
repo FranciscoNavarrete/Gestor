@@ -8,6 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { filter } from 'rxjs';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
+import { abrirSoporte } from '../../../core/utils/soporte.util';
 
 interface ItemNavegacion {
   path: string;
@@ -68,6 +69,10 @@ export class AdminShell {
         this.titulo.set(this.leerTitulo());
         this.rutaActual.set(this.router.url);
       });
+  }
+
+  contactarSoporte(): void {
+    abrirSoporte(`Hola, soy ${this.adminAuth.nombre()} (${this.adminAuth.rol()}) y necesito ayuda con el panel de GestorPOS.`);
   }
 
   cerrarSesion(): void {
