@@ -20,6 +20,7 @@ import { CambiarPlanDialog } from '../../../core/dialogs/cambiar-plan-dialog/cam
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
 import { TerminosRegistroDialog } from '../../../core/dialogs/terminos-registro-dialog/terminos-registro-dialog';
 import { ConfirmarPagoDialog } from '../../../core/dialogs/confirmar-pago-dialog/confirmar-pago-dialog';
+import { RestablecerPasswordDialog } from '../../../core/dialogs/restablecer-password-dialog/restablecer-password-dialog';
 import { GrupoDialog } from '../../../core/dialogs/grupo-dialog/grupo-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
@@ -335,6 +336,16 @@ export class Negocios implements OnInit, OnDestroy {
         this.snackBar.open('Plan cambiado. Rige desde el próximo cobro.', 'OK', { duration: 3500 });
         this.cargarNegocios(true);
       });
+  }
+
+  // Restablece la contraseña del dueño con una temporal (soporte valida antes que es el dueño).
+  restablecerPassword(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(RestablecerPasswordDialog, {
+      data: { tipo: 'negocio', id: negocio.id, nombre: negocio.nombre, telefono: negocio.telefono ?? null },
+      width: '440px',
+      maxWidth: '94vw',
+    });
   }
 
   // Agrega el negocio a un grupo de dueños (o lo saca de su grupo).

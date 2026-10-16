@@ -75,14 +75,17 @@
                   <span class="usuario-nombre">{{ usuario.nombre }} · {{ usuario.rol }}</span>
                   <span class="usuario-detalle">{{ usuario.email }} · {{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
                 </div>
-                <button
-                  mat-button
-                  type="button"
-                  [disabled]="cambiandoEstadoId() === usuario.id"
-                  (click)="toggleEstado(usuario)"
-                >
-                  {{ usuario.activo ? 'Desactivar' : 'Activar' }}
-                </button>
+                <span class="usuario-acciones">
+                  <button mat-button type="button" (click)="restablecerPassword(usuario)">Restablecer contraseña</button>
+                  <button
+                    mat-button
+                    type="button"
+                    [disabled]="cambiandoEstadoId() === usuario.id"
+                    (click)="toggleEstado(usuario)"
+                  >
+                    {{ usuario.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </span>
               </div>
             }
           </div>

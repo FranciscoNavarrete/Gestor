@@ -8,6 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { filter } from 'rxjs';
 import { ConfirmDialog } from '../../../core/dialogs/confirm-dialog/confirm-dialog';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
+import { CambiarPasswordDialog } from '../../../core/dialogs/cambiar-password-dialog/cambiar-password-dialog';
 import { abrirSoporte } from '../../../core/utils/soporte.util';
 
 interface ItemNavegacion {
@@ -69,6 +70,10 @@ export class AdminShell {
         this.titulo.set(this.leerTitulo());
         this.rutaActual.set(this.router.url);
       });
+  }
+
+  cambiarPassword(): void {
+    this.dialog.open(CambiarPasswordDialog, { width: '420px', maxWidth: '94vw' });
   }
 
   contactarSoporte(): void {

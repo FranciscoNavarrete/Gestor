@@ -25,10 +25,18 @@
       <span class="etiqueta">Suscripción</span>
     </mat-button-toggle>
   }
+  <mat-button-toggle value="mi-cuenta" aria-label="Mi cuenta">
+    <mat-icon>account_circle</mat-icon>
+    <span class="etiqueta">Mi cuenta</span>
+  </mat-button-toggle>
 </mat-button-toggle-group>
 
 <!-- En celular el selector muestra solo íconos: el nombre de la sección ayuda a ubicarse. -->
 <p class="vista-titulo">{{ tituloVista() }}</p>
+
+@if (vista() === 'mi-cuenta') {
+  <app-mi-cuenta />
+}
 
 @if (vista() === 'categorias') {
   <button mat-flat-button color="primary" class="boton-nuevo" (click)="nuevaCategoria()">

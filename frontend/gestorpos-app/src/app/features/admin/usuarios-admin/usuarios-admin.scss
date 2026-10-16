@@ -70,3 +70,10 @@
   align-self: center;
   opacity: 0.7;
 }
+
+.usuario-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}

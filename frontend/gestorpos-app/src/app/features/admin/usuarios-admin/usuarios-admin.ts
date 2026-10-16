@@ -4,11 +4,13 @@ import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { RestablecerPasswordDialog } from '../../../core/dialogs/restablecer-password-dialog/restablecer-password-dialog';
 import { AdminRol, AdminUsuario } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminService } from '../../../core/services/admin.service';
@@ -33,6 +35,7 @@ import { extraerMensajeError } from '../../../core/utils/error.util';
 export class UsuariosAdmin implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly adminService = inject(AdminService);
+  private readonly dialog = inject(MatDialog);
   protected readonly adminAuth = inject(AdminAuthService);
 
   readonly form = this.fb.nonNullable.group({
@@ -85,6 +88,15 @@ export class UsuariosAdmin implements OnInit {
           this.error.set(extraerMensajeError(err));
         }
       },
+    });
+  }
+
+  // El operador le restablece la contraseña a un vendedor u otro operador con una temporal.
+  restablecerPassword(usuario: AdminUsuario): void {
+    this.dialog.open(RestablecerPasswordDialog, {
+      data: { tipo: 'usuario', id: usuario.id, nombre: usuario.nombre },
+      width: '440px',
+      maxWidth: '94vw',
     });
   }
 

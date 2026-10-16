@@ -52,3 +52,19 @@
   font-size: 0.875rem;
   margin: 0 0 8px;
 }
+
+.enlace {
+  background: none;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-accent, var(--mat-sys-primary, #1a73e8));
+  text-decoration: underline;
+}
+
+.salir {
+  text-align: center;
+  margin: 12px 0 0;
+}

@@ -6,8 +6,19 @@ export const adminAuthGuard: CanActivateFn = () => {
   const adminAuth = inject(AdminAuthService);
   const router = inject(Router);
 
-  if (adminAuth.estaLogueado()) return true;
+  if (!adminAuth.estaLogueado()) {
+    router.navigate(['/admin/login']);
+    return false;
+  }
 
-  router.navigate(['/admin/login']);
-  return false;
+  // Con una contraseña temporal (la restableció el operador) lo primero es elegir una nueva.
+  if (adminAuth.debeCambiarPassword()) return router.createUrlTree(['/admin/cambiar-password']);
+  return true;
+};
+
+/** Solo exige estar logueado: para la pantalla de cambio obligatorio de contraseña. */
+export const adminSesionGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  if (inject(AdminAuthService).estaLogueado()) return true;
+  return router.createUrlTree(['/admin/login']);
 };

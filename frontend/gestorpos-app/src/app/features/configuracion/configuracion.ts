@@ -1,5 +1,7 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { MiCuenta } from '../mi-cuenta/mi-cuenta';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
@@ -30,7 +32,7 @@ import { MedioPagoDialog, MedioPagoDialogData } from './medio-pago-dialog/medio-
 import { ProveedorDialog, ProveedorDialogData } from './proveedor-dialog/proveedor-dialog';
 import { MiSuscripcionVista } from './suscripcion/mi-suscripcion';
 
-type Vista = 'categorias' | 'proveedores' | 'medios-pago' | 'negocio' | 'suscripcion';
+type Vista = 'categorias' | 'proveedores' | 'medios-pago' | 'negocio' | 'suscripcion' | 'mi-cuenta';
 
 const TITULOS_VISTA: Record<Vista, string> = {
   categorias: 'Categorías',
@@ -38,6 +40,7 @@ const TITULOS_VISTA: Record<Vista, string> = {
   'medios-pago': 'Métodos de pago',
   negocio: 'Negocio',
   suscripcion: 'Suscripción',
+  'mi-cuenta': 'Mi cuenta',
 };
 
 @Component({
@@ -45,6 +48,7 @@ const TITULOS_VISTA: Record<Vista, string> = {
   imports: [
     FormsModule,
     MiSuscripcionVista,
+    MiCuenta,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -66,6 +70,7 @@ export class Configuracion implements OnInit, OnDestroy {
   private readonly suscripcionService = inject(SuscripcionService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChild('inputLogo') private inputLogo?: ElementRef<HTMLInputElement>;
   private logoObjectUrl: string | null = null;
@@ -103,6 +108,8 @@ export class Configuracion implements OnInit, OnDestroy {
   readonly cambiandoNotificaciones = signal(false);
 
   ngOnInit(): void {
+    // El menú de la cuenta entra directo a la pestaña Mi cuenta (?vista=mi-cuenta).
+    if (this.route.snapshot.queryParamMap.get('vista') === 'mi-cuenta') this.vista.set('mi-cuenta');
     this.cargarCategorias();
     if (this.tieneProveedores) this.cargarProveedores();
     this.cargarMediosPago();

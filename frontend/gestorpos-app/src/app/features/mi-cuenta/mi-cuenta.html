@@ -1,0 +1,22 @@
+<mat-card class="cuenta">
+  <mat-card-content>
+    <div class="dato"><span class="etiqueta">Nombre</span><span>{{ nombreUsuario() }}</span></div>
+    <div class="dato"><span class="etiqueta">Negocio</span><span>{{ nombreNegocio() }}</span></div>
+
+    <div class="seccion-password">
+      <div class="fila">
+        <div>
+          <p class="titulo">Contraseña</p>
+          <p class="ayuda">Cambiala cuando quieras.</p>
+        </div>
+        @if (!cambiando()) {
+          <button mat-stroked-button type="button" (click)="cambiando.set(true)">Cambiar</button>
+        }
+      </div>
+      @if (cambiando()) {
+        <app-cambiar-password [guardar]="guardar" (cambiada)="alCambiar()" />
+        <button mat-button type="button" (click)="cambiando.set(false)">Cancelar</button>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>

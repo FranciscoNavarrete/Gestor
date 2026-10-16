@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 import { extraerMensajeError } from '../../../core/utils/error.util';
+import { abrirSoporte } from '../../../core/utils/soporte.util';
 
 @Component({
   selector: 'app-login',
@@ -38,6 +39,12 @@ export class Login {
     password: ['', [Validators.required]],
   });
 
+  // El restablecimiento lo hace soporte: se valida que sea el dueño y se le pasa una contraseña temporal.
+  olvideMiPassword(): void {
+    const email = this.form.controls.email.value.trim();
+    abrirSoporte(`Hola, olvidé mi contraseña de GestorPOS.${email ? ` Mi email es ${email}.` : ''}`);
+  }
+
   enviar(): void {
     if (this.form.invalid || this.cargando()) return;
 
@@ -47,7 +54,7 @@ export class Login {
     this.authService.login(this.form.getRawValue()).subscribe({
       next: () => {
         this.cargando.set(false);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([this.authService.debeCambiarPassword() ? '/cambiar-password' : '/dashboard']);
       },
       error: (err) => {
         this.cargando.set(false);

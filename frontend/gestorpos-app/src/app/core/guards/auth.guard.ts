@@ -12,6 +12,9 @@ export const authGuard: CanActivateFn = () => {
     return false;
   }
 
+  // Con una contraseña temporal (la restableció el operador) lo primero es elegir una nueva.
+  if (authService.debeCambiarPassword()) return router.createUrlTree(['/cambiar-password']);
+
   // El dueño que todavía no aceptó los términos no entra al sistema hasta aceptarlos.
   return authService.verificarTerminos().pipe(
     map((pendientes) => (pendientes ? router.createUrlTree(['/terminos']) : true)),

@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
+import { abrirSoporte } from '../../../core/utils/soporte.util';
 import { activarManifestAdmin, restaurarManifestNegocio } from '../../../core/utils/admin-manifest.util';
 
 @Component({
@@ -35,6 +36,12 @@ export class AdminLogin implements OnInit, OnDestroy {
     restaurarManifestNegocio();
   }
 
+  // El restablecimiento lo hace el operador: se le avisa por WhatsApp a soporte.
+  olvideMiPassword(): void {
+    const email = this.form.controls.email.value.trim();
+    abrirSoporte(`Hola, olvidé mi contraseña del panel de GestorPOS.${email ? ` Mi email es ${email}.` : ''}`);
+  }
+
   ingresar(): void {
     if (this.form.invalid || this.iniciandoSesion()) return;
     this.error.set(null);
@@ -44,7 +51,7 @@ export class AdminLogin implements OnInit, OnDestroy {
     this.adminAuth.login(email, password).subscribe({
       next: () => {
         this.iniciandoSesion.set(false);
-        this.router.navigateByUrl('/admin/negocios');
+        this.router.navigateByUrl(this.adminAuth.debeCambiarPassword() ? '/admin/cambiar-password' : '/admin/negocios');
       },
       error: () => {
         this.iniciandoSesion.set(false);

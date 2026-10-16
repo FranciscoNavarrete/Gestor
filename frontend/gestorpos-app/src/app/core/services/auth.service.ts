@@ -16,6 +16,7 @@ export class AuthService {
   readonly nombreUsuario = computed(() => this.authState()?.nombreUsuario ?? '');
   readonly token = computed(() => this.authState()?.token ?? null);
   readonly terminosPendientes = computed(() => this.authState()?.terminosPendientes === true);
+  readonly debeCambiarPassword = computed(() => this.authState()?.debeCambiarPassword === true);
   private readonly features = computed(() => new Set(this.authState()?.features ?? []));
 
   constructor(private readonly http: HttpClient) {}
@@ -28,6 +29,16 @@ export class AuthService {
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, request)
       .pipe(tap((auth) => this.guardarSesion(auth)));
+  }
+
+  /** Cambia la contraseña del usuario logueado (también sirve para salir de una temporal). */
+  cambiarPassword(passwordActual: string, passwordNueva: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/cambiar-password`, { passwordActual, passwordNueva }).pipe(
+      tap(() => {
+        const actual = this.authState();
+        if (actual) this.guardarSesion({ ...actual, debeCambiarPassword: false });
+      }),
+    );
   }
 
   logout(): void {

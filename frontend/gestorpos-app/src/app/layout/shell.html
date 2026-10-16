@@ -105,6 +105,10 @@
     <p class="hola">Hola, {{ nombreUsuario() }}</p>
     <p class="negocio">{{ nombreNegocio() }}</p>
   </div>
+  <button mat-menu-item routerLink="/configuracion" [queryParams]="{ vista: 'mi-cuenta' }">
+    <mat-icon>account_circle</mat-icon>
+    <span>Mi cuenta</span>
+  </button>
   <button mat-menu-item routerLink="/configuracion">
     <mat-icon>settings</mat-icon>
     <span>Configuración</span>

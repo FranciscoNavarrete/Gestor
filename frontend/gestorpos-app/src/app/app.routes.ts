@@ -1,11 +1,18 @@
 import { Routes } from '@angular/router';
-import { adminAuthGuard } from './core/guards/admin-auth.guard';
+import { adminAuthGuard, adminSesionGuard } from './core/guards/admin-auth.guard';
 import { authGuard, sesionGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+  },
+  {
+    // Se llega con una contraseña temporal (la restableció el operador): hay que elegir una nueva antes de seguir.
+    path: 'cambiar-password',
+    canActivate: [sesionGuard],
+    loadComponent: () =>
+      import('./features/auth/cambiar-password-obligatorio/cambiar-password-obligatorio').then((m) => m.CambiarPasswordObligatorio),
   },
   {
     // El dueño del negocio acepta los términos antes de usar el sistema (authGuard lo manda acá hasta que lo haga).
@@ -20,6 +27,13 @@ export const routes: Routes = [
     path: 'admin/login',
     loadComponent: () =>
       import('./features/admin/admin-login/admin-login').then((m) => m.AdminLogin),
+  },
+  {
+    // Quien ingresó al panel interno con una contraseña temporal elige una nueva antes de seguir.
+    path: 'admin/cambiar-password',
+    canActivate: [adminSesionGuard],
+    loadComponent: () =>
+      import('./features/admin/cambiar-password-admin/cambiar-password-admin').then((m) => m.CambiarPasswordAdmin),
   },
   {
     // Panel interno del equipo de GestorPOS (Operador/Vendedor): un shell con menú y, adentro, una

@@ -16,6 +16,7 @@ import {
   EfectivoVendedor,
   FluxoPlan,
   GrupoDueno,
+  PasswordTemporal,
   Liquidacion,
   LiquidacionesMes,
   LinkPago,
@@ -41,6 +42,18 @@ export class AdminService {
 
   crearNegocioSinCobro(request: CrearNegocioSinCobroRequest): Observable<TenantResumen> {
     return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants/sin-cobro`, request, {
+      headers: this.headers(),
+    });
+  }
+
+  restablecerPasswordNegocio(tenantId: string): Observable<PasswordTemporal> {
+    return this.http.post<PasswordTemporal>(`${environment.apiUrl}/admin/tenants/${tenantId}/restablecer-password`, {}, {
+      headers: this.headers(),
+    });
+  }
+
+  restablecerPasswordUsuario(id: string): Observable<PasswordTemporal> {
+    return this.http.post<PasswordTemporal>(`${environment.apiUrl}/admin/usuarios/${id}/restablecer-password`, {}, {
       headers: this.headers(),
     });
   }

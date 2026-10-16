@@ -87,6 +87,13 @@ export interface TenantResumen {
   grupoDuenoNombre?: string | null;
 }
 
+/** Contraseña temporal recién generada por el operador (se muestra una sola vez). */
+export interface PasswordTemporal {
+  nombre: string;
+  email: string;
+  passwordTemporal: string;
+}
+
 export interface GrupoDueno {
   id: string;
   nombre: string;
