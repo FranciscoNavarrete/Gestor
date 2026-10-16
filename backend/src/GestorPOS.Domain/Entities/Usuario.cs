@@ -12,6 +12,9 @@ public class Usuario : TenantEntity
     public RolUsuario Rol { get; private set; }
     public bool Activo { get; private set; } = true;
 
+    /// <summary>El operador le restableció la contraseña con una temporal: tiene que elegir una nueva antes de seguir.</summary>
+    public bool DebeCambiarPassword { get; private set; }
+
     private Usuario() { }
 
     public static Usuario Crear(Guid tenantId, string nombre, string email, string passwordHash, RolUsuario rol)
@@ -34,6 +37,18 @@ public class Usuario : TenantEntity
     }
 
     public void Desactivar() => Activo = false;
+
+    public void CambiarPassword(string nuevoHash)
+    {
+        PasswordHash = nuevoHash;
+        DebeCambiarPassword = false;
+    }
+
+    public void RestablecerConTemporal(string hashTemporal)
+    {
+        PasswordHash = hashTemporal;
+        DebeCambiarPassword = true;
+    }
 
     // Se usa al desactivar el negocio dueño de este usuario: el email original queda libre para
     // que se pueda dar de alta un negocio nuevo con ese mismo email (el índice único de Email no

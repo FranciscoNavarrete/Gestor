@@ -43,6 +43,16 @@ public class AdminController : ControllerBase
     public async Task<ActionResult<TenantResumenDto>> CrearNegocioSinCobro(CrearNegocioSinCobroRequest request, CancellationToken ct)
         => Ok(await _adminService.CrearNegocioSinCobroAsync(request, ct));
 
+    [HttpPost("tenants/{tenantId:guid}/restablecer-password")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<PasswordTemporalDto>> RestablecerPasswordNegocio(Guid tenantId, CancellationToken ct)
+        => Ok(await _adminService.RestablecerPasswordNegocioAsync(tenantId, ct));
+
+    [HttpPost("usuarios/{id:guid}/restablecer-password")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<PasswordTemporalDto>> RestablecerPasswordUsuario(Guid id, CancellationToken ct)
+        => Ok(await _adminService.RestablecerPasswordUsuarioAsync(id, ct));
+
     [HttpGet("grupos")]
     [Authorize(Policy = "AdminOperador")]
     public async Task<ActionResult<IReadOnlyList<GrupoDuenoDto>>> ListarGrupos(CancellationToken ct)

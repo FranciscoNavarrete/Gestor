@@ -75,6 +75,9 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("DebeCambiarPassword")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1040,6 +1043,9 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("DebeCambiarPassword")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Email")

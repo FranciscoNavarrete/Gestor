@@ -8,6 +8,8 @@ public interface IAdminService
 {
     Task<TenantResumenDto> CrearNegocioAsync(CrearNegocioRequest request, CancellationToken ct = default);
     Task<TenantResumenDto> CrearNegocioSinCobroAsync(CrearNegocioSinCobroRequest request, CancellationToken ct = default);
+    Task<PasswordTemporalDto> RestablecerPasswordNegocioAsync(Guid tenantId, CancellationToken ct = default);
+    Task<PasswordTemporalDto> RestablecerPasswordUsuarioAsync(Guid id, CancellationToken ct = default);
     Task<IReadOnlyList<GrupoDuenoDto>> ListarGruposAsync(CancellationToken ct = default);
     Task<GrupoDuenoDto> CrearGrupoAsync(CrearGrupoDuenoRequest request, CancellationToken ct = default);
     Task<TenantResumenDto> AsignarGrupoAsync(Guid tenantId, AsignarGrupoRequest request, CancellationToken ct = default);

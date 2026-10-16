@@ -8,4 +8,5 @@ public record AuthResponse(
     string NombreUsuario,
     string Rol,
     IReadOnlyList<string> Features,
-    bool TerminosPendientes = false);
+    bool TerminosPendientes = false,
+    bool DebeCambiarPassword = false);

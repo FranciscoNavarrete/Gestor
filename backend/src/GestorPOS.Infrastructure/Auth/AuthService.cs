@@ -1,5 +1,6 @@
 using GestorPOS.Application.Auth;
 using GestorPOS.Application.Auth.Dtos;
+using GestorPOS.Application.Common;
 using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Terminos;
@@ -15,12 +16,27 @@ public class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly ITenantContext _tenantContext;
 
-    public AuthService(AppDbContext db, IPasswordHasher passwordHasher, IJwtService jwtService)
+    public AuthService(AppDbContext db, IPasswordHasher passwordHasher, IJwtService jwtService, ITenantContext tenantContext)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _tenantContext = tenantContext;
+    }
+
+    public async Task CambiarPasswordAsync(CambiarPasswordRequest request, CancellationToken ct = default)
+    {
+        var usuario = await _db.Usuarios.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == _tenantContext.UsuarioId && u.Activo, ct)
+            ?? throw new AppException("No se encontró tu usuario.");
+
+        if (!_passwordHasher.Verify(request.PasswordActual ?? string.Empty, usuario.PasswordHash))
+            throw new AppException("La contraseña actual no es correcta.");
+
+        ReglasPassword.ValidarNueva(request.PasswordActual, request.PasswordNueva);
+        usuario.CambiarPassword(_passwordHasher.Hash(request.PasswordNueva));
+        await _db.SaveChangesAsync(ct);
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
@@ -50,6 +66,6 @@ public class AuthService : IAuthService
                 a.TenantId == tenant.Id && a.Origen == OrigenAceptacionTerminos.Cliente && a.Version == TerminosVigentes.Version, ct);
 
         var (token, expira) = _jwtService.GenerarToken(usuario, features);
-        return new AuthResponse(token, expira, tenant.Id, tenant.Nombre, usuario.Nombre, usuario.Rol.ToString(), features, terminosPendientes);
+        return new AuthResponse(token, expira, tenant.Id, tenant.Nombre, usuario.Nombre, usuario.Rol.ToString(), features, terminosPendientes, usuario.DebeCambiarPassword);
     }
 }

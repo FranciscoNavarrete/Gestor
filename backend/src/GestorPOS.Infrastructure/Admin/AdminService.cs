@@ -179,6 +179,46 @@ public class AdminService : IAdminService
             EmailAdmin: emailNormalizado, NotaInterna: tenant.NotaInterna, Telefono: tenant.Telefono);
     }
 
+    // Letras y números sin caracteres ambiguos (0/O, 1/l/I) para poder dictarla o copiarla sin errores.
+    private static string GenerarPasswordTemporal()
+    {
+        const string alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        string Tramo(int largo) => new(Enumerable.Range(0, largo)
+            .Select(_ => alfabeto[System.Security.Cryptography.RandomNumberGenerator.GetInt32(alfabeto.Length)]).ToArray());
+        return $"{Tramo(3)}-{Tramo(9)}";
+    }
+
+    public async Task<PasswordTemporalDto> RestablecerPasswordNegocioAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        if (!_currentAdmin.EsOperador)
+            throw new AppException("Solo el operador puede restablecer contraseñas.");
+
+        var tenant = await ObtenerTenantAsync(tenantId, ct);
+        var dueno = await DuenoDelNegocioAsync(tenantId, ct)
+            ?? throw new AppException("Este negocio no tiene usuarios.");
+
+        var temporal = GenerarPasswordTemporal();
+        dueno.RestablecerConTemporal(_passwordHasher.Hash(temporal));
+        await RegistrarMovimientoAsync("password.restablecida", "negocio", tenant.Id, tenant.Nombre, dueno.EmailOriginalLiberado() ?? dueno.Email, ct);
+        await _db.SaveChangesAsync(ct);
+
+        return new PasswordTemporalDto(dueno.Nombre, dueno.EmailOriginalLiberado() ?? dueno.Email, temporal);
+    }
+
+    public async Task<PasswordTemporalDto> RestablecerPasswordUsuarioAsync(Guid id, CancellationToken ct = default)
+    {
+        if (!_currentAdmin.EsOperador)
+            throw new AppException("Solo el operador puede restablecer contraseñas.");
+
+        var usuario = await ObtenerAdminUsuarioAsync(id, ct);
+        var temporal = GenerarPasswordTemporal();
+        usuario.RestablecerConTemporal(_passwordHasher.Hash(temporal));
+        await RegistrarMovimientoAsync("password.restablecida", "usuario", usuario.Id, usuario.Nombre, usuario.Rol.ToString(), ct);
+        await _db.SaveChangesAsync(ct);
+
+        return new PasswordTemporalDto(usuario.Nombre, usuario.Email, temporal);
+    }
+
     public async Task<IReadOnlyList<GrupoDuenoDto>> ListarGruposAsync(CancellationToken ct = default)
     {
         var grupos = await _db.GruposDuenos.AsNoTracking().OrderBy(g => g.Nombre).ToListAsync(ct);

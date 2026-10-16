@@ -1,5 +1,6 @@
 using GestorPOS.Application.Auth;
 using GestorPOS.Application.Auth.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestorPOS.WebAPI.Controllers;
@@ -13,6 +14,14 @@ public class AuthController : ControllerBase
     public AuthController(IAuthService authService)
     {
         _authService = authService;
+    }
+
+    [HttpPost("cambiar-password")]
+    [Authorize]
+    public async Task<IActionResult> CambiarPassword(CambiarPasswordRequest request, CancellationToken ct)
+    {
+        await _authService.CambiarPasswordAsync(request, ct);
+        return NoContent();
     }
 
     [HttpPost("login")]

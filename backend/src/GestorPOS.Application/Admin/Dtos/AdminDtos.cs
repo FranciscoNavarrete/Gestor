@@ -120,6 +120,9 @@ public record CrearGrupoDuenoRequest(string Nombre, string? Telefono = null);
 /// <summary>GrupoId null saca el negocio de su grupo.</summary>
 public record AsignarGrupoRequest(Guid? GrupoId);
 
+/// <summary>Contraseña temporal recién generada por el operador: se muestra una sola vez.</summary>
+public record PasswordTemporalDto(string Nombre, string Email, string PasswordTemporal);
+
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
     decimal? MontoPrimerCobro = null, decimal? MontoPromo = null, int? MesesPromo = null);

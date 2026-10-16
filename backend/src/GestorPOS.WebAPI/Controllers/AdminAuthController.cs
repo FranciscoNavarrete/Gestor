@@ -21,4 +21,13 @@ public class AdminAuthController : ControllerBase
         var response = await _adminAuth.LoginAsync(request, ct);
         return Ok(response);
     }
+
+    [HttpPost("cambiar-password")]
+    [Authorize(Policy = "AdminPanel")]
+    public async Task<IActionResult> CambiarPassword(
+        [FromBody] GestorPOS.Application.Auth.Dtos.CambiarPasswordRequest request, CancellationToken ct)
+    {
+        await _adminAuth.CambiarPasswordAsync(request, ct);
+        return NoContent();
+    }
 }
