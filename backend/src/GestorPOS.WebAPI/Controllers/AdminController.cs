@@ -38,6 +38,11 @@ public class AdminController : ControllerBase
         => Ok(await _adminService.CrearNegocioAsync(
             request with { Ip = HttpContext.Connection.RemoteIpAddress?.ToString() }, ct));
 
+    [HttpPost("tenants/sin-cobro")]
+    [Authorize(Policy = "AdminOperador")]
+    public async Task<ActionResult<TenantResumenDto>> CrearNegocioSinCobro(CrearNegocioSinCobroRequest request, CancellationToken ct)
+        => Ok(await _adminService.CrearNegocioSinCobroAsync(request, ct));
+
     [HttpGet("fluxo/planes")]
     public async Task<ActionResult<IReadOnlyList<FluxoPlanDto>>> ListarPlanesFluxo(CancellationToken ct)
         => Ok(await _adminService.ListarPlanesFluxoAsync(ct));

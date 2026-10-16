@@ -949,6 +949,10 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("NotaInterna")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<bool>("PendienteActivacion")
                         .HasColumnType("boolean");
 

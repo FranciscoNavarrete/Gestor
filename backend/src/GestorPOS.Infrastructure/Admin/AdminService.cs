@@ -33,10 +33,7 @@ public class AdminService : IAdminService
         if (!request.TerminosExplicados)
             throw new AppException("Confirmá que el cliente conoce y acepta los términos y condiciones.");
 
-        // El teléfono del cliente es obligatorio al dar de alta: hace falta para contactarlo.
-        var telefono = request.Telefono?.Trim();
-        if (string.IsNullOrWhiteSpace(telefono) || telefono.Count(char.IsDigit) < 8)
-            throw new AppException("Ingresá el teléfono del cliente (con código de área).");
+        var telefono = ValidarTelefono(request.Telefono);
 
         var emailEnUso = await _db.Usuarios.IgnoreQueryFilters()
             .AnyAsync(u => u.Email == emailNormalizado, ct);
@@ -132,6 +129,54 @@ public class AdminService : IAdminService
             tenant.FluxoClienteId, tenant.FluxoSuscripcionId, fluxo.InitPoint, fluxo.Estado,
             FormaPrimerPago: pago?.Metodo.ToString(), PagoManualEstado: pago?.Estado.ToString(),
             PagoManualMonto: pago?.Monto, PendienteActivacion: tenant.PendienteActivacion);
+    }
+
+    // El teléfono del cliente es obligatorio al dar de alta: hace falta para contactarlo.
+    private static string ValidarTelefono(string? valor)
+    {
+        var telefono = valor?.Trim();
+        if (string.IsNullOrWhiteSpace(telefono) || telefono.Count(char.IsDigit) < 8)
+            throw new AppException("Ingresá el teléfono del cliente (con código de área).");
+        return telefono;
+    }
+
+    public async Task<TenantResumenDto> CrearNegocioSinCobroAsync(CrearNegocioSinCobroRequest request, CancellationToken ct = default)
+    {
+        // Solo el operador da de alta negocios sin cobro: un vendedor siempre tiene que cargar plan y suscripción.
+        if (!_currentAdmin.EsOperador)
+            throw new AppException("Solo el operador puede dar de alta un negocio sin cobro.");
+
+        var telefono = ValidarTelefono(request.Telefono);
+        var emailNormalizado = request.Email.Trim().ToLowerInvariant();
+
+        var emailEnUso = await _db.Usuarios.IgnoreQueryFilters().AnyAsync(u => u.Email == emailNormalizado, ct);
+        if (emailEnUso)
+            throw new AppException("Ya existe una cuenta registrada con ese email.");
+
+        var slug = GenerarSlug(request.NombreNegocio);
+        if (await _db.Tenants.IgnoreQueryFilters().AnyAsync(t => t.Slug == slug, ct))
+            slug = $"{slug}-{Guid.NewGuid().ToString()[..6]}";
+
+        var tenant = Tenant.Crear(request.NombreNegocio, slug);
+        tenant.ActualizarDatos(request.NombreNegocio, telefono);
+        tenant.AsignarNotaInterna(request.Nota);
+        _db.Tenants.Add(tenant);
+
+        _db.MediosPago.Add(MedioPagoConfiguracion.Crear(tenant.Id, "Efectivo", esProtegido: true));
+        _db.MediosPago.Add(MedioPagoConfiguracion.Crear(tenant.Id, "Tarjeta"));
+        _db.MediosPago.Add(MedioPagoConfiguracion.Crear(tenant.Id, "Otro"));
+
+        var passwordHash = _passwordHasher.Hash(request.Password);
+        _db.Usuarios.Add(Usuario.Crear(tenant.Id, request.NombreAdmin, emailNormalizado, passwordHash, RolUsuario.Admin));
+
+        var detalle = string.IsNullOrWhiteSpace(request.Nota) ? "Alta sin cobro" : $"Alta sin cobro · {request.Nota.Trim()}";
+        await RegistrarMovimientoAsync("negocio.alta", "negocio", tenant.Id, tenant.Nombre, detalle, ct);
+
+        await _db.SaveChangesAsync(ct);
+
+        return new TenantResumenDto(
+            tenant.Id, tenant.Nombre, tenant.Slug, tenant.Activo, tenant.FechaCreacion, null, null,
+            EmailAdmin: emailNormalizado, NotaInterna: tenant.NotaInterna, Telefono: tenant.Telefono);
     }
 
     private static MetodoPagoManual? ParsearPrimerPago(string? valor)
@@ -288,7 +333,8 @@ public class AdminService : IAdminService
                     ? null
                     : estadosPorSuscripcion.GetValueOrDefault(t.FluxoSuscripcionId.Value)?.ProximoCobro,
                 TerminosAceptadosEn: terminosPorTenant.TryGetValue(t.Id, out var aceptadoEn) ? aceptadoEn : null,
-                EmailAdmin: duenos.GetValueOrDefault(t.Id)))
+                EmailAdmin: duenos.GetValueOrDefault(t.Id),
+                NotaInterna: t.NotaInterna, Telefono: t.Telefono))
             .ToList();
     }
 

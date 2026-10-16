@@ -16,6 +16,9 @@ public class Tenant : BaseEntity
     /// nueva: la venta sigue contando aunque la suscripción nueva todavía no haya cobrado.</summary>
     public bool VentaPreviaCobrada { get; private set; }
     public string? Telefono { get; private set; }
+
+    /// <summary>Nota interna del operador (p. ej. por qué un negocio no paga: "Incluido en el plan Dos locales").</summary>
+    public string? NotaInterna { get; private set; }
     public byte[]? LogoData { get; private set; }
     public string? LogoContentType { get; private set; }
     public Guid? VendedorId { get; private set; }
@@ -61,6 +64,8 @@ public class Tenant : BaseEntity
     }
 
     public void MarcarVentaPreviaCobrada() => VentaPreviaCobrada = true;
+
+    public void AsignarNotaInterna(string? nota) => NotaInterna = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
 
     public void AsignarVendedor(Guid? vendedorId) => VendedorId = vendedorId;
 

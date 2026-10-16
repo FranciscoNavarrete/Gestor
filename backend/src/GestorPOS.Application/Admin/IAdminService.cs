@@ -7,6 +7,7 @@ namespace GestorPOS.Application.Admin;
 public interface IAdminService
 {
     Task<TenantResumenDto> CrearNegocioAsync(CrearNegocioRequest request, CancellationToken ct = default);
+    Task<TenantResumenDto> CrearNegocioSinCobroAsync(CrearNegocioSinCobroRequest request, CancellationToken ct = default);
     Task<IReadOnlyList<TenantResumenDto>> ListarTenantsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<FluxoPlanDto>> ListarPlanesFluxoAsync(CancellationToken ct = default);
     Task<IReadOnlyList<TenantFeatureDto>> ListarFeaturesAsync(Guid tenantId, CancellationToken ct = default);

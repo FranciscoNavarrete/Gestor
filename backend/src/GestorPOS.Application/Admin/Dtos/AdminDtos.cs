@@ -7,7 +7,8 @@ public record TenantResumenDto(
     string? FluxoEstado = null, bool FluxoPrimerCobroAprobado = false, bool FluxoAjustePendiente = false,
     bool FluxoCobroRechazado = false, string? FluxoMotivoRechazo = null, DateTime? FluxoAccesoHasta = null,
     string? FormaPrimerPago = null, string? PagoManualEstado = null, decimal? PagoManualMonto = null,
-    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null, DateTime? TerminosAceptadosEn = null, string? EmailAdmin = null);
+    bool PendienteActivacion = false, DateTime? FluxoProximoCobro = null, DateTime? TerminosAceptadosEn = null, string? EmailAdmin = null,
+    string? NotaInterna = null, string? Telefono = null);
 
 /// <summary>Confirmación del operador de un pago recibido por transferencia (o tarjeta u otro). Metodo:
 /// Transferencia, Tarjeta u Otro (o Efectivo). Monto y fecha son opcionales: por defecto el monto esperado y hoy.</summary>
@@ -104,6 +105,12 @@ public record CrearNegocioRequest(
     Guid? VendedorId = null, int? MpPlanId = null, string? CardToken = null,
     string? PrimerPago = null, decimal? PrimerPagoMonto = null, string? PrimerPagoNota = null,
     bool TerminosExplicados = false, string? Ip = null, string? Telefono = null);
+
+/// <summary>Alta de un negocio sin cobro ni vendedor, hecha por el operador (p. ej. el segundo local de un cliente
+/// que ya paga una doble suscripción). Queda activo al instante y no se crea nada en Fluxo; el cliente acepta los
+/// términos él mismo al ingresar.</summary>
+public record CrearNegocioSinCobroRequest(
+    string NombreNegocio, string NombreAdmin, string Telefono, string Email, string Password, string? Nota = null);
 
 public record FluxoPlanDto(
     int MpPlanId, string Nombre, decimal Monto, string Moneda, string TipoFrecuencia, int Frecuencia, int DiasGratis,
