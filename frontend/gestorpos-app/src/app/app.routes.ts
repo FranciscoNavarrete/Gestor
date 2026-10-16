@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminAuthGuard, adminSesionGuard } from './core/guards/admin-auth.guard';
+import { adminAuthGuard, adminOperadorGuard, adminSesionGuard } from './core/guards/admin-auth.guard';
 import { authGuard, sesionGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -65,6 +65,7 @@ export const routes: Routes = [
       {
         // Solo Operador (lo exige el backend): negocio sin cobro ni vendedor.
         path: 'alta-sin-cobro',
+        canActivate: [adminOperadorGuard],
         data: { titulo: 'Alta sin cobro' },
         loadComponent: () =>
           import('./features/admin/alta-sin-cobro/alta-sin-cobro').then((m) => m.AltaSinCobro),

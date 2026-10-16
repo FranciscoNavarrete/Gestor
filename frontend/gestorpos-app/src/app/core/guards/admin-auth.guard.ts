@@ -22,3 +22,10 @@ export const adminSesionGuard: CanActivateFn = () => {
   if (inject(AdminAuthService).estaLogueado()) return true;
   return router.createUrlTree(['/admin/login']);
 };
+
+/** Pantallas solo del operador: si entra un vendedor (por URL) se lo manda a Negocios, sin mensaje. */
+export const adminOperadorGuard: CanActivateFn = () => {
+  const adminAuth = inject(AdminAuthService);
+  const router = inject(Router);
+  return adminAuth.esOperador() ? true : router.createUrlTree(['/admin/negocios']);
+};
