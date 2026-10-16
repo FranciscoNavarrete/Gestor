@@ -82,6 +82,16 @@ export interface TenantResumen {
   /** Nota interna del operador (p. ej. por qué el negocio no paga). */
   notaInterna?: string | null;
   telefono?: string | null;
+  /** Grupo de dueños al que pertenece el negocio (si el dueño tiene más de un local). */
+  grupoDuenoId?: string | null;
+  grupoDuenoNombre?: string | null;
+}
+
+export interface GrupoDueno {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  negocios: number;
 }
 
 /** Alta de un negocio sin cobro ni vendedor (solo operador). */

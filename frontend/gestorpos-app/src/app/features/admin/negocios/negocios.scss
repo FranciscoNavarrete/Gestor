@@ -197,6 +197,11 @@
   white-space: nowrap;
 }
 
+.badge-grupo {
+  background: color-mix(in srgb, var(--mat-sys-primary, #1a73e8) 14%, transparent);
+  color: var(--mat-sys-primary, #1a73e8);
+}
+
 .badge-ajuste {
   background: color-mix(in srgb, #f5a623 18%, transparent);
   color: #f5a623;

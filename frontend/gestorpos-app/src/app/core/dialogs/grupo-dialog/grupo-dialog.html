@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>Grupo de {{ data.negocio.nombre }}</h2>
+
+<mat-dialog-content class="contenido">
+  @if (cargando()) {
+    <div class="centrado"><mat-spinner diameter="32"></mat-spinner></div>
+  } @else {
+    <p class="subtitulo">Agrupá los negocios de un mismo dueño para verlos juntos. No cambia cobros ni accesos.</p>
+
+    @if (grupos().length > 0) {
+      <div class="grupos" role="radiogroup" aria-label="Grupo">
+        @for (grupo of grupos(); track grupo.id) {
+          <button type="button" class="grupo" role="radio" [attr.aria-checked]="!creandoNuevo() && grupoId() === grupo.id"
+                  [class.activo]="!creandoNuevo() && grupoId() === grupo.id" (click)="elegir(grupo.id)">
+            <span>{{ grupo.nombre }}</span>
+            <span class="cuenta">{{ grupo.negocios }} {{ grupo.negocios === 1 ? 'negocio' : 'negocios' }}</span>
+          </button>
+        }
+        <button type="button" class="grupo" role="radio" [attr.aria-checked]="creandoNuevo()" [class.activo]="creandoNuevo()" (click)="nuevo()">
+          Crear grupo nuevo
+        </button>
+        @if (data.negocio.grupoDuenoId) {
+          <button type="button" class="grupo quitar" role="radio" [attr.aria-checked]="!creandoNuevo() && grupoId() === null"
+                  [class.activo]="!creandoNuevo() && grupoId() === null" (click)="elegir(null)">
+            Sacar de su grupo
+          </button>
+        }
+      </div>
+    }
+
+    @if (creandoNuevo()) {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre del grupo</mat-label>
+        <input matInput [(ngModel)]="nombreNuevo" maxlength="120" placeholder="Grupo Méndez" (keydown.enter)="guardar()" />
+        <mat-hint>Por ejemplo, el nombre del dueño</mat-hint>
+      </mat-form-field>
+    }
+  }
+
+  @if (error(); as mensaje) {
+    <p class="error">{{ mensaje }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="undefined">Cancelar</button>
+  <button mat-flat-button type="button" (click)="guardar()" [disabled]="!puedeGuardar">
+    {{ guardando() ? 'Guardando…' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

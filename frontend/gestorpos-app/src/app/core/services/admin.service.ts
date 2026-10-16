@@ -15,6 +15,7 @@ import {
   EfectivoResumen,
   EfectivoVendedor,
   FluxoPlan,
+  GrupoDueno,
   Liquidacion,
   LiquidacionesMes,
   LinkPago,
@@ -40,6 +41,20 @@ export class AdminService {
 
   crearNegocioSinCobro(request: CrearNegocioSinCobroRequest): Observable<TenantResumen> {
     return this.http.post<TenantResumen>(`${environment.apiUrl}/admin/tenants/sin-cobro`, request, {
+      headers: this.headers(),
+    });
+  }
+
+  listarGrupos(): Observable<GrupoDueno[]> {
+    return this.http.get<GrupoDueno[]>(`${environment.apiUrl}/admin/grupos`, { headers: this.headers() });
+  }
+
+  crearGrupo(request: { nombre: string; telefono?: string | null }): Observable<GrupoDueno> {
+    return this.http.post<GrupoDueno>(`${environment.apiUrl}/admin/grupos`, request, { headers: this.headers() });
+  }
+
+  asignarGrupo(tenantId: string, grupoId: string | null): Observable<TenantResumen> {
+    return this.http.put<TenantResumen>(`${environment.apiUrl}/admin/tenants/${tenantId}/grupo`, { grupoId }, {
       headers: this.headers(),
     });
   }

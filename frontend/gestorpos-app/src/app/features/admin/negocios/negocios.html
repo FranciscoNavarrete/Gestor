@@ -52,6 +52,18 @@
               </button>
             }
           </div>
+          @if (adminAuth.esOperador() && grupos().length > 0) {
+            <mat-form-field appearance="outline" class="full buscador">
+              <mat-label>Grupo de dueño</mat-label>
+              <mat-select [value]="filtroGrupo()" (selectionChange)="filtroGrupo.set($event.value)">
+                <mat-option [value]="null">Todos los grupos</mat-option>
+                @for (grupo of grupos(); track grupo.id) {
+                  <mat-option [value]="grupo.id">{{ grupo.nombre }}</mat-option>
+                }
+                <mat-option value="">Sin grupo</mat-option>
+              </mat-select>
+            </mat-form-field>
+          }
           <mat-form-field appearance="outline" class="full buscador">
             <mat-label>Buscar negocio</mat-label>
             <input matInput [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" />
@@ -123,6 +135,9 @@
                           <span [class]="'badge-suscripcion ' + badge.clase">{{ badge.texto }}</span>
                         }
                       }
+                      @if (adminAuth.esOperador() && negocio.grupoDuenoNombre) {
+                        <span class="badge-suscripcion badge-grupo" title="Grupo de dueño">Grupo {{ negocio.grupoDuenoNombre }}</span>
+                      }
                       @if (!negocio.terminosAceptadosEn) {
                         <button type="button" class="badge-suscripcion badge-pendiente badge-boton" (click)="verTerminos(negocio, $event)" title="El cliente todavía no aceptó los términos y condiciones. Se los pide al ingresar por primera vez.">
                           Términos pendientes
@@ -168,6 +183,11 @@
                         </button>
                       }
                       @if (adminAuth.esOperador()) {
+                        <button type="button" class="boton-cobros" (click)="gestionarGrupo(negocio, $event)" aria-label="Agregar este negocio a un grupo de dueño" title="Grupo de dueño">
+                          <mat-icon>group_add</mat-icon>
+                        </button>
+                      }
+                      @if (adminAuth.esOperador()) {
                         <span class="switch-activo" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
                           <span class="switch-etiqueta">{{ negocio.activo ? 'Activo' : 'Inactivo' }}</span>
                           <mat-slide-toggle
@@ -203,6 +223,7 @@
                         }
                         <button mat-menu-item (click)="verTerminos(negocio, $event)"><mat-icon>gavel</mat-icon><span>Ver términos</span></button>
                         @if (adminAuth.esOperador()) {
+                          <button mat-menu-item (click)="gestionarGrupo(negocio, $event)"><mat-icon>group_add</mat-icon><span>{{ negocio.grupoDuenoId ? 'Cambiar de grupo' : 'Agregar a un grupo' }}</span></button>
                           <button mat-menu-item (click)="toggleExpandido(negocio)"><mat-icon>tune</mat-icon><span>Funcionalidades</span></button>
                           <button mat-menu-item (click)="alternarActivo(negocio)" [disabled]="cambiandoEstadoNegocioId() === negocio.id">
                             <mat-icon>power_settings_new</mat-icon><span>{{ negocio.activo ? 'Desactivar negocio' : 'Activar negocio' }}</span>

@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,6 +20,7 @@ import { CambiarPlanDialog } from '../../../core/dialogs/cambiar-plan-dialog/cam
 import { CobrosDialog } from '../../../core/dialogs/cobros-dialog/cobros-dialog';
 import { TerminosRegistroDialog } from '../../../core/dialogs/terminos-registro-dialog/terminos-registro-dialog';
 import { ConfirmarPagoDialog } from '../../../core/dialogs/confirmar-pago-dialog/confirmar-pago-dialog';
+import { GrupoDialog } from '../../../core/dialogs/grupo-dialog/grupo-dialog';
 import { LinkPagoDialog } from '../../../core/dialogs/link-pago-dialog/link-pago-dialog';
 import { CATALOGO_FEATURES, TenantResumen } from '../../../core/models/admin.models';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
@@ -41,6 +43,7 @@ const FILTROS_VALIDOS: FiltroEstado[] = ['todos', 'activos', 'inactivos', 'porCo
     MatIconModule,
     MatInputModule,
     MatMenuModule,
+    MatSelectModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
   ],
@@ -71,11 +74,24 @@ export class Negocios implements OnInit, OnDestroy {
       sinAutorizar: todos.filter((n) => this.esSinAutorizar(n)).length,
     };
   });
+  // null = todos los grupos; '' = solo los negocios que no están en ningún grupo.
+  readonly filtroGrupo = signal<string | null>(null);
+  readonly grupos = computed(() => {
+    const porId = new Map<string, string>();
+    for (const n of this.negocios()) {
+      if (n.grupoDuenoId) porId.set(n.grupoDuenoId, n.grupoDuenoNombre ?? 'Grupo');
+    }
+    return [...porId].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
   readonly negociosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
     const estado = this.filtroEstado();
+    const grupo = this.filtroGrupo();
     return this.negocios().filter(
-      (n) => this.cumpleFiltro(n, estado) && (!termino || n.nombre.toLowerCase().includes(termino)),
+      (n) =>
+        this.cumpleFiltro(n, estado) &&
+        (grupo === null || (grupo === '' ? !n.grupoDuenoId : n.grupoDuenoId === grupo)) &&
+        (!termino || n.nombre.toLowerCase().includes(termino)),
     );
   });
 
@@ -318,6 +334,28 @@ export class Negocios implements OnInit, OnDestroy {
         if (!cambiado) return;
         this.snackBar.open('Plan cambiado. Rige desde el próximo cobro.', 'OK', { duration: 3500 });
         this.cargarNegocios(true);
+      });
+  }
+
+  // Agrega el negocio a un grupo de dueños (o lo saca de su grupo).
+  gestionarGrupo(negocio: TenantResumen, event: Event): void {
+    event.stopPropagation();
+    this.dialog
+      .open(GrupoDialog, { data: { negocio }, width: '440px', maxWidth: '94vw' })
+      .afterClosed()
+      .subscribe((actualizado?: TenantResumen) => {
+        if (!actualizado) return;
+        this.negocios.update((lista) =>
+          lista.map((n) =>
+            n.id === actualizado.id
+              ? { ...n, grupoDuenoId: actualizado.grupoDuenoId ?? null, grupoDuenoNombre: actualizado.grupoDuenoNombre ?? null }
+              : n,
+          ),
+        );
+        // Si quedó sin ningún negocio el grupo que se estaba filtrando, se vuelve a ver todo.
+        const filtro = this.filtroGrupo();
+        if (filtro && !this.negocios().some((n) => n.grupoDuenoId === filtro)) this.filtroGrupo.set(null);
+        this.snackBar.open(actualizado.grupoDuenoNombre ? `Agregado al grupo ${actualizado.grupoDuenoNombre}` : 'Sacado de su grupo', 'OK', { duration: 3000 });
       });
   }
 
