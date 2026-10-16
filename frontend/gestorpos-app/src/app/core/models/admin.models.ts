@@ -79,6 +79,19 @@ export interface TenantResumen {
   terminosAceptadosEn?: string | null;
   /** Email del dueño del negocio. */
   emailAdmin?: string | null;
+  /** Nota interna del operador (p. ej. por qué el negocio no paga). */
+  notaInterna?: string | null;
+  telefono?: string | null;
+}
+
+/** Alta de un negocio sin cobro ni vendedor (solo operador). */
+export interface CrearNegocioSinCobroRequest {
+  nombreNegocio: string;
+  nombreAdmin: string;
+  telefono: string;
+  email: string;
+  password: string;
+  nota?: string | null;
 }
 
 export interface NuevaSuscripcionRequest {

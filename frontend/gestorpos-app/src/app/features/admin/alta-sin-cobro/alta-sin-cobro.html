@@ -1,0 +1,89 @@
+<div class="pagina">
+  <mat-card class="card">
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="crear()" class="form">
+        <p class="aviso">Queda activo al instante. Sin plan, sin vendedor y sin tocar Fluxo.</p>
+
+        <p class="seccion">Datos del negocio</p>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nombre del negocio</mat-label>
+          <input matInput formControlName="nombreNegocio" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nombre del dueño/admin</mat-label>
+          <input matInput formControlName="nombreAdmin" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Teléfono del cliente</mat-label>
+          <input matInput type="tel" inputmode="tel" formControlName="telefono" placeholder="11 2345 6789" />
+          <mat-hint>Con código de área, para poder contactarlo</mat-hint>
+          @if (form.controls.telefono.touched && form.controls.telefono.invalid) {
+            <mat-error>Ingresá un teléfono válido (al menos 8 números)</mat-error>
+          }
+        </mat-form-field>
+
+        <p class="seccion">Acceso del cliente</p>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Email (usuario de acceso)</mat-label>
+          <input matInput type="email" formControlName="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="text" formControlName="password" />
+          <mat-hint>La definís vos y se la pasás al cliente</mat-hint>
+        </mat-form-field>
+
+        <p class="seccion">Nota interna</p>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nota (opcional)</mat-label>
+          <input matInput formControlName="nota" maxlength="500" placeholder="Incluido en el plan Dos locales" />
+          <mat-hint>Solo la ves vos: para recordar por qué este negocio no paga</mat-hint>
+        </mat-form-field>
+
+        <p class="ayuda-cobro">El cliente acepta los términos y condiciones él mismo al ingresar por primera vez.</p>
+
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <button mat-flat-button type="submit" [disabled]="form.invalid || guardando()">
+          @if (guardando()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Crear negocio
+          }
+        </button>
+
+        @if (creado(); as negocio) {
+          <div class="resultado">
+            <button mat-icon-button type="button" class="cerrar-resultado" (click)="cerrarResultado()" aria-label="Cerrar">
+              <mat-icon>close</mat-icon>
+            </button>
+            <p class="exito">
+              <mat-icon>check_circle</mat-icon>
+              Negocio "{{ negocio.nombre }}" creado y activo
+            </p>
+            @if (credenciales(); as cred) {
+              <div class="dato-copiable">
+                <span>{{ cred.email }}</span>
+                <button mat-icon-button type="button" (click)="copiar(cred.email, 'Email')" aria-label="Copiar email">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+              <div class="dato-copiable">
+                <span>{{ cred.password }}</span>
+                <button mat-icon-button type="button" (click)="copiar(cred.password, 'Contraseña')" aria-label="Copiar contraseña">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+            }
+            <button mat-stroked-button type="button" (click)="verNegocios()">Ver negocios</button>
+          </div>
+        }
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

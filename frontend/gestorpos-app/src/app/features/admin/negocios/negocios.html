@@ -15,6 +15,12 @@
             <mat-icon [class.girando]="actualizando()">refresh</mat-icon>
             Actualizar
           </button>
+          @if (adminAuth.esOperador()) {
+            <a mat-stroked-button routerLink="/admin/alta-sin-cobro">
+              <mat-icon>add</mat-icon>
+              Alta sin cobro
+            </a>
+          }
           @if (ultimaActualizacion(); as hora) {
             <span class="hora-actualizacion">Actualizado {{ hora | date: 'HH:mm:ss' }}</span>
           }
@@ -93,7 +99,13 @@
                       @if (negocio.formaPrimerPago) {
                         · 1er pago en {{ negocio.formaPrimerPago.toLowerCase() }}
                       }
+                      @if (adminAuth.esOperador() && !negocio.fluxoSuscripcionId) {
+                        · Sin cobro
+                      }
                     </span>
+                    @if (adminAuth.esOperador() && negocio.notaInterna) {
+                      <span class="negocio-detalle">{{ negocio.notaInterna }}</span>
+                    }
 
                     <div class="negocio-badges">
                       @if (badgeSuscripcion(negocio); as badge) {

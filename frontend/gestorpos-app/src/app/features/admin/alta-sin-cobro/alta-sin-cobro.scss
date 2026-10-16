@@ -1,0 +1,112 @@
+// El título y el menú los pone el shell del admin; acá solo el contenido.
+.pagina {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .pagina {
+    margin: 0;
+  }
+}
+
+.card {
+  padding: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full {
+  width: 100%;
+}
+
+.seccion {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+  margin: 18px 0 2px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.aviso {
+  font-size: 0.8125rem;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, #2e7d32 10%, transparent);
+  color: #2e7d32;
+}
+
+.ayuda-cobro {
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant, #5f6368);
+  margin: 4px 0 12px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}
+
+.exito {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2e7d32;
+  font-size: 0.875rem;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.resultado {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin: 12px 0 4px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, #2e7d32 10%, transparent);
+}
+
+.cerrar-resultado {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.dato-copiable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface-card);
+  border-radius: var(--radius-sm);
+  padding: 4px 4px 4px 12px;
+  font-size: 0.8rem;
+  font-family: monospace;
+
+  span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
+    flex-shrink: 0;
+  }
+}

@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -34,6 +34,7 @@ const FILTROS_VALIDOS: FiltroEstado[] = ['todos', 'activos', 'inactivos', 'porCo
   selector: 'app-negocios',
   imports: [
     DatePipe,
+    RouterLink,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,

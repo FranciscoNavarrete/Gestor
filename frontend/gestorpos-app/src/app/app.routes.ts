@@ -49,6 +49,13 @@ export const routes: Routes = [
           import('./features/admin/nuevo-negocio/nuevo-negocio').then((m) => m.NuevoNegocio),
       },
       {
+        // Solo Operador (lo exige el backend): negocio sin cobro ni vendedor.
+        path: 'alta-sin-cobro',
+        data: { titulo: 'Alta sin cobro' },
+        loadComponent: () =>
+          import('./features/admin/alta-sin-cobro/alta-sin-cobro').then((m) => m.AltaSinCobro),
+      },
+      {
         // Vendedor: sus propias ventas y comisión. Operador: las de todos, con ranking.
         path: 'reportes',
         data: { titulo: 'Reportes' },
