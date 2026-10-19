@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# Compara dos corridas del guion de humo ignorando fecha y sufijo del negocio de prueba.
+# Compara dos corridas del guion de humo ignorando fecha, sufijo del negocio de prueba y los campos que la
+# versión nueva SUMA (unidad, presentaciones, presentacionNombre). Cualquier otra diferencia se informa.
 A="$1"; B="$2"; rc=0
+limpiar() {
+  case "$1" in
+    *.json) jq -S 'walk(if type=="object" then del(.unidad, .presentaciones, .presentacionNombre) else . end)' "$1" 2>/dev/null | sed -E 's/Fecha: [0-9\/ :]+/Fecha: X/; s/(base|run)[0-9]+/SUF/g' ;;
+    *) sed -E 's/Fecha: [0-9\/ :]+/Fecha: X/; s/(base|run)[0-9]+/SUF/g' "$1" ;;
+  esac
+}
 for f in "$A"/*; do
   n=$(basename "$f")
-  if ! diff <(sed -E 's/Fecha: [0-9\/ :]+/Fecha: X/; s/(base|run)[0-9]+/SUF/g' "$f") <(sed -E 's/Fecha: [0-9\/ :]+/Fecha: X/; s/(base|run)[0-9]+/SUF/g' "$B/$n") >/dev/null; then
-    echo "DIFERENTE: $n"; rc=1
+  if ! diff <(limpiar "$f") <(limpiar "$B/$n") >/dev/null; then
+    echo "DIFERENTE: $n"; diff <(limpiar "$f") <(limpiar "$B/$n") | head -10; rc=1
   fi
 done
 [ $rc -eq 0 ] && echo "IGUAL: las dos corridas dan el mismo resultado"
