@@ -20,7 +20,7 @@ req() { # metodo ruta [cuerpo] [token]
 }
 
 norm() { # quita ids, fechas y tokens para poder comparar
-  jq -S 'walk(if type=="object" then with_entries(select(.key|test("(^id$|Id$|^fecha|Fecha|Utc$|token|Token)";"i")|not)) else . end)'
+  jq -S 'walk(if type=="object" then with_entries(select(.key|test("(^id$|Id$|^fecha|Fecha|Utc$|token|Token)";"i")|not)) elif type=="number" then (.*1) else . end)'
 }
 
 ADMIN=$(req POST /api/admin/auth/login '{"email":"admin@gestorpos.com","password":"Admin123!"}' | jq -r .token)
