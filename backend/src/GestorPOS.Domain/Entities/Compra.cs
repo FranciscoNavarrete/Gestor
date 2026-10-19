@@ -16,7 +16,7 @@ public class Compra : TenantEntity
 
     public static Compra Crear(
         Guid tenantId, Guid usuarioId, Proveedor proveedor,
-        IEnumerable<(Producto Producto, int Cantidad, decimal CostoUnitario)> items)
+        IEnumerable<(Producto Producto, decimal Cantidad, decimal CostoUnitario, ProductoPresentacion? Presentacion)> items)
     {
         var compra = new Compra
         {
@@ -26,7 +26,7 @@ public class Compra : TenantEntity
             ProveedorNombre = proveedor.Nombre
         };
 
-        var itemsCompra = items.Select(i => CompraItem.Crear(i.Producto, i.Cantidad, i.CostoUnitario)).ToList();
+        var itemsCompra = items.Select(i => CompraItem.Crear(i.Producto, i.Cantidad, i.CostoUnitario, i.Presentacion)).ToList();
         if (itemsCompra.Count == 0)
             throw new ArgumentException("La compra debe tener al menos un producto.", nameof(items));
 
@@ -34,7 +34,7 @@ public class Compra : TenantEntity
             item.AsignarCompra(compra.Id);
 
         compra._items.AddRange(itemsCompra);
-        compra.Total = itemsCompra.Sum(i => i.Subtotal);
+        compra.Total = ReglasCantidad.RedondearImporte(itemsCompra.Sum(i => i.Subtotal));
 
         return compra;
     }

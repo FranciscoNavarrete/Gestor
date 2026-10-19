@@ -10,8 +10,8 @@ public class MovimientoStock : TenantEntity
 {
     public Guid ProductoId { get; private set; }
     public string ProductoNombre { get; private set; } = string.Empty;
-    public int Cantidad { get; private set; }
-    public int StockResultante { get; private set; }
+    public decimal Cantidad { get; private set; }
+    public decimal StockResultante { get; private set; }
     public string Motivo { get; private set; } = string.Empty;
     public Guid UsuarioId { get; private set; }
     public string UsuarioNombre { get; private set; } = string.Empty;
@@ -19,7 +19,7 @@ public class MovimientoStock : TenantEntity
     private MovimientoStock() { }
 
     public static MovimientoStock Crear(
-        Guid tenantId, Guid productoId, string productoNombre, int cantidad, int stockResultante,
+        Guid tenantId, Guid productoId, string productoNombre, decimal cantidad, decimal stockResultante,
         string motivo, Guid usuarioId, string usuarioNombre)
     {
         if (cantidad == 0)

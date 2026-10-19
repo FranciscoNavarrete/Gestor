@@ -1,4 +1,5 @@
 using GestorPOS.Domain.Entities;
+using GestorPOS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,6 +15,9 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(p => p.Nombre).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Precio).HasColumnType("numeric(12,2)");
         builder.Property(p => p.Costo).HasColumnType("numeric(12,2)");
+        builder.Property(p => p.StockActual).HasColumnType("numeric(12,3)");
+        builder.Property(p => p.StockMinimo).HasColumnType("numeric(12,3)");
+        builder.Property(p => p.Unidad).HasDefaultValue(UnidadMedida.Unidad);
         builder.HasIndex(p => new { p.TenantId, p.Sku }).IsUnique();
         builder.Ignore(p => p.EnStockMinimo);
     }

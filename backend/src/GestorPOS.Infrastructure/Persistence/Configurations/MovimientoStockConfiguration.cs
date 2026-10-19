@@ -10,6 +10,8 @@ public class MovimientoStockConfiguration : IEntityTypeConfiguration<MovimientoS
     {
         builder.ToTable("MovimientosStock");
         builder.HasKey(m => m.Id);
+        builder.Property(m => m.Cantidad).HasColumnType("numeric(12,3)");
+        builder.Property(m => m.StockResultante).HasColumnType("numeric(12,3)");
         builder.Property(m => m.ProductoNombre).IsRequired().HasMaxLength(200);
         builder.Property(m => m.Motivo).IsRequired().HasMaxLength(50);
         builder.Property(m => m.UsuarioNombre).IsRequired().HasMaxLength(150);

@@ -1,4 +1,5 @@
 using GestorPOS.Domain.Common;
+using GestorPOS.Domain.Enums;
 
 namespace GestorPOS.Domain.Entities;
 
@@ -9,8 +10,10 @@ public class Producto : TenantEntity
     public Guid? CategoriaId { get; private set; }
     public decimal Precio { get; private set; }
     public decimal Costo { get; private set; }
-    public int StockActual { get; private set; }
-    public int StockMinimo { get; private set; }
+    public decimal StockActual { get; private set; }
+    public decimal StockMinimo { get; private set; }
+    /// <summary>Unidad del stock y de la venta. No cambia después de crear el producto.</summary>
+    public UnidadMedida Unidad { get; private set; } = UnidadMedida.Unidad;
     public bool Activo { get; private set; } = true;
 
     public bool EnStockMinimo => StockActual <= StockMinimo;
@@ -19,7 +22,8 @@ public class Producto : TenantEntity
 
     public static Producto Crear(
         Guid tenantId, string sku, string nombre, Guid? categoriaId,
-        decimal precio, decimal costo, int stockActual, int stockMinimo)
+        decimal precio, decimal costo, decimal stockActual, decimal stockMinimo,
+        UnidadMedida unidad = UnidadMedida.Unidad)
     {
         if (string.IsNullOrWhiteSpace(sku))
             throw new ArgumentException("El SKU es obligatorio.", nameof(sku));
@@ -33,6 +37,8 @@ public class Producto : TenantEntity
             throw new ArgumentException("El stock actual no puede ser negativo.", nameof(stockActual));
         if (stockMinimo < 0)
             throw new ArgumentException("El stock mínimo no puede ser negativo.", nameof(stockMinimo));
+        ReglasCantidad.Validar(unidad, stockActual, "El stock actual");
+        ReglasCantidad.Validar(unidad, stockMinimo, "El stock mínimo");
 
         return new Producto
         {
@@ -43,11 +49,12 @@ public class Producto : TenantEntity
             Precio = precio,
             Costo = costo,
             StockActual = stockActual,
-            StockMinimo = stockMinimo
+            StockMinimo = stockMinimo,
+            Unidad = unidad
         };
     }
 
-    public void Editar(string nombre, Guid? categoriaId, decimal precio, decimal costo, int stockMinimo)
+    public void Editar(string nombre, Guid? categoriaId, decimal precio, decimal costo, decimal stockMinimo)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre es obligatorio.", nameof(nombre));
@@ -57,6 +64,7 @@ public class Producto : TenantEntity
             throw new ArgumentException("El costo no puede ser negativo.", nameof(costo));
         if (stockMinimo < 0)
             throw new ArgumentException("El stock mínimo no puede ser negativo.", nameof(stockMinimo));
+        ReglasCantidad.Validar(Unidad, stockMinimo, "El stock mínimo");
 
         Nombre = nombre.Trim();
         CategoriaId = categoriaId;
@@ -81,11 +89,12 @@ public class Producto : TenantEntity
         Costo = nuevoCosto;
     }
 
-    public void AjustarStock(int cantidad)
+    public void AjustarStock(decimal cantidad)
     {
+        ReglasCantidad.Validar(Unidad, cantidad);
         var nuevoStock = StockActual + cantidad;
         if (nuevoStock < 0)
-            throw new InvalidOperationException($"No hay stock suficiente de '{Nombre}' (disponible: {StockActual}).");
+            throw new InvalidOperationException($"No hay stock suficiente de '{Nombre}' (disponible: {StockActual.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}).");
         StockActual = nuevoStock;
     }
 

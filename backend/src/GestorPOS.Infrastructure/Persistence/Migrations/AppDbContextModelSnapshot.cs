@@ -234,8 +234,8 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("numeric(12,3)");
 
                     b.Property<Guid>("CompraId")
                         .HasColumnType("uuid");
@@ -243,8 +243,17 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("CostoUnitario")
                         .HasColumnType("numeric(12,2)");
 
+                    b.Property<decimal>("FactorBase")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(12,3)")
+                        .HasDefaultValue(1m);
+
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PresentacionNombre")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("ProductoId")
                         .HasColumnType("uuid");
@@ -256,6 +265,11 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("Unidad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -608,8 +622,8 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("numeric(12,3)");
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
@@ -627,8 +641,8 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<int>("StockResultante")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("StockResultante")
+                        .HasColumnType("numeric(12,3)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -810,14 +824,19 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("StockActual")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("StockActual")
+                        .HasColumnType("numeric(12,3)");
 
-                    b.Property<int>("StockMinimo")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("StockMinimo")
+                        .HasColumnType("numeric(12,3)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Unidad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -825,6 +844,42 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Productos", (string)null);
+                });
+
+            modelBuilder.Entity("GestorPOS.Domain.Entities.ProductoPresentacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("CantidadBase")
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "ProductoId");
+
+                    b.ToTable("ProductoPresentaciones", (string)null);
                 });
 
             modelBuilder.Entity("GestorPOS.Domain.Entities.Proveedor", b =>
@@ -1119,17 +1174,26 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("numeric(12,3)");
 
                     b.Property<decimal>("CostoUnitario")
                         .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("FactorBase")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(12,3)")
+                        .HasDefaultValue(1m);
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("PrecioUnitario")
                         .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("PresentacionNombre")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("ProductoId")
                         .HasColumnType("uuid");
@@ -1141,6 +1205,11 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("Unidad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<Guid>("VentaId")
                         .HasColumnType("uuid");

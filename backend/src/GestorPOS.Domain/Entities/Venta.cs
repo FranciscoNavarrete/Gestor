@@ -17,7 +17,7 @@ public class Venta : TenantEntity
 
     public static Venta Crear(
         Guid tenantId, Guid usuarioId, string medioPago, string? telefonoCliente,
-        IEnumerable<(Producto Producto, int Cantidad)> items)
+        IEnumerable<(Producto Producto, decimal Cantidad, ProductoPresentacion? Presentacion)> items)
     {
         var venta = new Venta
         {
@@ -27,7 +27,7 @@ public class Venta : TenantEntity
             TelefonoCliente = string.IsNullOrWhiteSpace(telefonoCliente) ? null : telefonoCliente.Trim()
         };
 
-        var itemsVenta = items.Select(i => VentaItem.Crear(i.Producto, i.Cantidad)).ToList();
+        var itemsVenta = items.Select(i => VentaItem.Crear(i.Producto, i.Cantidad, i.Presentacion)).ToList();
         if (itemsVenta.Count == 0)
             throw new ArgumentException("La venta debe tener al menos un producto.", nameof(items));
 
@@ -35,7 +35,7 @@ public class Venta : TenantEntity
             item.AsignarVenta(venta.Id);
 
         venta._items.AddRange(itemsVenta);
-        venta.Total = itemsVenta.Sum(i => i.Subtotal);
+        venta.Total = ReglasCantidad.RedondearImporte(itemsVenta.Sum(i => i.Subtotal));
 
         return venta;
     }
