@@ -2,6 +2,7 @@ using System.Globalization;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Reportes;
 using GestorPOS.Domain.Common;
+using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Common;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +52,7 @@ public class ReportePdfService : IReportePdfService
             .ToListAsync(ct);
 
         var items = query.SelectMany(v => v.Items);
-        var totalCosto = await items.SumAsync(i => (decimal?)(i.CostoUnitario * i.Cantidad), ct) ?? 0m;
+        var totalCosto = await items.SumAsync(i => (decimal?)Math.Round(i.CostoUnitario * i.Cantidad, 2), ct) ?? 0m;
         var totalVentas = ventas.Sum(v => v.Total);
         var gananciaNeta = totalVentas - totalCosto;
 
@@ -177,6 +178,7 @@ public class ReportePdfService : IReportePdfService
                 p.StockMinimo,
                 p.Costo,
                 p.EnStockMinimo,
+                p.Unidad,
             })
             .ToListAsync(ct);
 
@@ -231,8 +233,8 @@ public class ReportePdfService : IReportePdfService
                         var colorTexto = p.EnStockMinimo ? Colors.Red.Darken1 : Colors.Black;
                         tabla.Cell().Element(CeldaCuerpo).Text($"{p.Nombre}\n{p.Sku}").FontColor(colorTexto);
                         tabla.Cell().Element(CeldaCuerpo).Text(p.CategoriaNombre ?? "—").FontColor(colorTexto);
-                        tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"{p.StockActual} u.").FontColor(colorTexto);
-                        tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"{p.StockMinimo} u.").FontColor(colorTexto);
+                        tabla.Cell().Element(CeldaCuerpo).AlignRight().Text(TextoStock(p.StockActual, p.Unidad)).FontColor(colorTexto);
+                        tabla.Cell().Element(CeldaCuerpo).AlignRight().Text(TextoStock(p.StockMinimo, p.Unidad)).FontColor(colorTexto);
                         tabla.Cell().Element(CeldaCuerpo).AlignRight().Text($"${(p.StockActual * p.Costo).ToString("N2", Ci)}").FontColor(colorTexto);
                     }
                 });
@@ -484,4 +486,10 @@ public class ReportePdfService : IReportePdfService
 
     private static QuestPDF.Infrastructure.IContainer CeldaCuerpo(QuestPDF.Infrastructure.IContainer contenedor)
         => contenedor.ShowEntire().Padding(6).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
+
+    /// <summary>"24 u." para productos por unidad (como siempre); "12.5 kg", "3 L" o "2.4 m" para los medidos.</summary>
+    private static string TextoStock(decimal valor, UnidadMedida unidad) =>
+        unidad == UnidadMedida.Unidad
+            ? $"{ReglasCantidad.Texto(valor)} u."
+            : $"{ReglasCantidad.Texto(valor)} {unidad.Simbolo()}";
 }

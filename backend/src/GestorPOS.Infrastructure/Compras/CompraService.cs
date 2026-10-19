@@ -31,28 +31,45 @@ public class CompraService : ICompraService
         var proveedor = await _db.Proveedores.FirstOrDefaultAsync(p => p.Id == request.ProveedorId && p.Activo, ct)
             ?? throw new AppException("El proveedor no existe o está inactivo.");
 
-        var productoIds = request.Items.Select(i => i.ProductoId).ToList();
+        var productoIds = request.Items.Select(i => i.ProductoId).Distinct().ToList();
         var productos = await _db.Productos
             .Where(p => productoIds.Contains(p.Id) && p.Activo)
             .ToDictionaryAsync(p => p.Id, ct);
 
-        var items = new List<(Producto Producto, int Cantidad, decimal CostoUnitario)>();
+        var presentacionIds = request.Items
+            .Where(i => i.PresentacionId is not null).Select(i => i.PresentacionId!.Value).Distinct().ToList();
+        var presentaciones = presentacionIds.Count == 0
+            ? new Dictionary<Guid, ProductoPresentacion>()
+            : await _db.ProductoPresentaciones
+                .Where(p => presentacionIds.Contains(p.Id) && p.Activo)
+                .ToDictionaryAsync(p => p.Id, ct);
+
+        var items = new List<(Producto Producto, decimal Cantidad, decimal CostoUnitario, ProductoPresentacion? Presentacion)>();
         foreach (var itemRequest in request.Items)
         {
             if (!productos.TryGetValue(itemRequest.ProductoId, out var producto))
                 throw new AppException("Uno de los productos de la compra no existe o está inactivo.");
 
-            items.Add((producto, itemRequest.Cantidad, itemRequest.CostoUnitario));
+            ProductoPresentacion? presentacion = null;
+            if (itemRequest.PresentacionId is { } presentacionId
+                && (!presentaciones.TryGetValue(presentacionId, out presentacion) || presentacion.ProductoId != producto.Id))
+                throw new AppException("Una de las presentaciones de la compra no existe, está desactivada o no es de ese producto.");
+
+            items.Add((producto, itemRequest.Cantidad, itemRequest.CostoUnitario, presentacion));
         }
 
         var compra = Compra.Crear(_tenantContext.TenantId, _tenantContext.UsuarioId, proveedor, items);
 
-        foreach (var (producto, cantidad, costoUnitario) in items)
+        // El stock suma en la unidad del producto y el costo vigente pasa a ser el de esa unidad (por kilo, por
+        // litro...), aunque se haya comprado por presentación: "2 bolsas de 15 kg a $42.000" suma 30 kg y deja
+        // el costo en $2.800 por kg.
+        foreach (var item in compra.Items)
         {
-            producto.AjustarStock(cantidad);
-            producto.ActualizarCosto(costoUnitario);
+            var producto = productos[item.ProductoId];
+            producto.AjustarStock(item.CantidadBase);
+            producto.ActualizarCosto(item.CostoPorUnidadBase);
             _movimientoStockService.Registrar(
-                producto.Id, producto.Nombre, cantidad, producto.StockActual, $"Compra a {proveedor.Nombre}");
+                producto.Id, producto.Nombre, item.CantidadBase, producto.StockActual, $"Compra a {proveedor.Nombre}");
         }
 
         _db.Compras.Add(compra);
@@ -113,7 +130,9 @@ public class CompraService : ICompraService
     private static CompraDto ToDto(Compra compra)
     {
         var items = compra.Items
-            .Select(i => new CompraItemDto(i.ProductoId, i.ProductoNombre, i.Cantidad, i.CostoUnitario, i.Subtotal))
+            .Select(i => new CompraItemDto(
+                i.ProductoId, i.ProductoNombre, i.Cantidad, i.CostoUnitario, i.Subtotal,
+                i.PresentacionNombre, i.Unidad.ToString()))
             .ToList();
 
         return new CompraDto(compra.Id, compra.FechaCreacion, compra.ProveedorId, compra.ProveedorNombre, compra.Total, items);

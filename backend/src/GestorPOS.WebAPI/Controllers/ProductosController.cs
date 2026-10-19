@@ -62,6 +62,29 @@ public class ProductosController : ControllerBase
     public async Task<ActionResult<ProductoDto>> AjustarStock(Guid id, AjustarStockRequest request, CancellationToken ct)
         => Ok(await _productoService.AjustarStockAsync(id, request.Cantidad, request.Motivo, ct));
 
+    [HttpPost("{id:guid}/presentaciones")]
+    public async Task<ActionResult<PresentacionDto>> CrearPresentacion(Guid id, CrearPresentacionRequest request, CancellationToken ct)
+        => Ok(await _productoService.CrearPresentacionAsync(id, request, ct));
+
+    [HttpPut("{id:guid}/presentaciones/{presentacionId:guid}")]
+    public async Task<ActionResult<PresentacionDto>> EditarPresentacion(
+        Guid id, Guid presentacionId, EditarPresentacionRequest request, CancellationToken ct)
+        => Ok(await _productoService.EditarPresentacionAsync(id, presentacionId, request, ct));
+
+    [HttpDelete("{id:guid}/presentaciones/{presentacionId:guid}")]
+    public async Task<IActionResult> DesactivarPresentacion(Guid id, Guid presentacionId, CancellationToken ct)
+    {
+        await _productoService.DesactivarPresentacionAsync(id, presentacionId, ct);
+        return NoContent();
+    }
+
+    [HttpPost("{id:guid}/presentaciones/{presentacionId:guid}/activar")]
+    public async Task<IActionResult> ActivarPresentacion(Guid id, Guid presentacionId, CancellationToken ct)
+    {
+        await _productoService.ActivarPresentacionAsync(id, presentacionId, ct);
+        return NoContent();
+    }
+
     [HttpPost("actualizar-precios-masivo")]
     public async Task<IActionResult> ActualizarPreciosMasivo(ActualizarPreciosMasivoRequest request, CancellationToken ct)
     {

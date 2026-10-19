@@ -58,7 +58,7 @@ public class MovimientoStockService : IMovimientoStockService
         return new PaginaDto<MovimientoStockDto>(items, pagina, tamanoPagina, totalItems, totalPaginas);
     }
 
-    public void Registrar(Guid productoId, string productoNombre, int cantidad, int stockResultante, string motivo)
+    public void Registrar(Guid productoId, string productoNombre, decimal cantidad, decimal stockResultante, string motivo)
     {
         var movimiento = MovimientoStock.Crear(
             _tenantContext.TenantId, productoId, productoNombre, cantidad, stockResultante,

@@ -3,7 +3,9 @@ using ClosedXML.Excel;
 using GestorPOS.Application.Catalog;
 using GestorPOS.Application.Catalog.Dtos;
 using GestorPOS.Application.Common.Interfaces;
+using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Entities;
+using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +15,10 @@ public class ProductoImportService : IProductoImportService
 {
     private static readonly string[] Encabezados =
         ["SKU", "Nombre", "Categoría", "Precio", "Costo", "Stock inicial", "Stock mínimo"];
+
+    /// <summary>Con la función "Medidas y presentaciones" la planilla suma una octava columna, "Unidad".</summary>
+    private const string EncabezadoUnidad = "Unidad";
+    private const int ColumnaUnidad = 8;
 
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
@@ -28,10 +34,13 @@ public class ProductoImportService : IProductoImportService
         using var workbook = new XLWorkbook();
         var hoja = workbook.Worksheets.Add("Productos");
 
-        for (var i = 0; i < Encabezados.Length; i++)
+        var conMedidas = _tenantContext.TieneFeature(MedidasFeature.Clave);
+        var encabezados = conMedidas ? [.. Encabezados, EncabezadoUnidad] : Encabezados;
+
+        for (var i = 0; i < encabezados.Length; i++)
         {
             var celda = hoja.Cell(1, i + 1);
-            celda.Value = Encabezados[i];
+            celda.Value = encabezados[i];
             celda.Style.Font.Bold = true;
             celda.Style.Fill.BackgroundColor = XLColor.FromHtml("#EDE7F6");
         }
@@ -44,6 +53,8 @@ public class ProductoImportService : IProductoImportService
         hoja.Cell(2, 5).Value = 600;
         hoja.Cell(2, 6).Value = 10;
         hoja.Cell(2, 7).Value = 2;
+        if (conMedidas)
+            hoja.Cell(2, ColumnaUnidad).Value = "u";
 
         hoja.Columns().AdjustToContents();
         hoja.SheetView.FreezeRows(1);
@@ -60,6 +71,7 @@ public class ProductoImportService : IProductoImportService
         var filas = hoja.RowsUsed().Skip(1).ToList(); // saltea el encabezado
 
         var tenantId = _tenantContext.TenantId;
+        var conMedidas = _tenantContext.TieneFeature(MedidasFeature.Clave);
 
         var categoriasPorNombre = await _db.Categorias
             .ToDictionaryAsync(c => c.Nombre.Trim().ToLowerInvariant(), c => c, ct);
@@ -80,13 +92,22 @@ public class ProductoImportService : IProductoImportService
                 var categoriaNombre = fila.Cell(3).GetString().Trim();
                 var precio = LeerDecimal(fila.Cell(4), "Precio");
                 var costo = LeerDecimal(fila.Cell(5), "Costo");
-                var stockInicial = LeerEntero(fila.Cell(6), "Stock inicial");
-                var stockMinimo = LeerEntero(fila.Cell(7), "Stock mínimo");
+                var unidadPedida = LeerUnidad(fila.Cell(ColumnaUnidad));
 
                 if (string.IsNullOrWhiteSpace(sku))
                     throw new FormatException("Falta el SKU.");
                 if (string.IsNullOrWhiteSpace(nombre))
                     throw new FormatException("Falta el nombre.");
+
+                productosPorSku.TryGetValue(sku, out var existente);
+                if (unidadPedida is { } pedida && pedida != UnidadMedida.Unidad && !conMedidas)
+                    throw new FormatException("La función Medidas y presentaciones no está activada para tu negocio.");
+                if (existente is not null && unidadPedida is { } otra && otra != existente.Unidad)
+                    throw new FormatException("No se puede cambiar la unidad de un producto que ya existe.");
+
+                var unidad = existente?.Unidad ?? unidadPedida ?? UnidadMedida.Unidad;
+                var stockInicial = LeerCantidad(fila.Cell(6), "Stock inicial", unidad);
+                var stockMinimo = LeerCantidad(fila.Cell(7), "Stock mínimo", unidad);
 
                 Categoria? categoria = null;
                 if (!string.IsNullOrWhiteSpace(categoriaNombre))
@@ -100,14 +121,14 @@ public class ProductoImportService : IProductoImportService
                     }
                 }
 
-                if (productosPorSku.TryGetValue(sku, out var existente))
+                if (existente is not null)
                 {
                     existente.Editar(nombre, categoria?.Id, precio, costo, stockMinimo);
                     actualizados++;
                 }
                 else
                 {
-                    var nuevo = Producto.Crear(tenantId, sku, nombre, categoria?.Id, precio, costo, stockInicial, stockMinimo);
+                    var nuevo = Producto.Crear(tenantId, sku, nombre, categoria?.Id, precio, costo, stockInicial, stockMinimo, unidad);
                     _db.Productos.Add(nuevo);
                     productosPorSku[sku] = nuevo;
                     creados++;
@@ -138,17 +159,55 @@ public class ProductoImportService : IProductoImportService
         throw new FormatException($"'{nombreColumna}' no es un número válido: '{texto}'.");
     }
 
-    private static int LeerEntero(IXLCell celda, string nombreColumna)
+    /// <summary>Stock por unidad: entero, como siempre (acepta "10.0"). Stock medido: hasta 3 decimales.</summary>
+    private static decimal LeerCantidad(IXLCell celda, string nombreColumna, UnidadMedida unidad)
     {
         var texto = celda.GetString().Trim();
         if (string.IsNullOrWhiteSpace(texto))
             return 0;
 
-        if (int.TryParse(texto, NumberStyles.Integer, CultureInfo.InvariantCulture, out var valor))
+        if (unidad == UnidadMedida.Unidad)
+        {
+            if (int.TryParse(texto, NumberStyles.Integer, CultureInfo.InvariantCulture, out var valor))
+                return valor;
+
+            // Por si viene como "10.0" en vez de entero.
+            return (int)decimal.Round(LeerDecimal(celda, nombreColumna));
+        }
+
+        return decimal.Round(LeerDecimalConComa(celda, nombreColumna), ReglasCantidad.DecimalesMedida);
+    }
+
+    /// <summary>Para cantidades medidas: la coma es el decimal ("12,5" son 12 kilos y medio). Si trae las dos,
+    /// el último separador es el decimal ("1.234,5" y "1,234.5" valen 1234,5).</summary>
+    private static decimal LeerDecimalConComa(IXLCell celda, string nombreColumna)
+    {
+        var texto = celda.GetString().Trim().Replace(" ", "");
+        var coma = texto.LastIndexOf(',');
+        var punto = texto.LastIndexOf('.');
+        if (coma >= 0 && punto >= 0)
+            texto = coma > punto ? texto.Replace(".", "").Replace(',', '.') : texto.Replace(",", "");
+        else if (coma >= 0)
+            texto = texto.Replace(',', '.');
+
+        if (decimal.TryParse(texto, NumberStyles.Number, CultureInfo.InvariantCulture, out var valor))
             return valor;
 
-        // Por si viene como "10.0" en vez de entero.
-        var comoDecimal = LeerDecimal(celda, nombreColumna);
-        return (int)decimal.Round(comoDecimal);
+        throw new FormatException($"'{nombreColumna}' no es un número válido: '{celda.GetString().Trim()}'.");
+    }
+
+    /// <summary>Celda vacía = sin dato (producto nuevo por unidad; en uno existente se deja la que tiene).</summary>
+    private static UnidadMedida? LeerUnidad(IXLCell celda)
+    {
+        var texto = celda.GetString().Trim().ToLowerInvariant();
+        return texto switch
+        {
+            "" => null,
+            "u" or "un" or "unidad" or "unidades" => UnidadMedida.Unidad,
+            "kg" or "kilo" or "kilos" => UnidadMedida.Kilo,
+            "l" or "lt" or "litro" or "litros" => UnidadMedida.Litro,
+            "m" or "mt" or "metro" or "metros" => UnidadMedida.Metro,
+            _ => throw new FormatException($"La unidad '{texto}' no es válida. Usá u, kg, L o m.")
+        };
     }
 }

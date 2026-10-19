@@ -4,8 +4,8 @@ public record MovimientoStockDto(
     Guid Id,
     Guid ProductoId,
     string ProductoNombre,
-    int Cantidad,
-    int StockResultante,
+    decimal Cantidad,
+    decimal StockResultante,
     string Motivo,
     string UsuarioNombre,
     DateTime Fecha);

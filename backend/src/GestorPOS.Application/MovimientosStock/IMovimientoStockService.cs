@@ -12,5 +12,5 @@ public interface IMovimientoStockService
     /// cuenta — mismo patrón que ClienteService.ObtenerOCrearPorTelefonoAsync — queda a cargo del
     /// caller persistirlo junto con el resto de los cambios (ajuste de stock o venta) en una sola
     /// transacción.</summary>
-    void Registrar(Guid productoId, string productoNombre, int cantidad, int stockResultante, string motivo);
+    void Registrar(Guid productoId, string productoNombre, decimal cantidad, decimal stockResultante, string motivo);
 }

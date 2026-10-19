@@ -24,13 +24,14 @@ public class ReporteService : IReporteService
         // una navegación filtrada por tenant; se trae la lista plana (volumen bajo en un POS) y se agrupa en memoria.
         var items = await VentasEnRango(desde, hasta)
             .SelectMany(v => v.Items)
-            .Select(i => new { i.ProductoId, i.ProductoNombre, i.Cantidad, i.Subtotal })
+            .Select(i => new { i.ProductoId, i.ProductoNombre, CantidadBase = i.Cantidad * i.FactorBase, i.Subtotal, i.Unidad })
             .ToListAsync(ct);
 
         return items
             .GroupBy(i => new { i.ProductoId, i.ProductoNombre })
             .Select(g => new RankingProductoDto(
-                g.Key.ProductoId, g.Key.ProductoNombre, g.Sum(i => i.Cantidad), g.Sum(i => i.Subtotal)))
+                g.Key.ProductoId, g.Key.ProductoNombre, g.Sum(i => i.CantidadBase), g.Sum(i => i.Subtotal),
+                g.First().Unidad.ToString()))
             .OrderByDescending(r => r.CantidadVendida)
             .Take(top)
             .ToList();
@@ -71,7 +72,7 @@ public class ReporteService : IReporteService
 
         var items = ventas.SelectMany(v => v.Items);
         var totalVentas = await items.SumAsync(i => (decimal?)i.Subtotal, ct) ?? 0m;
-        var totalCosto = await items.SumAsync(i => (decimal?)(i.CostoUnitario * i.Cantidad), ct) ?? 0m;
+        var totalCosto = await items.SumAsync(i => (decimal?)Math.Round(i.CostoUnitario * i.Cantidad, 2), ct) ?? 0m;
 
         return new GananciasDto(cantidadVentas, totalVentas, totalCosto, totalVentas - totalCosto);
     }

@@ -1,6 +1,9 @@
 namespace GestorPOS.Application.Reportes.Dtos;
 
-public record RankingProductoDto(Guid ProductoId, string ProductoNombre, int CantidadVendida, decimal TotalVendido);
+/// <summary>CantidadVendida está en la unidad del producto (kilos, litros, metros o unidades), aunque se haya
+/// vendido por presentaciones.</summary>
+public record RankingProductoDto(
+    Guid ProductoId, string ProductoNombre, decimal CantidadVendida, decimal TotalVendido, string Unidad = "Unidad");
 
 public record RankingClienteDto(Guid ClienteId, string? Nombre, string Telefono, int CantidadCompras, decimal TotalGastado);
 

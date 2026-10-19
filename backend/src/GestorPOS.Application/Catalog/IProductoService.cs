@@ -22,5 +22,12 @@ public interface IProductoService
 
     /// <summary>Suma o resta stock manualmente (reposición, merma, corrección de inventario).
     /// Las ventas descuentan stock por su cuenta; esto es para todo lo demás.</summary>
-    Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, string motivo, CancellationToken ct = default);
+    Task<ProductoDto> AjustarStockAsync(Guid id, decimal cantidad, string motivo, CancellationToken ct = default);
+
+    /// <summary>Crear una presentación exige la función "Medidas y presentaciones"; editar, desactivar y
+    /// activar las que ya existen funciona siempre.</summary>
+    Task<PresentacionDto> CrearPresentacionAsync(Guid productoId, CrearPresentacionRequest request, CancellationToken ct = default);
+    Task<PresentacionDto> EditarPresentacionAsync(Guid productoId, Guid presentacionId, EditarPresentacionRequest request, CancellationToken ct = default);
+    Task DesactivarPresentacionAsync(Guid productoId, Guid presentacionId, CancellationToken ct = default);
+    Task ActivarPresentacionAsync(Guid productoId, Guid presentacionId, CancellationToken ct = default);
 }

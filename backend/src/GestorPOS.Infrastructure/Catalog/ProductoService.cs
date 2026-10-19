@@ -5,7 +5,9 @@ using GestorPOS.Application.Common.Exceptions;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.MovimientosStock;
 using GestorPOS.Application.Notificaciones;
+using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Entities;
+using GestorPOS.Domain.Enums;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,12 +36,14 @@ public class ProductoService : IProductoService
         if (soloBajoStock)
             query = query.Where(p => p.StockActual <= p.StockMinimo);
 
-        return await query
+        var productos = await query
             .OrderBy(p => p.Nombre)
             .Select(p => ToDto(p, p.CategoriaId != null
                 ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
                 : null))
             .ToListAsync(ct);
+
+        return await ConPresentacionesAsync(productos, ct);
     }
 
     public async Task<PaginaDto<ProductoDto>> BuscarAsync(
@@ -75,7 +79,8 @@ public class ProductoService : IProductoService
                 : null))
             .ToListAsync(ct);
 
-        return new PaginaDto<ProductoDto>(items, pagina, tamanoPagina, totalItems, totalPaginas);
+        return new PaginaDto<ProductoDto>(
+            await ConPresentacionesAsync(items, ct), pagina, tamanoPagina, totalItems, totalPaginas);
     }
 
     public async Task<ProductoDto> ObtenerAsync(Guid id, CancellationToken ct = default)
@@ -87,7 +92,8 @@ public class ProductoService : IProductoService
             ? null
             : await _db.Categorias.Where(c => c.Id == producto.CategoriaId).Select(c => c.Nombre).FirstOrDefaultAsync(ct);
 
-        return ToDto(producto, categoriaNombre);
+        var dto = ToDto(producto, categoriaNombre);
+        return (await ConPresentacionesAsync([dto], ct))[0];
     }
 
     public async Task<ProductoDto> CrearAsync(CrearProductoRequest request, CancellationToken ct = default)
@@ -103,9 +109,23 @@ public class ProductoService : IProductoService
                 throw new AppException("La categoría indicada no existe.");
         }
 
+        var unidad = ParsearUnidad(request.Unidad);
+        var presentaciones = request.Presentaciones ?? [];
+        if ((unidad != UnidadMedida.Unidad || presentaciones.Count > 0) && !_tenantContext.TieneFeature(MedidasFeature.Clave))
+            throw new AppException(MensajeFuncionNoActivada);
+
         var producto = Producto.Crear(
             _tenantContext.TenantId, request.Sku, request.Nombre, request.CategoriaId,
-            request.Precio, request.Costo, request.StockActual, request.StockMinimo);
+            request.Precio, request.Costo, request.StockActual, request.StockMinimo, unidad);
+
+        var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pedida in presentaciones)
+        {
+            var presentacion = ProductoPresentacion.Crear(producto, pedida.Nombre, pedida.CantidadBase, pedida.Precio);
+            if (!nombresUsados.Add(presentacion.Nombre))
+                throw new AppException($"Ya hay una presentación llamada '{presentacion.Nombre}'.");
+            _db.ProductoPresentaciones.Add(presentacion);
+        }
 
         _db.Productos.Add(producto);
         await _db.SaveChangesAsync(ct);
@@ -150,7 +170,7 @@ public class ProductoService : IProductoService
         return await ObtenerAsync(id, ct);
     }
 
-    public async Task<ProductoDto> AjustarStockAsync(Guid id, int cantidad, string motivo, CancellationToken ct = default)
+    public async Task<ProductoDto> AjustarStockAsync(Guid id, decimal cantidad, string motivo, CancellationToken ct = default)
     {
         if (cantidad == 0)
             throw new AppException("La cantidad a ajustar no puede ser cero.");
@@ -166,7 +186,7 @@ public class ProductoService : IProductoService
         {
             producto.AjustarStock(cantidad);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {
             throw new AppException(ex.Message);
         }
@@ -177,7 +197,7 @@ public class ProductoService : IProductoService
         // Avisa solo en el momento en que CRUZA el mínimo, no en cada ajuste posterior mientras sigue
         // bajo — si no, spamea un push por cada venta chica mientras el stock no se repone.
         if (!estabaBajoAntes && producto.EnStockMinimo)
-            await _notificacionPushService.NotificarStockBajoAsync(producto.Nombre, producto.StockActual, ct);
+            await _notificacionPushService.NotificarStockBajoAsync(producto.Nombre, producto.StockActual, producto.Unidad.Simbolo(), ct);
 
         return await ObtenerAsync(id, ct);
     }
@@ -198,7 +218,104 @@ public class ProductoService : IProductoService
         return productos.Count;
     }
 
+    public async Task<PresentacionDto> CrearPresentacionAsync(
+        Guid productoId, CrearPresentacionRequest request, CancellationToken ct = default)
+    {
+        if (!_tenantContext.TieneFeature(MedidasFeature.Clave))
+            throw new AppException(MensajeFuncionNoActivada);
+
+        var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == productoId, ct)
+            ?? throw new AppException("El producto no existe.");
+
+        var presentacion = ProductoPresentacion.Crear(producto, request.Nombre, request.CantidadBase, request.Precio);
+        await ValidarNombreLibreAsync(productoId, presentacion.Nombre, null, ct);
+
+        _db.ProductoPresentaciones.Add(presentacion);
+        await _db.SaveChangesAsync(ct);
+        return ToDto(presentacion);
+    }
+
+    public async Task<PresentacionDto> EditarPresentacionAsync(
+        Guid productoId, Guid presentacionId, EditarPresentacionRequest request, CancellationToken ct = default)
+    {
+        var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == productoId, ct)
+            ?? throw new AppException("El producto no existe.");
+        var presentacion = await ObtenerPresentacionAsync(productoId, presentacionId, ct);
+
+        presentacion.Editar(producto, request.Nombre, request.CantidadBase, request.Precio);
+        await ValidarNombreLibreAsync(productoId, presentacion.Nombre, presentacionId, ct);
+
+        await _db.SaveChangesAsync(ct);
+        return ToDto(presentacion);
+    }
+
+    public async Task DesactivarPresentacionAsync(Guid productoId, Guid presentacionId, CancellationToken ct = default)
+    {
+        var presentacion = await ObtenerPresentacionAsync(productoId, presentacionId, ct);
+        presentacion.Desactivar();
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task ActivarPresentacionAsync(Guid productoId, Guid presentacionId, CancellationToken ct = default)
+    {
+        var presentacion = await ObtenerPresentacionAsync(productoId, presentacionId, ct);
+        await ValidarNombreLibreAsync(productoId, presentacion.Nombre, presentacionId, ct);
+        presentacion.Activar();
+        await _db.SaveChangesAsync(ct);
+    }
+
+    private const string MensajeFuncionNoActivada =
+        "La función Medidas y presentaciones no está activada para tu negocio.";
+
+    private static UnidadMedida ParsearUnidad(string? texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+            return UnidadMedida.Unidad;
+        if (Enum.TryParse<UnidadMedida>(texto.Trim(), ignoreCase: true, out var unidad) && Enum.IsDefined(unidad))
+            return unidad;
+        throw new AppException("La unidad indicada no existe. Usá Unidad, Kilo, Litro o Metro.");
+    }
+
+    private async Task<ProductoPresentacion> ObtenerPresentacionAsync(Guid productoId, Guid presentacionId, CancellationToken ct) =>
+        await _db.ProductoPresentaciones.FirstOrDefaultAsync(p => p.Id == presentacionId && p.ProductoId == productoId, ct)
+            ?? throw new AppException("La presentación no existe.");
+
+    private async Task ValidarNombreLibreAsync(Guid productoId, string nombre, Guid? excluirId, CancellationToken ct)
+    {
+        var minuscula = nombre.ToLower();
+        var repetido = await _db.ProductoPresentaciones.AnyAsync(
+            p => p.ProductoId == productoId && p.Activo && p.Id != excluirId && p.Nombre.ToLower() == minuscula, ct);
+        if (repetido)
+            throw new AppException($"Ya hay una presentación llamada '{nombre}'.");
+    }
+
+    /// <summary>Completa cada producto con sus presentaciones activas, en una sola consulta.</summary>
+    private async Task<IReadOnlyList<ProductoDto>> ConPresentacionesAsync(IReadOnlyList<ProductoDto> productos, CancellationToken ct)
+    {
+        if (productos.Count == 0)
+            return productos;
+
+        var ids = productos.Select(p => p.Id).ToList();
+        var presentaciones = await _db.ProductoPresentaciones
+            .Where(p => ids.Contains(p.ProductoId) && p.Activo)
+            .OrderBy(p => p.CantidadBase)
+            .ToListAsync(ct);
+        if (presentaciones.Count == 0)
+            return productos;
+
+        var porProducto = presentaciones.GroupBy(p => p.ProductoId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<PresentacionDto>)g.Select(ToDto).ToList());
+
+        return productos
+            .Select(p => porProducto.TryGetValue(p.Id, out var lista) ? p with { Presentaciones = lista } : p)
+            .ToList();
+    }
+
+    private static PresentacionDto ToDto(ProductoPresentacion p) =>
+        new(p.Id, p.ProductoId, p.Nombre, p.CantidadBase, p.Precio, p.Activo);
+
     private static ProductoDto ToDto(Producto p, string? categoriaNombre) => new(
         p.Id, p.Sku, p.Nombre, p.CategoriaId, categoriaNombre,
-        p.Precio, p.Costo, p.StockActual, p.StockMinimo, p.EnStockMinimo, p.Activo);
+        p.Precio, p.Costo, p.StockActual, p.StockMinimo, p.EnStockMinimo, p.Activo,
+        p.Unidad.ToString(), Array.Empty<PresentacionDto>());
 }

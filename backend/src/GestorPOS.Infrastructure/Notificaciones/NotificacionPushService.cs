@@ -3,6 +3,7 @@ using System.Text.Json;
 using GestorPOS.Application.Common.Interfaces;
 using GestorPOS.Application.Notificaciones;
 using GestorPOS.Application.Notificaciones.Dtos;
+using GestorPOS.Domain.Common;
 using GestorPOS.Domain.Entities;
 using GestorPOS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -54,7 +55,7 @@ public class NotificacionPushService : INotificacionPushService
             .ToListAsync(ct);
     }
 
-    public async Task NotificarStockBajoAsync(string productoNombre, int stockActual, CancellationToken ct = default)
+    public async Task NotificarStockBajoAsync(string productoNombre, decimal stockActual, string unidad = "u", CancellationToken ct = default)
     {
         var vapidDetails = ObtenerVapidDetails();
         if (vapidDetails is null) return;
@@ -62,7 +63,10 @@ public class NotificacionPushService : INotificacionPushService
         var suscripciones = await _db.SuscripcionesPush.ToListAsync(ct);
         if (suscripciones.Count == 0) return;
 
-        var payload = ArmarPayload("Stock bajo", $"{productoNombre}: quedan {stockActual} unidades.");
+        var cuanto = unidad == "u"
+            ? $"{ReglasCantidad.Texto(stockActual)} unidades"
+            : $"{ReglasCantidad.Texto(stockActual)} {unidad}";
+        var payload = ArmarPayload("Stock bajo", $"{productoNombre}: quedan {cuanto}.");
         var cliente = new WebPushClient();
 
         foreach (var suscripcion in suscripciones)
