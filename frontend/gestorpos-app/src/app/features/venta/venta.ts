@@ -295,7 +295,14 @@ export class Venta implements OnInit {
     // El stock se controla sumando todas las líneas del producto: suelto y bolsas salen del mismo stock.
     const nueva = { ...item, cantidad: nuevaCantidad };
     const base = baseEnCarrito(this.carrito(), item.producto.id, item) + cantidadBaseDeLinea(nueva);
-    if (base > item.producto.stockActual + 1e-9) return;
+    if (base > item.producto.stockActual + 1e-9) {
+      this.snackBar.open(
+        `No hay más stock de ${item.producto.nombre} (disponible: ${formatearCantidad(item.producto.stockActual, item.producto.unidad)}).`,
+        'Cerrar',
+        { duration: 3000 },
+      );
+      return;
+    }
 
     this.carrito.set(this.carrito().map((i) => (mismaLinea(i, item) ? nueva : i)));
     this.carritoEnCursoService.tocar();
@@ -367,6 +374,9 @@ export class Venta implements OnInit {
         next: (venta) => {
           this.procesando.set(false);
           this.carritoExpandido.set(false);
+          // La venta ya está cobrada: se vacía el carrito en el acto. Si no, al salir de la pantalla sin tocar
+          // «Nueva venta» quedaba el carrito anterior y se podía cobrar dos veces lo mismo.
+          this.carritoEnCursoService.cancelar();
           this.ventaResultado.set(venta);
         },
         error: (err) => {

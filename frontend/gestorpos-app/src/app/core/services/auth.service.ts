@@ -41,6 +41,29 @@ export class AuthService {
     );
   }
 
+  private ultimoRefrescoDeFunciones = 0;
+
+  /** Pregunta al servidor qué funciones tiene hoy el negocio y las actualiza en la sesión: así un cambio del
+   * operador (por ejemplo prender «Medidas y presentaciones») llega sin cerrar sesión. Se limita a una consulta
+   * cada 15 segundos y, si falla, se queda con lo que ya había. */
+  refrescarFunciones(): Observable<void> {
+    const actual = this.authState();
+    if (!actual || Date.now() - this.ultimoRefrescoDeFunciones < 15_000) return of(undefined);
+    this.ultimoRefrescoDeFunciones = Date.now();
+
+    return this.http.get<{ features: string[] }>(`${environment.apiUrl}/auth/funciones`).pipe(
+      tap(({ features }) => {
+        const vigente = this.authState();
+        if (!vigente) return;
+        const antes = [...(vigente.features ?? [])].sort().join('|');
+        const ahora = [...features].sort().join('|');
+        if (antes !== ahora) this.guardarSesion({ ...vigente, features });
+      }),
+      map(() => undefined),
+      catchError(() => of(undefined)),
+    );
+  }
+
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
     this.authState.set(null);

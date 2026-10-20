@@ -90,6 +90,17 @@ export interface EditarProductoRequest {
 export interface ActualizarPreciosMasivoRequest {
   porcentaje: number;
   categoriaId: string | null;
+  marcaId: string | null;
+}
+
+export interface AlcancePreciosMasivo {
+  productos: number;
+  presentaciones: number;
+}
+
+export interface ResultadoPreciosMasivo {
+  productosActualizados: number;
+  presentacionesActualizadas: number;
 }
 
 export interface ImportarProductoError {

@@ -107,6 +107,8 @@ export class SelectorCantidad {
 
   readonly importe = computed(() => {
     const c = this.cantidad();
+    // Con más decimales de los permitidos no se muestra un importe a medias: primero hay que corregir la cantidad.
+    if (this.sueltoMedido() && Number.isFinite(c) && tieneMasDeTresDecimales(c)) return 0;
     return Number.isFinite(c) ? redondear(this.precio() * c, 2) : 0;
   });
 

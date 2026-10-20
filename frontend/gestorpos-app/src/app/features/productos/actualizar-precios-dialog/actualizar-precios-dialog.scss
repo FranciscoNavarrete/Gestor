@@ -1,0 +1,25 @@
+.full {
+  width: 100%;
+}
+
+.intro,
+.ejemplo,
+.aviso {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin: 0 0 12px;
+}
+
+.alcance {
+  font-weight: 600;
+  margin: 4px 0 6px;
+}
+
+.ejemplo {
+  margin-bottom: 6px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.875rem;
+}

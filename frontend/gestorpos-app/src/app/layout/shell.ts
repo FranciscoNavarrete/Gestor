@@ -1,4 +1,4 @@
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, ViewChild, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -38,8 +38,18 @@ export class Shell {
 
   readonly nombreNegocio = this.authService.nombreNegocio;
   readonly nombreUsuario = this.authService.nombreUsuario;
-  readonly tieneMenuLateral = this.authService.tieneFeature(FEATURE_MENU_LATERAL);
-  readonly tieneTareas = this.authService.tieneFeature(FEATURE_TAREAS);
+  // Computed: si el operador prende o apaga una función, el menú se entera sin que el dueño vuelva a ingresar.
+  readonly tieneMenuLateral = computed(() => this.authService.tieneFeature(FEATURE_MENU_LATERAL));
+  readonly tieneTareas = computed(() => this.authService.tieneFeature(FEATURE_TAREAS));
+
+  constructor() {
+    this.authService.refrescarFunciones().subscribe();
+    const alVolver = () => {
+      if (document.visibilityState === 'visible') this.authService.refrescarFunciones().subscribe();
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    inject(DestroyRef).onDestroy(() => document.removeEventListener('visibilitychange', alVolver));
+  }
 
   readonly navItems = [
     { path: '/dashboard', icon: 'dashboard', label: 'Resumen' },

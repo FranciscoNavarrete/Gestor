@@ -11,11 +11,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Categoria, Marca, Producto } from '../../core/models/catalog.models';
+import { Categoria, Marca, Producto, ResultadoPreciosMasivo } from '../../core/models/catalog.models';
 import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
+import { ActualizarPreciosDialog, ActualizarPreciosDialogData } from './actualizar-precios-dialog/actualizar-precios-dialog';
 import { AjustarStockDialog } from './ajustar-stock-dialog/ajustar-stock-dialog';
 import { ImportarResultadoDialog } from './importar-resultado-dialog/importar-resultado-dialog';
 import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-dialog';
@@ -193,6 +194,22 @@ export class Productos implements OnInit, OnDestroy {
       },
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
     });
+  }
+
+  abrirActualizarPrecios(): void {
+    const data: ActualizarPreciosDialogData = { categorias: this.categorias(), marcas: this.marcas() };
+    this.dialog
+      .open(ActualizarPreciosDialog, { data, width: '420px', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((resultado: ResultadoPreciosMasivo | undefined) => {
+        if (!resultado) return;
+        const presentaciones =
+          resultado.presentacionesActualizadas > 0 ? ` y ${resultado.presentacionesActualizadas} presentaciones` : '';
+        this.snackBar.open(`Precios actualizados: ${resultado.productosActualizados} productos${presentaciones}.`, 'Cerrar', {
+          duration: 5000,
+        });
+        this.cargar();
+      });
   }
 
   abrirSelectorImportar(): void {

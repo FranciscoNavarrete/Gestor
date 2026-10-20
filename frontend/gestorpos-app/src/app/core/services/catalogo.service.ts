@@ -1,9 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ActualizarPreciosMasivoRequest,
+  AlcancePreciosMasivo,
+  ResultadoPreciosMasivo,
   Categoria,
   CrearCategoriaRequest,
   CrearMarcaRequest,
@@ -122,11 +124,15 @@ export class CatalogoService {
     return this.http.delete<void>(`${environment.apiUrl}/productos/${productoId}/presentaciones/${id}`);
   }
 
-  actualizarPreciosMasivo(request: ActualizarPreciosMasivoRequest): Observable<{ productosActualizados: number }> {
-    return this.http.post<{ productosActualizados: number }>(
-      `${environment.apiUrl}/productos/actualizar-precios-masivo`,
-      request,
-    );
+  actualizarPreciosMasivo(request: ActualizarPreciosMasivoRequest): Observable<ResultadoPreciosMasivo> {
+    return this.http.post<ResultadoPreciosMasivo>(`${environment.apiUrl}/productos/actualizar-precios-masivo`, request);
+  }
+
+  alcancePreciosMasivo(categoriaId: string | null, marcaId: string | null): Observable<AlcancePreciosMasivo> {
+    let params = new HttpParams();
+    if (categoriaId) params = params.set('categoriaId', categoriaId);
+    if (marcaId) params = params.set('marcaId', marcaId);
+    return this.http.get<AlcancePreciosMasivo>(`${environment.apiUrl}/productos/actualizar-precios-masivo/alcance`, { params });
   }
 
   descargarPlantillaExcel(): Observable<Blob> {

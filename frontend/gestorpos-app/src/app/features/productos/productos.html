@@ -20,6 +20,9 @@
         <mat-icon>local_shipping</mat-icon>
       </button>
     }
+    <button mat-icon-button (click)="abrirActualizarPrecios()" aria-label="Actualizar precios">
+      <mat-icon>percent</mat-icon>
+    </button>
     <button mat-icon-button [matMenuTriggerFor]="menuImportar" aria-label="Importar desde Excel" [disabled]="importando()">
       @if (importando()) {
         <mat-spinner diameter="20"></mat-spinner>
