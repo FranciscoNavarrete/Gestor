@@ -1,43 +1,139 @@
 .cuenta {
-  max-width: 480px;
-}
-
-.dato {
+  max-width: 470px;
+  margin: 8px auto 0;
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  gap: 16px;
 }
 
-.etiqueta {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.55;
+.perfil {
+  text-align: center;
+  padding: 26px 20px 22px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.25));
+  background: var(--surface-card, rgba(128, 128, 128, 0.08));
 }
 
-.seccion-password {
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.25));
+.avatar {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.nombre {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.negocio {
+  margin: 3px 0 10px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+
+.rol {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.lista {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.25));
+  background: var(--surface-card, rgba(128, 128, 128, 0.08));
 }
 
 .fila {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 14px;
+  width: 100%;
+  padding: 15px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.25));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.accion {
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+}
+
+.icono {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .titulo {
   margin: 0;
-  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .ayuda {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 0.8125rem;
   opacity: 0.7;
+}
+
+.flecha {
+  opacity: 0.5;
+}
+
+.salir {
+  color: var(--mat-sys-error, #f08a8a);
+
+  .icono {
+    color: var(--mat-sys-error, #f08a8a);
+    background: color-mix(in srgb, var(--mat-sys-error, #f08a8a) 14%, transparent);
+  }
+}
+
+// El formulario de contraseña ocupa todo el ancho debajo de la fila de Contraseña.
+.fila-formulario {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
 }
 
 // Aire debajo del formulario para que el botón no quede pegado a la barra de navegación de abajo.

@@ -1,23 +1,45 @@
-<mat-card class="cuenta">
-  <mat-card-content>
-    <div class="dato"><span class="etiqueta">Nombre</span><span>{{ nombreUsuario() }}</span></div>
-    <div class="dato"><span class="etiqueta">Negocio</span><span>{{ nombreNegocio() }}</span></div>
+<section class="cuenta">
+  <div class="perfil">
+    <div class="avatar font-display" aria-hidden="true">{{ inicial() }}</div>
+    <h2 class="nombre font-display">{{ nombreUsuario() }}</h2>
+    <p class="negocio">{{ nombreNegocio() }}</p>
+    @if (etiquetaRol()) {
+      <span class="rol">{{ etiquetaRol() }}</span>
+    }
+  </div>
 
-    <div class="seccion-password">
-      <div class="fila">
-        <div>
-          <p class="titulo">Contraseña</p>
-          <p class="ayuda">Cambiala cuando quieras.</p>
-        </div>
-        @if (!cambiando()) {
-          <button mat-stroked-button type="button" (click)="abrirFormulario()">Cambiar</button>
-        }
+  <div class="lista">
+    <div class="fila">
+      <span class="icono"><mat-icon>lock</mat-icon></span>
+      <div class="texto">
+        <p class="titulo">Contraseña</p>
+        <p class="ayuda">Cambiala cuando quieras</p>
       </div>
-      @if (cambiando()) {
+      @if (!cambiando()) {
+        <button mat-stroked-button type="button" (click)="abrirFormulario()">Cambiar</button>
+      }
+    </div>
+
+    @if (cambiando()) {
+      <div class="fila fila-formulario">
         <app-cambiar-password [guardar]="guardar" (cambiada)="alCambiar()" />
         <button mat-button type="button" (click)="cambiando.set(false)">Cancelar</button>
         <div #formulario class="formulario"></div>
-      }
-    </div>
-  </mat-card-content>
-</mat-card>
+      </div>
+    }
+
+    <button type="button" class="fila accion" (click)="contactarSoporte()">
+      <span class="icono"><mat-icon>support_agent</mat-icon></span>
+      <span class="texto">
+        <span class="titulo">Comunicate con soporte</span>
+        <span class="ayuda">Te respondemos por WhatsApp</span>
+      </span>
+      <mat-icon class="flecha">chevron_right</mat-icon>
+    </button>
+
+    <button type="button" class="fila accion salir" (click)="cerrarSesion()">
+      <span class="icono"><mat-icon>logout</mat-icon></span>
+      <span class="texto"><span class="titulo">Cerrar sesión</span></span>
+    </button>
+  </div>
+</section>
