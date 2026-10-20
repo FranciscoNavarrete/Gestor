@@ -27,7 +27,8 @@ para revisarlo antes de desplegar. Su `Down` solo es seguro si todavía no hay c
 
 ## Casos límite
 
-    backend/scripts/smoke/smoke-limites.sh http://localhost:5090      # cantidades inválidas, aislamiento entre negocios, fiado, redondeos, compras, ventas simultáneas
+    backend/scripts/smoke/smoke-limites.sh http://localhost:5090      # 65 comprobaciones
 
-Una comprobación falla a propósito: "solo una venta de 6 kg entra". El stock no tiene control de concurrencia
-(pasa igual con productos por unidad, también en `qas`); queda como pendiente aparte.
+Cantidades inválidas, aislamiento entre negocios, fiado, redondeos, compras, ventas simultáneas (4 ventas de 6 kg
+con 10 kg: entra una sola; también con unidades y mezclando ventas y ajustes), aumento masivo de precios con
+filtros por categoría y marca, cantidades con coma y cambio de funciones sin volver a ingresar.

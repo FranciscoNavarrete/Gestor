@@ -99,12 +99,27 @@ echo "== Ventas simultáneas contra el mismo stock"
 req POST "/api/productos/$PID/ajustar-stock" "{\"cantidad\":$(jq -n "(10-$(req GET "/api/productos/$PID" "" "$TOKA" | jq '.stockActual*1'))*1000|round/1000"),\"motivo\":\"corrección\"}" "$TOKA" >/dev/null
 check "stock puesto en 10 kg para la carrera" "$(req GET "/api/productos/$PID" "" "$TOKA" | jq '.stockActual*1')" "10"
 for i in 1 2 3 4; do v $PID 6 > "/tmp/carrera-$SUF-$i.json" & done; wait
-OK=0; for i in 1 2 3 4; do jq -e '.total' "/tmp/carrera-$SUF-$i.json" >/dev/null 2>&1 && OK=$((OK+1)); done
+OK=0; RECH=0; for i in 1 2 3 4; do
+  if jq -e '.total' "/tmp/carrera-$SUF-$i.json" >/dev/null 2>&1; then OK=$((OK+1));
+  elif jq -r '.error' "/tmp/carrera-$SUF-$i.json" | grep -q "^Stock insuficiente de 'pruebaFran-Alimento' (disponible: 4 kg)"; then RECH=$((RECH+1)); fi
+done
 FINAL=$(req GET "/api/productos/$PID" "" "$TOKA" | jq '.stockActual*1')
 rm -f /tmp/carrera-$SUF-*.json
-check "4 ventas de 6 kg con 10 kg: el stock nunca queda negativo" "$(jq -n "$FINAL >= 0")" "true"
-# FALLA CONOCIDA, ANTERIOR A ESTA FUNCIÓN: el stock no tiene control de concurrencia (pasa igual con productos por unidad)
-check "solo una venta de 6 kg entra (entraron $OK)" "$OK" "1"
+check "4 ventas de 6 kg con 10 kg: entra una sola" "$OK" "1"
+check "las otras 3 dicen «Stock insuficiente … (disponible: 4 kg)»" "$RECH" "3"
+check "el stock queda exacto en 4 kg" "$FINAL" "4"
+# lo mismo con un producto por unidad (la falla ya existía antes de esta función)
+req POST "/api/productos/$PIDU/ajustar-stock" "{\"cantidad\":$(jq -n "10-$(req GET "/api/productos/$PIDU" "" "$TOKA" | jq '.stockActual*1')"),\"motivo\":\"corrección\"}" "$TOKA" >/dev/null
+for i in 1 2 3 4 5 6; do v $PIDU 4 > "/tmp/carreraU-$SUF-$i.json" & done; wait
+OKU=0; for i in 1 2 3 4 5 6; do jq -e '.total' "/tmp/carreraU-$SUF-$i.json" >/dev/null 2>&1 && OKU=$((OKU+1)); done; rm -f /tmp/carreraU-$SUF-*.json
+check "6 ventas de 4 u. con 10 u.: entran 2 y el stock queda en 2" "$OKU $(req GET "/api/productos/$PIDU" "" "$TOKA" | jq '.stockActual*1')" "2 2"
+# ventas y ajustes a la vez sobre el mismo producto
+req POST "/api/productos/$PIDU/ajustar-stock" '{"cantidad":8,"motivo":"corrección"}' "$TOKA" >/dev/null
+for i in 1 2 3; do v $PIDU 4 > "/tmp/mezcla-$SUF-$i.json" & done
+for i in 1 2 3; do req POST "/api/productos/$PIDU/ajustar-stock" '{"cantidad":-4,"motivo":"merma"}' "$TOKA" > "/tmp/mezclaA-$SUF-$i.json" & done; wait
+MV=0; for i in 1 2 3; do jq -e '.total' "/tmp/mezcla-$SUF-$i.json" >/dev/null 2>&1 && MV=$((MV+1)); jq -e '.stockActual' "/tmp/mezclaA-$SUF-$i.json" >/dev/null 2>&1 && MV=$((MV+1)); done
+rm -f /tmp/mezcla-$SUF-* /tmp/mezclaA-$SUF-*
+check "3 ventas y 3 ajustes de 4 u. con 10 u. a la vez: entran 2 en total y el stock queda en 2" "$MV $(req GET "/api/productos/$PIDU" "" "$TOKA" | jq '.stockActual*1')" "2 2"
 
 echo "== Compras"
 PROV=$(req POST /api/proveedores '{"nombre":"pruebaFran-Prov","cuit":null,"telefono":null,"email":null}' "$TOKA" | jq -r .id)
@@ -116,8 +131,9 @@ S1=$(req GET "/api/productos/$PID" "" "$TOKA" | jq '.stockActual*1')
 c $PID 3 10000 $B5 >/dev/null
 check "3 bolsas de 5 kg suman 15 kg" "$(req GET "/api/productos/$PID" "" "$TOKA" | jq '.stockActual*1')" "$(jq -n "$S1+15")"
 check "costo por kg = 10000 / 5 = 2000" "$(req GET "/api/productos/$PID" "" "$TOKA" | jq '.costo*1')" "2000"
+SU=$(req GET "/api/productos/$PIDU" "" "$TOKA" | jq '.stockActual*1')
 c $PIDU 2 24000 >/dev/null
-check "compra de producto por unidad (2 a \$24000 c/u) suma 2" "$(req GET "/api/productos/$PIDU" "" "$TOKA" | jq '.stockActual*1')" "7"
+check "compra de producto por unidad (2 a \$24000 c/u) suma 2" "$(req GET "/api/productos/$PIDU" "" "$TOKA" | jq '.stockActual*1')" "$(jq -n "$SU+2")"
 
 echo "== Aislamiento entre negocios"
 check "B no ve productos de A" "$(req GET "/api/productos" "" "$TOKB" | jq '[.[]|select(.nombre=="pruebaFran-Alimento")]|length')" "0"
@@ -132,9 +148,41 @@ for r in reportes/stock/pdf reportes/ventas/pdf; do
 done
 check "PDF de stock responde 200 PDF" "$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "$BASE/api/reportes/stock/pdf" -H "Authorization: Bearer $TOKA")" "200 application/pdf"
 check "PDF de ventas responde 200 PDF" "$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "$BASE/api/reportes/ventas/pdf" -H "Authorization: Bearer $TOKA")" "200 application/pdf"
-check "aumento masivo +10% sube el precio del producto por kilo" "$(req POST /api/productos/actualizar-precios-masivo '{"porcentaje":10,"categoriaId":null}' "$TOKA" >/dev/null; req GET "/api/productos/$PID" "" "$TOKA" | jq '.precio*1')" "2310"
-echo -n "  (informativo) tras el +10%: "; req GET "/api/productos/$PID" "" "$TOKA" | jq -c '{precio, presentaciones:[.presentaciones[]|{nombre,precio}]}'
 
+echo "== Aumento masivo de precios"
+CAT=$(req POST /api/categorias '{"nombre":"pruebaFran-Cat"}' "$TOKA" | jq -r .id)
+MR1=$(req POST /api/marcas '{"nombre":"pruebaFran-M1"}' "$TOKA" | jq -r .id)
+MR2=$(req POST /api/marcas '{"nombre":"pruebaFran-M2"}' "$TOKA" | jq -r .id)
+pm() { req POST /api/productos "{\"sku\":\"$1-$SUF\",\"nombre\":\"pruebaFran-$1\",\"categoriaId\":${2:-null},\"marcaId\":${3:-null},\"precio\":1000,\"costo\":500,\"stockActual\":5,\"stockMinimo\":1,\"unidad\":\"Kilo\",\"presentaciones\":[{\"nombre\":\"Bolsa\",\"cantidadBase\":2,\"precio\":1800}]}" "$TOKA" | jq -r .id; }
+PM1=$(pm MA "\"$CAT\"" "\"$MR1\""); PM2=$(pm MB "null" "\"$MR1\""); PM3=$(pm MC "\"$CAT\"" "\"$MR2\"")
+precio() { req GET "/api/productos/$1" "" "$TOKA" | jq -r '"\(.precio*1) \([.presentaciones[]|.precio*1]|first)"'; }
+check "el alcance cuenta productos y presentaciones de la marca M1 (2 y 2)" "$(req GET "/api/productos/actualizar-precios-masivo/alcance?marcaId=$MR1" "" "$TOKA" | jq -c '[.productos,.presentaciones]')" "[2,2]"
+check "el alcance con categoría y marca a la vez cuenta solo 1 producto" "$(req GET "/api/productos/actualizar-precios-masivo/alcance?categoriaId=$CAT&marcaId=$MR1" "" "$TOKA" | jq -c '[.productos,.presentaciones]')" "[1,1]"
+R=$(req POST /api/productos/actualizar-precios-masivo "{\"porcentaje\":10,\"categoriaId\":null,\"marcaId\":\"$MR1\"}" "$TOKA")
+check "+10% a la marca M1 actualiza 2 productos y 2 presentaciones" "$(echo "$R" | jq -c '[.productosActualizados,.presentacionesActualizadas]')" "[2,2]"
+check "la marca M1 sube el producto y su bolsa (1000→1100 y 1800→1980)" "$(precio $PM1) | $(precio $PM2)" "1100 1980 | 1100 1980"
+check "la marca M2 no se tocó" "$(precio $PM3)" "1000 1800"
+req POST /api/productos/actualizar-precios-masivo "{\"porcentaje\":-50,\"categoriaId\":\"$CAT\",\"marcaId\":null}" "$TOKA" >/dev/null
+check "-50% a la categoría baja el producto y su bolsa (1100→550, 1000→500)" "$(precio $PM1) | $(precio $PM3)" "550 990 | 500 900"
+check "el producto de otra categoría (M1 sin categoría) quedó igual" "$(precio $PM2)" "1100 1980"
+check "un porcentaje de 0 se rechaza" "$(err "$(req POST /api/productos/actualizar-precios-masivo '{"porcentaje":0,"categoriaId":null}' "$TOKA")")" "error"
+check "-100% se rechaza (dejaría todo gratis)" "$(err "$(req POST /api/productos/actualizar-precios-masivo '{"porcentaje":-100,"categoriaId":null}' "$TOKA")")" "error"
+check "+5000% se rechaza" "$(err "$(req POST /api/productos/actualizar-precios-masivo '{"porcentaje":5000,"categoriaId":null}' "$TOKA")")" "error"
+check "B no puede tocar los precios de A" "$(req POST /api/productos/actualizar-precios-masivo '{"porcentaje":10,"categoriaId":null}' "$TOKB" | jq -c '[.productosActualizados]')" "[1]"
+check "…y los productos de A siguen igual" "$(precio $PM3)" "500 900"
+
+echo "== Cantidades con coma y funciones sin volver a ingresar"
+TK=$(req POST /api/auth/login "{\"email\":\"limB${SUF}@test.local\",\"password\":\"Humo1234!\"}" | jq -r .token)
+req POST /api/productos/$PID/ajustar-stock '{"cantidad":10,"motivo":"reposición"}' "$TOKA" >/dev/null
+check "el ticket de un kg suelto usa coma («0,333 kg»)" "$(v $PID 0.333 | jq -r .ticketTexto | grep -c '0,333 kg pruebaFran-Alimento')" "1"
+check "el aviso de stock insuficiente usa coma" "$(v $PID 9999 | jq -r '.error|test("disponible: [0-9]+(,[0-9]+)? kg")')" "true"
+FB=$(req POST /api/auth/login "{\"email\":\"limB${SUF}@test.local\",\"password\":\"Humo1234!\"}" | jq -r .token)
+req DELETE "/api/admin/tenants/$TB/features/medidas" "" "$ADMIN" >/dev/null
+check "con el MISMO token, apagar la función se nota al instante" "$(err "$(req POST /api/productos '{"sku":"NF-1","nombre":"Sin funcion","categoriaId":null,"precio":1,"costo":1,"stockActual":1,"stockMinimo":0,"unidad":"Kilo"}' "$FB")")" "error"
+check "/api/auth/funciones ya no la trae" "$(req GET /api/auth/funciones "" "$FB" | jq -c '.features|index("medidas")')" "null"
+req PUT "/api/admin/tenants/$TB/features/medidas" "" "$ADMIN" >/dev/null
+check "volver a prenderla también se nota con el mismo token" "$(req POST /api/productos "{\"sku\":\"NF-$SUF\",\"nombre\":\"Con funcion\",\"categoriaId\":null,\"precio\":1,\"costo\":1,\"stockActual\":1,\"stockMinimo\":0,\"unidad\":\"Kilo\"}" "$FB" | jq -r .unidad)" "Kilo"
+check "/api/auth/funciones la trae de nuevo" "$(req GET /api/auth/funciones "" "$FB" | jq -c '.features|index("medidas")!=null')" "true"
 echo
 echo "RESULTADO: $PASS pasaron, $FAIL fallaron"
 [ "$FAIL" -eq 0 ]

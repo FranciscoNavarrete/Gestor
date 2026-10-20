@@ -63,6 +63,13 @@ public class VentaService : IVentaService
         }
 
         var productoIds = request.Items.Select(i => i.ProductoId).Distinct().ToList();
+
+        // Todo lo que sigue (leer el stock, descontarlo y guardar) va en una sola transacción con los
+        // productos bloqueados: si dos celulares venden lo mismo a la vez, la segunda venta espera y se
+        // controla contra el stock que dejó la primera.
+        await using var transaccion = await _db.Database.BeginTransactionAsync(ct);
+        await _db.BloquearProductosAsync(_tenantContext.TenantId, productoIds, ct);
+
         var productos = await _db.Productos
             .Where(p => productoIds.Contains(p.Id) && p.Activo)
             .ToDictionaryAsync(p => p.Id, ct);
@@ -121,6 +128,7 @@ public class VentaService : IVentaService
 
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync(ct);
+        await transaccion.CommitAsync(ct);
 
         // Avisa solo en el momento en que CADA producto CRUZA el mínimo, no en cada venta posterior
         // mientras sigue bajo — mismo criterio que ProductoService.AjustarStockAsync.

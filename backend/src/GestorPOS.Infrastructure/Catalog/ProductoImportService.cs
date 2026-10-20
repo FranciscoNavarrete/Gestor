@@ -1,3 +1,4 @@
+using GestorPOS.Application.Common.Exceptions;
 using System.Globalization;
 using ClosedXML.Excel;
 using GestorPOS.Application.Catalog;
@@ -69,7 +70,19 @@ public class ProductoImportService : IProductoImportService
 
     public async Task<ImportarProductosResultado> ImportarAsync(Stream archivoExcel, CancellationToken ct = default)
     {
-        using var workbook = new XLWorkbook(archivoExcel);
+        XLWorkbook workbook;
+        try
+        {
+            workbook = new XLWorkbook(archivoExcel);
+        }
+        catch (Exception)
+        {
+            throw new AppException("No se pudo leer el archivo. Tiene que ser un Excel (.xlsx) sin daños: probá volver a guardarlo.");
+        }
+
+        using var _ = workbook;
+        if (!workbook.Worksheets.Any())
+            throw new AppException("El Excel no tiene ninguna hoja.");
         var hoja = workbook.Worksheets.First();
         var filas = hoja.RowsUsed().Skip(1).ToList(); // saltea el encabezado
 
@@ -167,18 +180,14 @@ public class ProductoImportService : IProductoImportService
         return new ImportarProductosResultado(filas.Count, creados, actualizados, errores);
     }
 
+    /// <summary>Precio, costo y cantidades: la coma es el decimal, como se escribe en Argentina ("1,5" son uno y
+    /// medio, no quince).</summary>
     private static decimal LeerDecimal(IXLCell celda, string nombreColumna)
     {
-        var texto = celda.GetString().Trim();
-        if (string.IsNullOrWhiteSpace(texto))
+        if (string.IsNullOrWhiteSpace(celda.GetString()))
             throw new FormatException($"Falta el valor de '{nombreColumna}'.");
 
-        if (decimal.TryParse(texto, NumberStyles.Any, CultureInfo.InvariantCulture, out var invariante))
-            return invariante;
-        if (decimal.TryParse(texto, NumberStyles.Any, CultureInfo.GetCultureInfo("es-AR"), out var esAr))
-            return esAr;
-
-        throw new FormatException($"'{nombreColumna}' no es un número válido: '{texto}'.");
+        return LeerDecimalConComa(celda, nombreColumna);
     }
 
     /// <summary>Stock por unidad: entero, como siempre (acepta "10.0"). Stock medido: hasta 3 decimales.</summary>
@@ -193,18 +202,24 @@ public class ProductoImportService : IProductoImportService
             if (int.TryParse(texto, NumberStyles.Integer, CultureInfo.InvariantCulture, out var valor))
                 return valor;
 
-            // Por si viene como "10.0" en vez de entero.
-            return (int)decimal.Round(LeerDecimal(celda, nombreColumna));
+            // Por si viene como "10.0" en vez de entero; con decimales de verdad no se redondea en silencio.
+            var decimalValor = LeerDecimal(celda, nombreColumna);
+            if (decimalValor != decimal.Truncate(decimalValor))
+                throw new FormatException($"'{nombreColumna}' de un producto por unidad tiene que ser un número entero: '{texto}'.");
+            return (int)decimalValor;
         }
 
-        return decimal.Round(LeerDecimalConComa(celda, nombreColumna), ReglasCantidad.DecimalesMedida);
+        var medido = LeerDecimalConComa(celda, nombreColumna);
+        if (medido != decimal.Round(medido, ReglasCantidad.DecimalesMedida))
+            throw new FormatException($"'{nombreColumna}' admite hasta {ReglasCantidad.DecimalesMedida} decimales: '{texto}'.");
+        return medido;
     }
 
     /// <summary>Para cantidades medidas: la coma es el decimal ("12,5" son 12 kilos y medio). Si trae las dos,
     /// el último separador es el decimal ("1.234,5" y "1,234.5" valen 1234,5).</summary>
     private static decimal LeerDecimalConComa(IXLCell celda, string nombreColumna)
     {
-        var texto = celda.GetString().Trim().Replace(" ", "");
+        var texto = celda.GetString().Trim().Replace(" ", "").Replace("$", "");
         var coma = texto.LastIndexOf(',');
         var punto = texto.LastIndexOf('.');
         if (coma >= 0 && punto >= 0)

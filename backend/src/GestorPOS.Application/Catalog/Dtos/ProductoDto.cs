@@ -49,9 +49,12 @@ public record EditarProductoRequest(
     decimal StockMinimo,
     Guid? MarcaId = null);
 
-/// <summary>Sube o baja el precio de todos los productos activos (opcionalmente filtrados por categoría)
-/// un porcentaje dado. Ej: 10 = +10%, -5 = -5%.</summary>
-public record ActualizarPreciosMasivoRequest(decimal Porcentaje, Guid? CategoriaId);
+/// <summary>Sube o baja un porcentaje el precio de los productos activos y el de sus presentaciones, opcionalmente
+/// solo los de una categoría y/o una marca. Ej: 10 = +10%, -5 = -5%.</summary>
+public record ActualizarPreciosMasivoRequest(decimal Porcentaje, Guid? CategoriaId, Guid? MarcaId = null);
+
+/// <summary>Cuántos productos y presentaciones activos toca (o tocaría) un aumento masivo.</summary>
+public record AlcancePreciosMasivoDto(int Productos, int Presentaciones);
 
 /// <summary>Cantidad positiva para reponer stock, negativa para descontarlo, en la unidad del producto.
 /// Motivo es texto libre (el frontend ofrece Reposición/Merma/Corrección/Otro como sugerencias rápidas,

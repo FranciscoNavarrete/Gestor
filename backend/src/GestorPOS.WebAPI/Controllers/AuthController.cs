@@ -24,6 +24,13 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Las funciones que el negocio tiene hoy: la app las consulta para enterarse de un cambio del
+    /// operador sin que el dueño tenga que volver a ingresar.</summary>
+    [HttpGet("funciones")]
+    [Authorize]
+    public IActionResult Funciones()
+        => Ok(new { features = User.FindAll("feature").Select(c => c.Value).ToList() });
+
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
     {

@@ -38,6 +38,13 @@ public class ProductoPresentacion : TenantEntity
         Precio = precio;
     }
 
+    public void ActualizarPrecio(decimal nuevoPrecio)
+    {
+        if (nuevoPrecio < 0)
+            throw new ArgumentException("El precio no puede ser negativo.", nameof(nuevoPrecio));
+        Precio = nuevoPrecio;
+    }
+
     public void Desactivar() => Activo = false;
     public void Activar() => Activo = true;
 

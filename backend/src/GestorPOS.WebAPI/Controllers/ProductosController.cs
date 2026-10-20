@@ -88,9 +88,13 @@ public class ProductosController : ControllerBase
     [HttpPost("actualizar-precios-masivo")]
     public async Task<IActionResult> ActualizarPreciosMasivo(ActualizarPreciosMasivoRequest request, CancellationToken ct)
     {
-        var afectados = await _productoService.ActualizarPreciosMasivoAsync(request, ct);
-        return Ok(new { productosActualizados = afectados });
+        var resultado = await _productoService.ActualizarPreciosMasivoAsync(request, ct);
+        return Ok(new { productosActualizados = resultado.Productos, presentacionesActualizadas = resultado.Presentaciones });
     }
+
+    [HttpGet("actualizar-precios-masivo/alcance")]
+    public async Task<IActionResult> AlcancePreciosMasivo(Guid? categoriaId, Guid? marcaId, CancellationToken ct)
+        => Ok(await _productoService.ContarPreciosMasivoAsync(categoriaId, marcaId, ct));
 
     [HttpGet("plantilla-excel")]
     public IActionResult DescargarPlantilla()

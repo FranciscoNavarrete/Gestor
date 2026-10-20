@@ -32,6 +32,11 @@ public class CompraService : ICompraService
             ?? throw new AppException("El proveedor no existe o está inactivo.");
 
         var productoIds = request.Items.Select(i => i.ProductoId).Distinct().ToList();
+
+        // Misma idea que en las ventas: el stock se lee y se suma con los productos bloqueados.
+        await using var transaccion = await _db.Database.BeginTransactionAsync(ct);
+        await _db.BloquearProductosAsync(_tenantContext.TenantId, productoIds, ct);
+
         var productos = await _db.Productos
             .Where(p => productoIds.Contains(p.Id) && p.Activo)
             .ToDictionaryAsync(p => p.Id, ct);
@@ -74,6 +79,7 @@ public class CompraService : ICompraService
 
         _db.Compras.Add(compra);
         await _db.SaveChangesAsync(ct);
+        await transaccion.CommitAsync(ct);
 
         return ToDto(compra);
     }

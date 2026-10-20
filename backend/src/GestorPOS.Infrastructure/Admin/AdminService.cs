@@ -18,8 +18,13 @@ public class AdminService : IAdminService
     private readonly ICurrentAdminContext _currentAdmin;
     private readonly IFluxoService _fluxo;
 
-    public AdminService(AppDbContext db, IPasswordHasher passwordHasher, ICurrentAdminContext currentAdmin, IFluxoService fluxo)
+    private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
+
+    public AdminService(
+        AppDbContext db, IPasswordHasher passwordHasher, ICurrentAdminContext currentAdmin, IFluxoService fluxo,
+        Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
     {
+        _cache = cache;
         _db = db;
         _passwordHasher = passwordHasher;
         _currentAdmin = currentAdmin;
@@ -688,6 +693,7 @@ public class AdminService : IAdminService
 
         await RegistrarMovimientoAsync("feature.activada", "negocio", tenantId, await NombreDeTenantAsync(tenantId, ct), clave, ct);
         await _db.SaveChangesAsync(ct);
+        _cache.Remove(Auth.FuncionesActualesClaimsTransformation.ClaveDeCache(tenantId));
         return new TenantFeatureDto(feature.Id, feature.Clave, feature.Habilitado);
     }
 
@@ -700,6 +706,7 @@ public class AdminService : IAdminService
         feature.Deshabilitar();
         await RegistrarMovimientoAsync("feature.desactivada", "negocio", tenantId, await NombreDeTenantAsync(tenantId, ct), clave, ct);
         await _db.SaveChangesAsync(ct);
+        _cache.Remove(Auth.FuncionesActualesClaimsTransformation.ClaveDeCache(tenantId));
         return new TenantFeatureDto(feature.Id, feature.Clave, feature.Habilitado);
     }
 

@@ -194,6 +194,9 @@ public class ProductoService : IProductoService
         if (string.IsNullOrWhiteSpace(motivo))
             throw new AppException("Elegí un motivo para el ajuste.");
 
+        await using var transaccion = await _db.Database.BeginTransactionAsync(ct);
+        await _db.BloquearProductosAsync(_tenantContext.TenantId, new[] { id }, ct);
+
         var producto = await _db.Productos.FirstOrDefaultAsync(p => p.Id == id, ct)
             ?? throw new AppException("El producto no existe.");
 
@@ -210,6 +213,7 @@ public class ProductoService : IProductoService
 
         _movimientoStockService.Registrar(producto.Id, producto.Nombre, cantidad, producto.StockActual, motivo);
         await _db.SaveChangesAsync(ct);
+        await transaccion.CommitAsync(ct);
 
         // Avisa solo en el momento en que CRUZA el mínimo, no en cada ajuste posterior mientras sigue
         // bajo — si no, spamea un push por cada venta chica mientras el stock no se repone.
@@ -219,20 +223,48 @@ public class ProductoService : IProductoService
         return await ObtenerAsync(id, ct);
     }
 
-    public async Task<int> ActualizarPreciosMasivoAsync(ActualizarPreciosMasivoRequest request, CancellationToken ct = default)
+    public async Task<AlcancePreciosMasivoDto> ActualizarPreciosMasivoAsync(
+        ActualizarPreciosMasivoRequest request, CancellationToken ct = default)
     {
-        var query = _db.Productos.Where(p => p.Activo);
-        if (request.CategoriaId is not null)
-            query = query.Where(p => p.CategoriaId == request.CategoriaId);
+        // Menos de -90% o más de +1000% casi seguro es un error de tipeo (-100% deja todo gratis).
+        if (request.Porcentaje is < -90m or > 1000m)
+            throw new AppException("El porcentaje tiene que estar entre -90% y 1000%.");
+        if (request.Porcentaje == 0)
+            throw new AppException("El porcentaje no puede ser cero.");
 
-        var productos = await query.ToListAsync(ct);
+        var productos = await ProductosDelAlcance(request.CategoriaId, request.MarcaId).ToListAsync(ct);
+        var ids = productos.Select(p => p.Id).ToList();
+        var presentaciones = await _db.ProductoPresentaciones
+            .Where(p => p.Activo && ids.Contains(p.ProductoId))
+            .ToListAsync(ct);
+
         var factor = 1 + (request.Porcentaje / 100m);
-
         foreach (var producto in productos)
             producto.ActualizarPrecio(Math.Round(producto.Precio * factor, 2));
+        foreach (var presentacion in presentaciones)
+            presentacion.ActualizarPrecio(Math.Round(presentacion.Precio * factor, 2));
 
         await _db.SaveChangesAsync(ct);
-        return productos.Count;
+        return new AlcancePreciosMasivoDto(productos.Count, presentaciones.Count);
+    }
+
+    public async Task<AlcancePreciosMasivoDto> ContarPreciosMasivoAsync(
+        Guid? categoriaId, Guid? marcaId, CancellationToken ct = default)
+    {
+        var ids = ProductosDelAlcance(categoriaId, marcaId).Select(p => p.Id);
+        var productos = await ids.CountAsync(ct);
+        var presentaciones = await _db.ProductoPresentaciones.CountAsync(p => p.Activo && ids.Contains(p.ProductoId), ct);
+        return new AlcancePreciosMasivoDto(productos, presentaciones);
+    }
+
+    private IQueryable<Producto> ProductosDelAlcance(Guid? categoriaId, Guid? marcaId)
+    {
+        var query = _db.Productos.Where(p => p.Activo);
+        if (categoriaId is not null)
+            query = query.Where(p => p.CategoriaId == categoriaId);
+        if (marcaId is not null)
+            query = query.Where(p => p.MarcaId == marcaId);
+        return query;
     }
 
     public async Task<PresentacionDto> CrearPresentacionAsync(

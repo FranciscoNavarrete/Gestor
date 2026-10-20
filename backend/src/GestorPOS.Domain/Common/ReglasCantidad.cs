@@ -21,9 +21,10 @@ public static class ReglasCantidad
         }
     }
 
-    /// <summary>Cantidad para mostrar en mensajes y tickets: sin ceros de más (3 → "3", 0.350 → "0.35").</summary>
+    /// <summary>Cantidad para mostrar en mensajes y tickets, con coma decimal como se escribe en Argentina y sin
+    /// ceros de más (3 → "3", 0.350 → "0,35").</summary>
     public static string Texto(decimal cantidad) =>
-        cantidad.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+        cantidad.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',');
 
     /// <summary>Redondeo de importes en pesos (2 decimales, mitades hacia arriba).</summary>
     public static decimal RedondearImporte(decimal importe) =>

@@ -41,7 +41,7 @@ B15=$(echo "$P" | jq -r '.presentaciones[]|select(.nombre=="Bolsa 15 kg")|.id')
 
 V1=$(req POST /api/ventas "{\"items\":[{\"productoId\":\"$PID\",\"cantidad\":0.35}],\"medioPago\":\"Efectivo\"}" "$PTOK")
 check "venta suelta de 0,35 kg = \$1470" "$(echo "$V1" | jq '.total*1')" "1470"
-check "ticket muestra '0.35 kg Alimento perro'" "$(echo "$V1" | jq -r .ticketTexto | grep -c '0.35 kg Alimento perro')" "1"
+check "ticket muestra '0,35 kg Alimento perro' (con coma)" "$(echo "$V1" | jq -r .ticketTexto | grep -c '0,35 kg Alimento perro')" "1"
 
 V2=$(req POST /api/ventas "{\"items\":[{\"productoId\":\"$PID\",\"cantidad\":2,\"presentacionId\":\"$B15\"}],\"medioPago\":\"Efectivo\"}" "$PTOK")
 check "2 bolsas de 15 kg = \$116000" "$(echo "$V2" | jq '.total*1')" "116000"
@@ -50,7 +50,7 @@ PS=$(req GET "/api/productos/$PID" "" "$PTOK")
 check "stock = 35,5 - 0,35 - 30 = 5,15 kg" "$(echo "$PS" | jq '.stockActual*1')" "5.15"
 
 E1=$(req POST /api/ventas "{\"items\":[{\"productoId\":\"$PID\",\"cantidad\":1,\"presentacionId\":\"$B15\"}],\"medioPago\":\"Efectivo\"}" "$PTOK")
-check "no vende una bolsa de 15 kg con 5,15 kg de stock" "$(echo "$E1" | jq -r '.error|startswith("Stock insuficiente de \u0027Alimento perro\u0027 (disponible: 5.15 kg)")')" "true"
+check "no vende una bolsa de 15 kg con 5,15 kg de stock" "$(echo "$E1" | jq -r '.error|startswith("Stock insuficiente de \u0027Alimento perro\u0027 (disponible: 5,15 kg)")')" "true"
 E2=$(req POST /api/ventas "{\"items\":[{\"productoId\":\"$PID\",\"cantidad\":3,\"presentacionId\":\"$B3\"},{\"productoId\":\"$PID\",\"cantidad\":1}],\"medioPago\":\"Efectivo\"}" "$PTOK")
 check "suma suelto + bolsas del mismo producto contra el mismo stock" "$(echo "$E2" | jq -r '.error|startswith("Stock insuficiente de \u0027Alimento perro\u0027")')" "true"
 E3=$(req POST /api/ventas "{\"items\":[{\"productoId\":\"$PID\",\"cantidad\":0.0005}],\"medioPago\":\"Efectivo\"}" "$PTOK")

@@ -42,6 +42,29 @@ LST2=$(req GET "/api/productos" "" "$K")
 check "el producto quedó con su marca" "$(echo "$LST2" | jq -r '[.[]|select(.sku|startswith("IMP1"))|.marcaNombre]|first')" "Royal Canin"
 check "la celda de marca vacía deja el producto sin marca" "$(echo "$LST2" | jq -r '[.[]|select(.sku|startswith("IMP3"))|.marcaId]|first')" "null"
 
+echo "== Filas que no se pueden redondear en silencio"
+python3 - "$SUF" <<'PY'
+import sys, openpyxl
+wb=openpyxl.Workbook(); ws=wb.active
+ws.append(["SKU","Nombre","Categoría","Precio","Costo","Stock inicial","Stock mínimo","Marca","Unidad"])
+s=sys.argv[1]
+ws.append([f"DEC1-{s}","Kilo con 5 decimales","Otros",100,50,"1,23456",1,"","kg"])
+ws.append([f"DEC2-{s}","Unidad con medio","Otros",100,50,"10,5",1,"","u"])
+ws.append([f"DEC3-{s}","Precio negativo","Otros",-5,50,3,1,"","u"])
+ws.append([f"DEC4-{s}","Kilo bien cargado","Otros",100,50,"2,125",1,"","kg"])
+ws.append([f"DEC5-{s}","Precio con coma","Otros","1.234,50","0,75",4,1,"","u"])
+wb.save("/tmp/imp-dec.xlsx")
+PY
+R4=$(curl -s -X POST "$BASE/api/productos/importar-excel" -H "Authorization: Bearer $K" -F "archivo=@/tmp/imp-dec.xlsx")
+check "entran solo las 2 filas bien cargadas" "$(echo "$R4" | jq '.creados')" "2"
+check "más de 3 decimales en kg se rechaza" "$(echo "$R4" | jq -r '[.errores[]|select(.fila==2)|.mensaje]|first|contains("hasta 3 decimales")')" "true"
+check "stock con decimales en un producto por unidad se rechaza" "$(echo "$R4" | jq -r '[.errores[]|select(.fila==3)|.mensaje]|first|contains("número entero")')" "true"
+check "el error de precio no trae texto técnico" "$(echo "$R4" | jq -r '[.errores[]|select(.fila==4)|.mensaje]|first|contains("Parameter")')" "false"
+check "el precio «1.234,50» se lee como 1234,50 y el costo «0,75» como 0,75" "$(req GET /api/productos "" "$K" | jq -r '[.[]|select(.sku|startswith("DEC5"))|"\(.precio*1) \(.costo*1)"]|first')" "1234.5 0.75"
+echo "esto no es un excel" > /tmp/roto.xlsx
+CODE=$(curl -s -o /tmp/roto.json -w "%{http_code}" -X POST "$BASE/api/productos/importar-excel" -H "Authorization: Bearer $K" -F "archivo=@/tmp/roto.xlsx")
+check "un archivo dañado responde 400 con un mensaje claro" "$CODE $(jq -r .error /tmp/roto.json | cut -c1-27)" "400 No se pudo leer el archivo."
+
 echo "== Negocio sin la función"
 T2=$(mk "Import Kio $SUF" "impk${SUF}@test.local"); K2=$(login "impk${SUF}@test.local")
 curl -s "$BASE/api/productos/plantilla-excel" -H "Authorization: Bearer $K2" -o /tmp/plantilla7.xlsx

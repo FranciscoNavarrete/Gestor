@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentAdminContext, CurrentAdminContext>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<Microsoft.AspNetCore.Authentication.IClaimsTransformation, Auth.FuncionesActualesClaimsTransformation>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICategoriaService, CategoriaService>();
         services.AddScoped<IMarcaService, MarcaService>();
