@@ -1,9 +1,12 @@
+import { UnidadMedida } from './catalog.models';
+
 export interface MovimientoStock {
   id: string;
   productoId: string;
   productoNombre: string;
   cantidad: number;
   stockResultante: number;
+  unidad?: UnidadMedida;
   motivo: string;
   usuarioNombre: string;
   fecha: string;

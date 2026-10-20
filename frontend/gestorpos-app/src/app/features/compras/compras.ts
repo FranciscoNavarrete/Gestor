@@ -10,16 +10,22 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Producto } from '../../core/models/catalog.models';
+import { Presentacion, Producto, UnidadMedida } from '../../core/models/catalog.models';
 import { ItemCompraRequest, Proveedor } from '../../core/models/compra.models';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { CompraService } from '../../core/services/compra.service';
+import { esMedida, formatearCantidad, formatearPesos, simboloUnidad, tieneMasDeTresDecimales } from '../../core/utils/cantidad.util';
+import { necesitaSelector } from '../../core/utils/carrito.util';
 import { extraerMensajeError } from '../../core/utils/error.util';
+import { redondearImporte } from '../../core/utils/precio.util';
 import { ProveedorDialog, ProveedorDialogData } from '../configuracion/proveedor-dialog/proveedor-dialog';
 import { ReciboCompraDialog } from './recibo-compra-dialog/recibo-compra-dialog';
 
 interface ItemCompra {
+  /** Identifica la línea: un mismo producto puede comprarse suelto y en bolsa a la vez. */
+  idLinea: number;
   producto: Producto;
+  presentacionId: string | null;
   cantidad: number | null;
   costoUnitario: number | null;
 }
@@ -52,6 +58,7 @@ export class Compras implements OnInit {
   readonly productos = signal<Producto[]>([]);
   readonly busqueda = signal('');
   readonly items = signal<ItemCompra[]>([]);
+  private contadorLineas = 0;
   readonly registrando = signal(false);
 
   readonly proveedoresActivos = computed(() => this.proveedores().filter((p) => p.activo));
@@ -59,18 +66,17 @@ export class Compras implements OnInit {
   readonly productosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
     if (!termino) return [];
-    const yaAgregados = new Set(this.items().map((i) => i.producto.id));
+    // Un producto común se agrega una sola vez; uno medido o con presentaciones puede repetirse (suelto y en bolsa).
+    const yaAgregados = new Set(this.items().filter((i) => !necesitaSelector(i.producto)).map((i) => i.producto.id));
     return this.productos()
       .filter((p) => p.activo && !yaAgregados.has(p.id))
       .filter((p) => p.nombre.toLowerCase().includes(termino) || p.sku.toLowerCase().includes(termino))
       .slice(0, 8);
   });
 
-  readonly total = computed(() => this.items().reduce((acc, item) => acc + this.subtotal(item), 0));
+  readonly total = computed(() => redondearImporte(this.items().reduce((acc, item) => acc + this.subtotal(item), 0)));
 
-  readonly itemsValidos = computed(() =>
-    this.items().every((i) => (i.cantidad ?? 0) >= 1 && (i.costoUnitario ?? -1) >= 0),
-  );
+  readonly itemsValidos = computed(() => this.items().every((i) => this.cantidadValida(i) && (i.costoUnitario ?? -1) >= 0));
 
   ngOnInit(): void {
     this.cargarProveedores();
@@ -101,28 +107,78 @@ export class Compras implements OnInit {
   }
 
   agregarProducto(producto: Producto): void {
-    this.items.update((actual) => [...actual, { producto, cantidad: 1, costoUnitario: producto.costo }]);
+    this.items.update((actual) => [
+      ...actual,
+      { idLinea: ++this.contadorLineas, producto, presentacionId: null, cantidad: 1, costoUnitario: producto.costo },
+    ]);
     this.busqueda.set('');
   }
 
-  quitarItem(producto: Producto): void {
-    this.items.update((actual) => actual.filter((i) => i.producto.id !== producto.id));
+  quitarItem(item: ItemCompra): void {
+    this.items.update((actual) => actual.filter((i) => i.idLinea !== item.idLinea));
   }
 
-  actualizarCantidad(producto: Producto, cantidad: number | null): void {
+  actualizarCantidad(item: ItemCompra, cantidad: number | null): void {
+    this.items.update((actual) => actual.map((i) => (i.idLinea === item.idLinea ? { ...i, cantidad } : i)));
+  }
+
+  actualizarCosto(item: ItemCompra, costo: number | null): void {
+    this.items.update((actual) => actual.map((i) => (i.idLinea === item.idLinea ? { ...i, costoUnitario: costo } : i)));
+  }
+
+  /** Cambia entre comprar suelto (por kilo, litro, metro o unidad) y una presentación; propone el costo que corresponde. */
+  elegirPresentacion(item: ItemCompra, presentacionId: string | null): void {
+    const presentacion = item.producto.presentaciones.find((p) => p.id === presentacionId) ?? null;
+    const costo = presentacion ? redondearImporte(item.producto.costo * presentacion.cantidadBase) : item.producto.costo;
     this.items.update((actual) =>
-      actual.map((i) => (i.producto.id === producto.id ? { ...i, cantidad } : i)),
+      actual.map((i) => (i.idLinea === item.idLinea ? { ...i, presentacionId: presentacion?.id ?? null, costoUnitario: costo, cantidad: 1 } : i)),
     );
   }
 
-  actualizarCosto(producto: Producto, costo: number | null): void {
-    this.items.update((actual) =>
-      actual.map((i) => (i.producto.id === producto.id ? { ...i, costoUnitario: costo } : i)),
-    );
+  esMedida(unidad: UnidadMedida): boolean {
+    return esMedida(unidad);
+  }
+
+  simboloDe(item: ItemCompra): string {
+    return simboloUnidad(item.producto.unidad);
+  }
+
+  presentacionDe(item: ItemCompra): Presentacion | null {
+    return item.producto.presentaciones.find((p) => p.id === item.presentacionId) ?? null;
+  }
+
+  /** Solo el suelto de un producto medido admite decimales; presentaciones y unidades se compran enteras. */
+  admiteDecimales(item: ItemCompra): boolean {
+    return esMedida(item.producto.unidad) && item.presentacionId === null;
+  }
+
+  private cantidadValida(item: ItemCompra): boolean {
+    const c = item.cantidad ?? 0;
+    if (c <= 0) return false;
+    return this.admiteDecimales(item) ? !tieneMasDeTresDecimales(c) : Number.isInteger(c);
   }
 
   subtotal(item: ItemCompra): number {
-    return (item.cantidad ?? 0) * (item.costoUnitario ?? 0);
+    return redondearImporte((item.cantidad ?? 0) * (item.costoUnitario ?? 0));
+  }
+
+  etiquetaCosto(item: ItemCompra): string {
+    if (item.presentacionId) return 'Costo por ' + (this.presentacionDe(item)?.nombre ?? 'presentación');
+    return esMedida(item.producto.unidad) ? `Costo por ${simboloUnidad(item.producto.unidad)}` : 'Costo u.';
+  }
+
+  /** "Suma 30 kg · el costo queda en $2800 por kg": lo que va a pasar con el stock y el costo al confirmar. */
+  efecto(item: ItemCompra): string | null {
+    const cantidad = item.cantidad ?? 0;
+    const costo = item.costoUnitario ?? 0;
+    const presentacion = this.presentacionDe(item);
+    if (cantidad <= 0) return null;
+    const base = cantidad * (presentacion?.cantidadBase ?? 1);
+    if (!presentacion && !esMedida(item.producto.unidad)) return null;
+    const suma = `Suma ${formatearCantidad(Math.round(base * 1000) / 1000, item.producto.unidad)}`;
+    const porUnidad = presentacion ? redondearImporte(costo / presentacion.cantidadBase) : costo;
+    const unidad = item.producto.unidad === 'Unidad' ? 'u.' : simboloUnidad(item.producto.unidad);
+    return `${suma} · el costo queda en ${formatearPesos(porUnidad)} por ${unidad}`;
   }
 
   registrarCompra(): void {
@@ -133,6 +189,7 @@ export class Compras implements OnInit {
       productoId: i.producto.id,
       cantidad: i.cantidad!,
       costoUnitario: i.costoUnitario!,
+      presentacionId: i.presentacionId,
     }));
 
     this.compraService.crearCompra({ proveedorId: this.proveedorId(), items }).subscribe({

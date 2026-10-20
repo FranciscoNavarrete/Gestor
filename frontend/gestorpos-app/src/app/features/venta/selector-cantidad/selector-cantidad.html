@@ -1,0 +1,66 @@
+<div class="selector">
+  <div class="cabecera">
+    <div class="titulo">
+      <b>{{ producto.nombre }}</b>
+      @if (producto.marcaNombre) {
+        <span class="marca">{{ producto.marcaNombre }}</span>
+      }
+    </div>
+    <span class="precio">{{ textoPrecio() }}</span>
+  </div>
+
+  @if (opciones.length > 1) {
+    <mat-button-toggle-group class="opciones" [value]="presentacion()?.id ?? null" aria-label="Qué vas a vender">
+      @for (o of opciones; track o.nombre) {
+        <mat-button-toggle [value]="o.presentacion?.id ?? null" (click)="elegirOpcion(o.presentacion)">{{ o.nombre }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  }
+
+  @if (sueltoMedido()) {
+    <div class="atajos">
+      @for (a of atajos; track a.texto) {
+        <button type="button" class="atajo" [class.activo]="texto() === ('' + a.valor).replace('.', ',') && subunidad() === a.subunidad" (click)="elegirAtajo(a)">{{ a.texto }}</button>
+      }
+    </div>
+
+    <div class="fila-cantidad">
+      <mat-form-field appearance="outline" class="campo-cantidad">
+        <mat-label>Cantidad</mat-label>
+        <input matInput type="text" inputmode="decimal" [ngModel]="texto()" (ngModelChange)="texto.set($event)" autocomplete="off" />
+      </mat-form-field>
+      @if (subunidades.length > 1) {
+        <mat-button-toggle-group class="subunidad" [value]="subunidad()" (change)="cambiarSubunidad($event.value)" aria-label="Unidad">
+          @for (s of subunidades; track s.simbolo) {
+            <mat-button-toggle [value]="s.simbolo">{{ s.simbolo }}</mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      } @else {
+        <span class="sufijo-fijo">{{ subunidades[0].simbolo }}</span>
+      }
+    </div>
+  } @else {
+    <div class="fila-enteros">
+      <span class="etiqueta">Cantidad</span>
+      <span class="stepper">
+        <button type="button" mat-icon-button (click)="sumar(-1)" [disabled]="enteros() <= 1" aria-label="Restar"><mat-icon>remove</mat-icon></button>
+        <b>{{ enteros() }}</b>
+        <button type="button" mat-icon-button (click)="sumar(1)" aria-label="Sumar"><mat-icon>add</mat-icon></button>
+      </span>
+    </div>
+  }
+
+  <p class="stock" [class.error]="error()">{{ error() ?? textoStock() }}</p>
+
+  <div class="importe">
+    <span>Importe</span>
+    <span class="importe-valor">{{ textoImporte() }}</span>
+  </div>
+
+  <div class="acciones">
+    <button type="button" mat-button (click)="cancelar()">Cancelar</button>
+    <button type="button" mat-flat-button color="primary" class="agregar" [disabled]="!valido()" (click)="agregar()">
+      {{ esEdicion ? 'Guardar cambios' : 'Agregar al carrito' }}
+    </button>
+  </div>
+</div>

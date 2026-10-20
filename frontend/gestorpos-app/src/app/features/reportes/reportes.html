@@ -150,7 +150,7 @@
           <div class="info">
             <div class="nombre-fila">
               <span class="nombre">{{ p.nombre }}</span>
-              <span class="stock-pill" [class.pill-alerta]="p.enStockMinimo">{{ p.stockActual }} u.</span>
+              <span class="stock-pill" [class.pill-alerta]="p.enStockMinimo">{{ stockTexto(p) }}</span>
             </div>
             <div class="detalle">
               {{ p.sku }} @if (p.categoriaNombre) { · {{ p.categoriaNombre }} }
@@ -455,14 +455,14 @@
           <div class="movimiento-top">
             <span class="movimiento-producto">{{ m.productoNombre }}</span>
             <span class="movimiento-cantidad" [class.negativo]="m.cantidad < 0">
-              {{ m.cantidad > 0 ? '+' : '' }}{{ m.cantidad }}
+              {{ movimientoTexto(m) }}
             </span>
           </div>
           <div class="movimiento-detalle">
             <span>{{ m.fecha | date: 'dd/MM HH:mm' }} · {{ m.usuarioNombre }}</span>
             <span class="motivo-pill" [class.motivo-venta]="m.motivo === 'Venta'">{{ m.motivo }}</span>
           </div>
-          <p class="movimiento-resultante">Stock resultante: {{ m.stockResultante }}</p>
+          <p class="movimiento-resultante">Stock resultante: {{ resultanteTexto(m) }}</p>
         </mat-card>
       }
     </div>

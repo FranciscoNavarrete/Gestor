@@ -49,16 +49,17 @@
     </div>
 
     <div class="lista-items">
-      @for (item of items(); track item.producto.id) {
+      @for (item of items(); track item.idLinea) {
         <mat-card class="item-compra">
           <span class="item-nombre">{{ item.producto.nombre }}</span>
           <input
             class="input-cantidad"
-            [class.invalido]="(item.cantidad ?? 0) < 1"
+            [class.invalido]="!(item.cantidad && item.cantidad > 0)"
             type="number"
-            min="1"
+            [attr.min]="admiteDecimales(item) ? 0.001 : 1"
+            [attr.step]="admiteDecimales(item) ? 0.001 : 1"
             [ngModel]="item.cantidad"
-            (ngModelChange)="actualizarCantidad(item.producto, $event)"
+            (ngModelChange)="actualizarCantidad(item, $event)"
           />
           <input
             class="input-costo"
@@ -67,12 +68,28 @@
             min="0"
             step="0.01"
             [ngModel]="item.costoUnitario"
-            (ngModelChange)="actualizarCosto(item.producto, $event)"
+            (ngModelChange)="actualizarCosto(item, $event)"
           />
           <span class="item-subtotal">${{ subtotal(item) | number: '1.0-2' }}</span>
-          <button mat-icon-button (click)="quitarItem(item.producto)" aria-label="Quitar producto">
+          <button mat-icon-button (click)="quitarItem(item)" aria-label="Quitar producto">
             <mat-icon>close</mat-icon>
           </button>
+          @if (item.producto.presentaciones.length > 0 || esMedida(item.producto.unidad)) {
+            <div class="item-extra">
+              @if (item.producto.presentaciones.length > 0) {
+                <select class="select-presentacion" [ngModel]="item.presentacionId" (ngModelChange)="elegirPresentacion(item, $event)" aria-label="Se compra por">
+                  <option [ngValue]="null">{{ item.producto.unidad === 'Unidad' ? 'Por unidad' : 'Suelto (por ' + simboloDe(item) + ')' }}</option>
+                  @for (p of item.producto.presentaciones; track p.id) {
+                    <option [ngValue]="p.id">{{ p.nombre }}</option>
+                  }
+                </select>
+              }
+              <span class="costo-etiqueta">{{ etiquetaCosto(item) }}</span>
+              @if (efecto(item); as texto) {
+                <span class="efecto">{{ texto }}</span>
+              }
+            </div>
+          }
         </mat-card>
       }
     </div>

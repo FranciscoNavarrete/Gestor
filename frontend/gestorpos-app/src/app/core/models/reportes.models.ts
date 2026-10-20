@@ -1,8 +1,12 @@
+import { UnidadMedida } from './catalog.models';
+
 export interface RankingProductoDto {
   productoId: string;
   productoNombre: string;
+  /** En la unidad del producto (kilos, litros, metros o unidades), aunque se haya vendido por presentaciones. */
   cantidadVendida: number;
   totalVendido: number;
+  unidad?: UnidadMedida;
 }
 
 export interface RankingClienteDto {

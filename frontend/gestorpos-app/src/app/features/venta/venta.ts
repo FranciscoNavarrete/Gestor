@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -24,15 +25,28 @@ import { CatalogoService } from '../../core/services/catalogo.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
+import { esMedida, formatearCantidad, formatearPesos, simboloUnidad } from '../../core/utils/cantidad.util';
+import {
+  baseEnCarrito,
+  cantidadBaseDeLinea,
+  cantidadParaResumen,
+  esLineaMedida,
+  esLineaSimple,
+  mismaLinea,
+  necesitaSelector,
+  subtotalDeLinea,
+  textoCantidadDeLinea,
+} from '../../core/utils/carrito.util';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { ClientePickerDialog, ClientePickerResultado } from './cliente-picker-dialog/cliente-picker-dialog';
+import { SelectorCantidad, SelectorCantidadData, SelectorCantidadResultado } from './selector-cantidad/selector-cantidad';
 
 const TOP_MAS_VENDIDOS = 6;
 
 interface NotificacionAgregado {
   id: number;
   nombre: string;
-  cantidad: number;
+  cantidad: string;
   subtotal: number;
   saliendo: boolean;
 }
@@ -65,6 +79,7 @@ export class Venta implements OnInit {
   private readonly configuracionService = inject(ConfiguracionService);
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
+  private readonly bottomSheet = inject(MatBottomSheet);
   private readonly snackBar = inject(MatSnackBar);
   private readonly carritoEnCursoService = inject(CarritoEnCursoService);
 
@@ -125,8 +140,41 @@ export class Venta implements OnInit {
   readonly faltaClienteParaACuenta = computed(() => this.esACuenta() && !this.telefonoCliente().trim());
   readonly hayCliente = computed(() => !!this.nombreCliente().trim() || !!this.telefonoCliente().trim());
 
+  /** Para la insignia de la tarjeta: cuánto lleva de ese producto (los medidos cuentan como una línea). */
   cantidadEnCarrito(productoId: string): number {
-    return this.carrito().find((i) => i.producto.id === productoId)?.cantidad ?? 0;
+    return cantidadParaResumen(this.carrito().filter((i) => i.producto.id === productoId));
+  }
+
+  // --- Cómo se muestra cada producto y cada línea ---
+
+  precioTexto(producto: Producto): string {
+    return `$${producto.precio}${esMedida(producto.unidad) ? ' / ' + simboloUnidad(producto.unidad) : ''}`;
+  }
+
+  stockTexto(producto: Producto): string {
+    const cantidad = formatearCantidad(producto.stockActual, producto.unidad);
+    const sinUnidad = producto.unidad === 'Unidad' ? String(producto.stockActual) : cantidad;
+    return producto.enStockMinimo ? `Quedan ${sinUnidad}` : `Stock: ${sinUnidad}`;
+  }
+
+  subtotal(item: ItemCarrito): number {
+    return subtotalDeLinea(item);
+  }
+
+  detalleLinea(item: ItemCarrito): string {
+    return `${textoCantidadDeLinea(item)} × ${formatearPesos(item.presentacion ? item.presentacion.precio : item.producto.precio)}`;
+  }
+
+  esSimple(item: ItemCarrito): boolean {
+    return esLineaSimple(item);
+  }
+
+  esMedida(item: ItemCarrito): boolean {
+    return esLineaMedida(item);
+  }
+
+  nombreLinea(item: ItemCarrito): string {
+    return item.presentacion ? `${item.producto.nombre} · ${item.presentacion.nombre}` : item.producto.nombre;
   }
 
   ngOnInit(): void {
@@ -156,6 +204,12 @@ export class Venta implements OnInit {
   }
 
   agregarAlCarrito(producto: Producto): void {
+    // Un producto medido o con presentaciones pide primero cuánto se lleva; el resto se suma de a uno, como siempre.
+    if (necesitaSelector(producto)) {
+      this.abrirSelector(producto, null);
+      return;
+    }
+
     const actual = this.carrito();
     const existente = actual.find((i) => i.producto.id === producto.id);
 
@@ -172,14 +226,53 @@ export class Venta implements OnInit {
     }
 
     this.carritoEnCursoService.tocar();
-    this.mostrarNotificacion(producto.nombre, nuevaCantidad, producto.precio * nuevaCantidad);
+    this.mostrarNotificacion(producto.nombre, String(nuevaCantidad), producto.precio * nuevaCantidad);
+  }
+
+  /** Abre la hoja para elegir peso, volumen o presentación; con una línea existente la edita en lugar de sumar otra. */
+  abrirSelector(producto: Producto, edicion: ItemCarrito | null): void {
+    const data: SelectorCantidadData = {
+      producto,
+      stockDisponible: Math.max(0, Math.round((producto.stockActual - baseEnCarrito(this.carrito(), producto.id, edicion)) * 1000) / 1000),
+      edicion,
+    };
+
+    this.bottomSheet
+      .open<SelectorCantidad, SelectorCantidadData, SelectorCantidadResultado | undefined>(SelectorCantidad, { data, panelClass: 'selector-cantidad-hoja' })
+      .afterDismissed()
+      .subscribe((resultado) => {
+        if (!resultado) return;
+        this.aplicarSeleccion(producto, edicion, resultado);
+      });
+  }
+
+  private aplicarSeleccion(producto: Producto, edicion: ItemCarrito | null, resultado: SelectorCantidadResultado): void {
+    const nueva: ItemCarrito = { producto, cantidad: resultado.cantidad, presentacion: resultado.presentacion };
+    const resto = edicion ? this.carrito().filter((i) => i !== edicion) : this.carrito();
+    const repetida = resto.find((i) => mismaLinea(i, nueva));
+
+    let linea: ItemCarrito;
+    if (repetida) {
+      linea = { ...repetida, cantidad: Math.round((repetida.cantidad + nueva.cantidad) * 1000) / 1000 };
+      this.carrito.set(resto.map((i) => (i === repetida ? linea : i)));
+    } else {
+      linea = nueva;
+      this.carrito.set(edicion ? this.carrito().map((i) => (i === edicion ? nueva : i)) : [...resto, nueva]);
+    }
+
+    this.carritoEnCursoService.tocar();
+    this.mostrarNotificacion(this.nombreLinea(linea), textoCantidadDeLinea(linea), subtotalDeLinea(linea));
+  }
+
+  editarLinea(item: ItemCarrito): void {
+    this.abrirSelector(item.producto, item);
   }
 
   // Notificación breve arriba a la derecha ("Coca Cola · Cantidad: 3 · $6300") para que el
   // vendedor sepa qué cargó sin tener que abrir el carrito. Se apilan si se agregan varias
   // seguidas (la más nueva arriba) y cada una desaparece sola a los DURACION_NOTIFICACION_MS,
   // sin afectar a las demás.
-  private mostrarNotificacion(nombre: string, cantidad: number, subtotal: number): void {
+  private mostrarNotificacion(nombre: string, cantidad: string, subtotal: number): void {
     const id = ++this.contadorNotificacion;
     this.notificaciones.update((actual) => [...actual, { id, nombre, cantidad, subtotal, saliendo: false }]);
 
@@ -195,26 +288,28 @@ export class Venta implements OnInit {
   cambiarCantidad(item: ItemCarrito, delta: number): void {
     const nuevaCantidad = item.cantidad + delta;
     if (nuevaCantidad <= 0) {
-      this.quitarDelCarrito(item, item.cantidad);
+      this.quitarDelCarrito(item);
       return;
     }
-    if (nuevaCantidad > item.producto.stockActual) return;
 
-    this.carrito.set(
-      this.carrito().map((i) => (i.producto.id === item.producto.id ? { ...i, cantidad: nuevaCantidad } : i)),
-    );
+    // El stock se controla sumando todas las líneas del producto: suelto y bolsas salen del mismo stock.
+    const nueva = { ...item, cantidad: nuevaCantidad };
+    const base = baseEnCarrito(this.carrito(), item.producto.id, item) + cantidadBaseDeLinea(nueva);
+    if (base > item.producto.stockActual + 1e-9) return;
+
+    this.carrito.set(this.carrito().map((i) => (mismaLinea(i, item) ? nueva : i)));
     this.carritoEnCursoService.tocar();
   }
 
-  private quitarDelCarrito(item: ItemCarrito, cantidadPrevia: number): void {
-    this.carrito.set(this.carrito().filter((i) => i.producto.id !== item.producto.id));
+  quitarDelCarrito(item: ItemCarrito): void {
+    this.carrito.set(this.carrito().filter((i) => !mismaLinea(i, item)));
     this.carritoEnCursoService.tocar();
 
     this.snackBar
-      .open(`Quitaste ${item.producto.nombre} del carrito`, 'Deshacer', { duration: 4000 })
+      .open(`Quitaste ${this.nombreLinea(item)} del carrito`, 'Deshacer', { duration: 4000 })
       .onAction()
       .subscribe(() => {
-        this.carrito.set([...this.carrito(), { producto: item.producto, cantidad: cantidadPrevia }]);
+        this.carrito.set([...this.carrito(), item]);
         this.carritoEnCursoService.tocar();
       });
   }
@@ -263,7 +358,7 @@ export class Venta implements OnInit {
     this.procesando.set(true);
     this.ventasService
       .crear({
-        items: this.carrito().map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad })),
+        items: this.carrito().map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad, presentacionId: i.presentacion?.id ?? null })),
         medioPago: this.medioPago(),
         telefonoCliente: this.telefonoCliente().trim() || null,
         nombreCliente: this.nombreCliente().trim() || null,

@@ -92,10 +92,11 @@
                   <span class="badge-cantidad">{{ cantidad }}</span>
                 }
                 <span class="nombre">{{ producto.nombre }}</span>
-                <span class="precio">${{ producto.precio }}</span>
-                <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
-                  {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
-                </span>
+                @if (producto.marcaNombre) {
+                  <span class="marca-tarjeta">{{ producto.marcaNombre }}</span>
+                }
+                <span class="precio">{{ precioTexto(producto) }}</span>
+                <span class="stock" [class.stock-bajo]="producto.enStockMinimo">{{ stockTexto(producto) }}</span>
               </button>
             }
           </div>
@@ -109,10 +110,11 @@
                   <span class="badge-cantidad">{{ cantidad }}</span>
                 }
                 <span class="nombre">{{ producto.nombre }}</span>
-                <span class="precio">${{ producto.precio }}</span>
-                <span class="stock" [class.stock-bajo]="producto.enStockMinimo">
-                  {{ producto.enStockMinimo ? 'Quedan ' + producto.stockActual : 'Stock: ' + producto.stockActual }}
-                </span>
+                @if (producto.marcaNombre) {
+                  <span class="marca-tarjeta">{{ producto.marcaNombre }}</span>
+                }
+                <span class="precio">{{ precioTexto(producto) }}</span>
+                <span class="stock" [class.stock-bajo]="producto.enStockMinimo">{{ stockTexto(producto) }}</span>
               </button>
             }
             @if (productosFiltrados().length === 0) {
@@ -163,25 +165,41 @@
 
   <ng-template #carritoContenido>
     <div class="carrito-items">
-      @for (item of carrito(); track item.producto.id) {
+      @for (item of carrito(); track $index) {
         <div class="item-carrito">
-          <div class="item-nombre">{{ item.producto.nombre }}</div>
-          <div class="item-controles">
-            <button
-              mat-icon-button
-              class="boton-cantidad"
-              [class.boton-quitar]="item.cantidad === 1"
-              (click)="cambiarCantidad(item, -1)"
-              [attr.aria-label]="item.cantidad === 1 ? 'Quitar del carrito' : 'Restar'"
-            >
-              <mat-icon>{{ item.cantidad === 1 ? 'delete_outline' : 'remove' }}</mat-icon>
-            </button>
-            <span class="cantidad">{{ item.cantidad }}</span>
-            <button mat-icon-button class="boton-cantidad boton-sumar" (click)="cambiarCantidad(item, 1)" aria-label="Sumar">
-              <mat-icon>add</mat-icon>
-            </button>
+          <div class="item-nombre">
+            {{ item.producto.nombre }}
+            @if (!esSimple(item)) {
+              <span class="item-detalle">{{ detalleLinea(item) }}</span>
+            }
           </div>
-          <span class="subtotal">${{ item.producto.precio * item.cantidad }}</span>
+          @if (esMedida(item)) {
+            <div class="item-controles">
+              <button mat-icon-button class="boton-cantidad" (click)="editarLinea(item)" aria-label="Cambiar cantidad">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="boton-cantidad boton-quitar" (click)="quitarDelCarrito(item)" aria-label="Quitar del carrito">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          } @else {
+            <div class="item-controles">
+              <button
+                mat-icon-button
+                class="boton-cantidad"
+                [class.boton-quitar]="item.cantidad === 1"
+                (click)="cambiarCantidad(item, -1)"
+                [attr.aria-label]="item.cantidad === 1 ? 'Quitar del carrito' : 'Restar'"
+              >
+                <mat-icon>{{ item.cantidad === 1 ? 'delete_outline' : 'remove' }}</mat-icon>
+              </button>
+              <span class="cantidad">{{ item.cantidad }}</span>
+              <button mat-icon-button class="boton-cantidad boton-sumar" (click)="cambiarCantidad(item, 1)" aria-label="Sumar">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          }
+          <span class="subtotal">${{ subtotal(item) }}</span>
         </div>
       }
     </div>

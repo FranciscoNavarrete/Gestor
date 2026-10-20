@@ -3,6 +3,8 @@ export type MedioPago = string;
 export interface ItemVentaRequest {
   productoId: string;
   cantidad: number;
+  /** Sin presentación = suelto o por unidad. Con presentación, cantidad cuenta presentaciones. */
+  presentacionId?: string | null;
 }
 
 export interface CrearVentaRequest {
@@ -18,6 +20,8 @@ export interface VentaItemDto {
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
+  presentacionNombre?: string | null;
+  unidad?: string;
 }
 
 export interface VentaDto {

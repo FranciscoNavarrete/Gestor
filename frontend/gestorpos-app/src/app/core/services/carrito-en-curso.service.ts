@@ -3,6 +3,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ItemCarrito } from '../models/carrito.models';
 import { Cliente } from '../models/cliente.models';
 import { MedioPago } from '../models/venta.models';
+import { cantidadParaResumen, totalDeCarrito } from '../utils/carrito.util';
 
 const EXPIRA_MS = 60 * 60 * 1000;
 const AVISO_ANTES_MS = 5 * 60 * 1000;
@@ -24,8 +25,8 @@ export class CarritoEnCursoService {
   private readonly ultimaActividad = signal(Date.now());
   private avisoMostrado = false;
 
-  readonly total = computed(() => this.items().reduce((acc, i) => acc + i.producto.precio * i.cantidad, 0));
-  readonly cantidadItems = computed(() => this.items().reduce((acc, i) => acc + i.cantidad, 0));
+  readonly total = computed(() => totalDeCarrito(this.items()));
+  readonly cantidadItems = computed(() => cantidadParaResumen(this.items()));
   readonly hayVentaEnCurso = computed(() => this.items().length > 0);
 
   constructor() {

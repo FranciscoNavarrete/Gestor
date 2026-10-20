@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { DashboardDto } from '../../core/models/reportes.models';
+import { DashboardDto, RankingProductoDto } from '../../core/models/reportes.models';
+import { esMedida, formatearCantidad, formatearNumero } from '../../core/utils/cantidad.util';
 import { ReportesService } from '../../core/services/reportes.service';
 import { fechaAIso, hoy } from '../../core/utils/fecha.util';
 
@@ -17,6 +18,11 @@ import { fechaAIso, hoy } from '../../core/utils/fecha.util';
 export class Dashboard implements OnInit {
   private readonly reportesService = inject(ReportesService);
   private readonly router = inject(Router);
+
+  /** "3 unidades" como siempre; "30,35 kg" si el producto se vende por kilo, litro o metro. */
+  cantidadTop(top: RankingProductoDto): string {
+    return esMedida(top.unidad) ? formatearCantidad(top.cantidadVendida, top.unidad) : `${formatearNumero(top.cantidadVendida)} unidades`;
+  }
 
   readonly cargando = signal(true);
   readonly datos = signal<DashboardDto | null>(null);

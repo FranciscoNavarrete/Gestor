@@ -19,7 +19,7 @@
   <div class="lista-items">
     @for (item of compra.items; track item.productoId) {
       <div class="item">
-        <span class="item-nombre">{{ item.productoNombre }}</span>
+        <span class="item-nombre">{{ item.productoNombre }}@if (item.presentacionNombre) { · {{ item.presentacionNombre }} }</span>
         <span class="col-cant">{{ item.cantidad }}</span>
         <span class="col-costo">${{ item.costoUnitario | number: '1.0-2' }}</span>
         <span class="col-subtotal">${{ item.subtotal | number: '1.0-2' }}</span>

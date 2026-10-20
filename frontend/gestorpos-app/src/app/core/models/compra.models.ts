@@ -25,6 +25,8 @@ export interface ItemCompraRequest {
   productoId: string;
   cantidad: number;
   costoUnitario: number;
+  /** Con presentación, cantidad cuenta presentaciones y costoUnitario es lo que costó cada una. */
+  presentacionId?: string | null;
 }
 
 export interface CrearCompraRequest {
@@ -38,6 +40,8 @@ export interface CompraItemDto {
   cantidad: number;
   costoUnitario: number;
   subtotal: number;
+  presentacionNombre?: string | null;
+  unidad?: string;
 }
 
 export interface CompraDto {

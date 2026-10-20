@@ -31,6 +31,7 @@ import { FacturaProveedorService } from '../../core/services/factura-proveedor.s
 import { MovimientoStockService } from '../../core/services/movimiento-stock.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { VentasService } from '../../core/services/ventas.service';
+import { esMedida, formatearCantidad, formatearNumero } from '../../core/utils/cantidad.util';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { fechaAIso, hoy, isoAFecha, restarMeses } from '../../core/utils/fecha.util';
 import { ReciboCompraDialog } from '../compras/recibo-compra-dialog/recibo-compra-dialog';
@@ -275,6 +276,24 @@ export class Reportes implements OnInit {
     if (this.paginaStock() >= this.totalPaginasStock()) return;
     this.paginaStock.set(this.paginaStock() + 1);
     this.cargarStock();
+  }
+
+  stockTexto(producto: Producto): string {
+    return formatearCantidad(producto.stockActual, producto.unidad);
+  }
+
+  /** "+10" para lo de siempre; "+0,35 kg" para lo medido. */
+  movimientoTexto(m: MovimientoStock): string {
+    const signo = m.cantidad > 0 ? '+' : '';
+    return `${signo}${this.cantidadMovimiento(m.cantidad, m)}`;
+  }
+
+  resultanteTexto(m: MovimientoStock): string {
+    return this.cantidadMovimiento(m.stockResultante, m);
+  }
+
+  private cantidadMovimiento(valor: number, m: MovimientoStock): string {
+    return esMedida(m.unidad) ? formatearCantidad(valor, m.unidad) : formatearNumero(valor);
   }
 
   valorizado(producto: Producto): number {

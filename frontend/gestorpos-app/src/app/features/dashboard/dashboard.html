@@ -44,7 +44,7 @@
       <div>
         <div class="top-titulo">Más vendido hoy</div>
         <div class="top-nombre font-display">{{ top.productoNombre }}</div>
-        <div class="top-detalle">{{ top.cantidadVendida }} unidades · ${{ top.totalVendido | number: '1.0-2' }}</div>
+        <div class="top-detalle">{{ cantidadTop(top) }} · ${{ top.totalVendido | number: '1.0-2' }}</div>
       </div>
     </mat-card>
   }

@@ -1,0 +1,137 @@
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 4px 8px;
+}
+
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.titulo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .marca {
+    font-size: 0.78rem;
+    opacity: 0.7;
+  }
+}
+
+.precio {
+  color: var(--color-accent, #7d9cf2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.opciones {
+  width: 100%;
+  flex-wrap: wrap;
+
+  mat-button-toggle {
+    flex: 1;
+  }
+}
+
+.atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.atajo {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.2));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &.activo {
+    background: color-mix(in srgb, var(--color-accent, #7d9cf2) 18%, transparent);
+    border-color: var(--color-accent, #7d9cf2);
+    color: var(--color-accent, #7d9cf2);
+    font-weight: 600;
+  }
+}
+
+.fila-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .campo-cantidad {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .subunidad {
+    margin-bottom: 22px;
+  }
+
+  .sufijo-fijo {
+    margin-bottom: 22px;
+    font-weight: 600;
+  }
+}
+
+.fila-enteros {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    b {
+      min-width: 28px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.stock {
+  margin: -2px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+
+  &.error {
+    color: var(--mat-sys-error, #f2b8b5);
+    opacity: 1;
+  }
+}
+
+.importe {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+
+  .importe-valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  .agregar {
+    flex: 1;
+    max-width: 260px;
+    height: 44px;
+  }
+}
