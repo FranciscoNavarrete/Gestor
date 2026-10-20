@@ -2,6 +2,7 @@ import { FEATURE_COMPRAS } from './compras-feature';
 import { FEATURE_CUENTA_CORRIENTE } from './cuenta-corriente';
 import { FEATURE_FACTURAS_PROVEEDOR } from './facturas-proveedor-feature';
 import { FEATURE_MENU_LATERAL } from './menu-lateral';
+import { FEATURE_MEDIDAS } from './medidas-feature';
 import { FEATURE_TAREAS } from './tareas-feature';
 
 export interface CrearNegocioRequest {
@@ -341,6 +342,12 @@ export const CATALOGO_FEATURES: FeatureCatalogoItem[] = [
     clave: FEATURE_TAREAS,
     nombre: 'Tareas',
     descripcion: 'Agendar tareas con fecha y hora, con recordatorio por notificación push',
+  },
+  {
+    clave: FEATURE_MEDIDAS,
+    nombre: 'Medidas y presentaciones',
+    descripcion:
+      'Vender por kilo, litro o metro y por presentaciones (bolsa 15 kg, caja x12). Apagarla no afecta a los productos ya cargados',
   },
 ];
 
