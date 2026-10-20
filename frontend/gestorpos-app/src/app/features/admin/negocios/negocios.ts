@@ -185,10 +185,16 @@ export class Negocios implements OnInit, OnDestroy {
     });
   }
 
-  toggleFeature(negocio: TenantResumen, clave: string): void {
-    if (this.guardandoFeature()) return;
-
+  toggleFeature(negocio: TenantResumen, clave: string, cambio?: MatSlideToggleChange): void {
     const activo = this.featuresActivos().has(clave);
+
+    // Si ya hay un cambio guardándose, este clic se ignora. El interruptor ya se movió solo, así que se lo
+    // devuelve a su estado real: si no, queda prendido en pantalla sin haberse guardado.
+    if (this.guardandoFeature()) {
+      if (cambio) cambio.source.checked = activo;
+      return;
+    }
+
     this.guardandoFeature.set(clave);
 
     const accion$ = activo
@@ -203,7 +209,11 @@ export class Negocios implements OnInit, OnDestroy {
         else nuevos.add(clave);
         this.featuresActivos.set(nuevos);
       },
-      error: () => this.guardandoFeature.set(null),
+      error: (err) => {
+        this.guardandoFeature.set(null);
+        if (cambio) cambio.source.checked = activo;
+        this.snackBar.open(extraerMensajeError(err), 'OK', { duration: 6000 });
+      },
     });
   }
 

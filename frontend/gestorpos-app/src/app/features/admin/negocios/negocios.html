@@ -256,8 +256,8 @@
                           </div>
                           <mat-slide-toggle
                             [checked]="featuresActivos().has(feature.clave)"
-                            [disabled]="guardandoFeature() === feature.clave"
-                            (change)="toggleFeature(negocio, feature.clave)"
+                            [disabled]="guardandoFeature() !== null"
+                            (change)="toggleFeature(negocio, feature.clave, $event)"
                           ></mat-slide-toggle>
                         </div>
                       }
