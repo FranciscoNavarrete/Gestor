@@ -59,3 +59,16 @@
     color: var(--color-accent, #7d9cf2);
   }
 }
+
+/* Las etiquetas largas se recortan con "…" en vez de salirse del campo. */
+:host ::ng-deep .mdc-floating-label {
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Con la unidad al lado ("kg") los dos campos no entran uno junto al otro en un celular. */
+.fila.apilada {
+  flex-direction: column;
+  gap: 0;
+}

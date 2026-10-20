@@ -83,10 +83,6 @@ export class PresentacionesEditor implements OnInit, OnChanges {
     return simboloUnidad(this.unidad);
   }
 
-  get etiquetaCantidad(): string {
-    return `Cantidad (en ${this.unidad === 'Unidad' ? 'unidades' : this.simbolo})`;
-  }
-
   get hintCantidad(): string {
     return this.unidad === 'Unidad' ? 'Cuántas unidades trae. Ej: 12 para una caja' : `Hasta 3 decimales. Ej: 15 para una bolsa de 15 ${this.simbolo}`;
   }
