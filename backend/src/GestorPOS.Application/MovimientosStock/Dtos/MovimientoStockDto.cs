@@ -8,4 +8,5 @@ public record MovimientoStockDto(
     decimal StockResultante,
     string Motivo,
     string UsuarioNombre,
-    DateTime Fecha);
+    DateTime Fecha,
+    string Unidad = "Unidad");

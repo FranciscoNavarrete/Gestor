@@ -52,7 +52,8 @@ public class MovimientoStockService : IMovimientoStockService
             .Take(tamanoPagina)
             .Select(m => new MovimientoStockDto(
                 m.Id, m.ProductoId, m.ProductoNombre, m.Cantidad, m.StockResultante,
-                m.Motivo, m.UsuarioNombre, m.FechaCreacion))
+                m.Motivo, m.UsuarioNombre, m.FechaCreacion,
+                _db.Productos.Where(p => p.Id == m.ProductoId).Select(p => p.Unidad).FirstOrDefault().ToString()))
             .ToListAsync(ct);
 
         return new PaginaDto<MovimientoStockDto>(items, pagina, tamanoPagina, totalItems, totalPaginas);
