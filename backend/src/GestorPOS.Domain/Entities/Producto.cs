@@ -97,7 +97,11 @@ public class Producto : TenantEntity
         ReglasCantidad.Validar(Unidad, cantidad);
         var nuevoStock = StockActual + cantidad;
         if (nuevoStock < 0)
-            throw new InvalidOperationException($"No hay stock suficiente de '{Nombre}' (disponible: {StockActual.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}).");
+        {
+            var disponible = StockActual.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+            if (Unidad != UnidadMedida.Unidad) disponible += $" {Unidad.Simbolo()}";
+            throw new InvalidOperationException($"No hay stock suficiente de '{Nombre}' (disponible: {disponible}).");
+        }
         StockActual = nuevoStock;
     }
 

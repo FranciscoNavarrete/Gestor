@@ -24,3 +24,10 @@ para revisarlo antes de desplegar. Su `Down` solo es seguro si todavía no hay c
     backend/scripts/smoke/smoke-marcas.sh http://localhost:5090       # catálogo de marcas, marca en productos y búsqueda
 
 `migracion-marcas.sql` es el SQL de la migración `AgregaMarcas` (una columna `MarcaId` nullable y la tabla `Marcas`).
+
+## Casos límite
+
+    backend/scripts/smoke/smoke-limites.sh http://localhost:5090      # cantidades inválidas, aislamiento entre negocios, fiado, redondeos, compras, ventas simultáneas
+
+Una comprobación falla a propósito: "solo una venta de 6 kg entra". El stock no tiene control de concurrencia
+(pasa igual con productos por unidad, también en `qas`); queda como pendiente aparte.

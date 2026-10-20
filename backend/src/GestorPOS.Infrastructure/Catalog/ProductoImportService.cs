@@ -156,7 +156,9 @@ public class ProductoImportService : IProductoImportService
             }
             catch (Exception ex) when (ex is FormatException or ArgumentException)
             {
-                errores.Add(new ImportarProductoErrorDto(numeroFila, ex.Message));
+                // ArgumentException agrega " (Parameter 'x')" al mensaje: es ruido para quien carga el Excel.
+                var mensaje = System.Text.RegularExpressions.Regex.Replace(ex.Message, @"\s*\(Parameter '[^']*'\)\s*$", "");
+                errores.Add(new ImportarProductoErrorDto(numeroFila, mensaje));
             }
         }
 
