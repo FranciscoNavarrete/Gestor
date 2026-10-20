@@ -1,0 +1,27 @@
+<div class="fila-precios">
+  <mat-form-field appearance="outline">
+    <mat-label>{{ etiquetaCosto }}</mat-label>
+    <input matInput type="number" [formControl]="costo" min="0" step="0.01" placeholder="0" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Ganancia %</mat-label>
+    <input matInput type="number" [formControl]="ganancia" step="0.1" placeholder="0" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="campo-precio">
+    <mat-label>{{ etiquetaPrecio }}</mat-label>
+    <input matInput type="number" [formControl]="precio" min="0" step="0.01" placeholder="0" />
+  </mat-form-field>
+</div>
+
+@if (resumen(); as texto) {
+  <div class="resumen" [class.perdida]="hayPerdida()">
+    <span>{{ texto }}</span>
+    @if (precioRedondeado(); as redondeado) {
+      <button type="button" mat-stroked-button class="redondear" (click)="redondear()">
+        Redondear a ${{ redondeado }}
+      </button>
+    }
+  </div>
+}

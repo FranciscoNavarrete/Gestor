@@ -12,6 +12,26 @@ export interface EditarCategoriaRequest {
   nombre: string;
 }
 
+export type UnidadMedida = 'Unidad' | 'Kilo' | 'Litro' | 'Metro';
+
+/** Forma alternativa de vender un producto ("Bolsa 15 kg"). cantidadBase está en la unidad del producto. */
+export interface Presentacion {
+  id: string;
+  productoId: string;
+  nombre: string;
+  cantidadBase: number;
+  precio: number;
+  activo: boolean;
+}
+
+export interface CrearPresentacionRequest {
+  nombre: string;
+  cantidadBase: number;
+  precio: number;
+}
+
+export type EditarPresentacionRequest = CrearPresentacionRequest;
+
 export interface Producto {
   id: string;
   sku: string;
@@ -24,6 +44,8 @@ export interface Producto {
   stockMinimo: number;
   enStockMinimo: boolean;
   activo: boolean;
+  unidad: UnidadMedida;
+  presentaciones: Presentacion[];
 }
 
 export interface CrearProductoRequest {
@@ -34,6 +56,9 @@ export interface CrearProductoRequest {
   costo: number;
   stockActual: number;
   stockMinimo: number;
+  /** Solo con la función "Medidas y presentaciones". Sin dato, el producto es por unidad. */
+  unidad?: UnidadMedida;
+  presentaciones?: CrearPresentacionRequest[];
 }
 
 export interface EditarProductoRequest {

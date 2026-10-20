@@ -19,6 +19,7 @@ import { extraerMensajeError } from '../../core/utils/error.util';
 import { AjustarStockDialog } from './ajustar-stock-dialog/ajustar-stock-dialog';
 import { ImportarResultadoDialog } from './importar-resultado-dialog/importar-resultado-dialog';
 import { ProductoDialog, ProductoDialogData } from './producto-dialog/producto-dialog';
+import { esMedida, formatearCantidad, simboloUnidad } from '../../core/utils/cantidad.util';
 
 const TAMANO_PAGINA = 20;
 const DEBOUNCE_BUSQUEDA_MS = 350;
@@ -121,6 +122,15 @@ export class Productos implements OnInit, OnDestroy {
     if (this.pagina() >= this.totalPaginas()) return;
     this.pagina.set(this.pagina() + 1);
     this.cargar();
+  }
+
+  cantidadTexto(producto: Producto): string {
+    return formatearCantidad(producto.stockActual, producto.unidad);
+  }
+
+  /** " / kg" para lo medido; vacío para lo de siempre, que sigue mostrando el precio solo. */
+  precioPorUnidad(producto: Producto): string {
+    return esMedida(producto.unidad) ? ` / ${simboloUnidad(producto.unidad)}` : '';
   }
 
   abrirNuevo(): void {

@@ -1,0 +1,96 @@
+:host {
+  display: block;
+}
+
+.presentaciones {
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  margin-top: 8px;
+  padding-top: 14px;
+}
+
+.titulo {
+  margin: 0;
+  font-weight: 600;
+}
+
+.sub,
+.vacio {
+  margin: 2px 0 10px;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.fila-presentacion {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0 6px 2px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.nombre-precio {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.precio {
+  color: var(--color-accent, #7d9cf2);
+  font-weight: 600;
+}
+
+.detalle {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.form-presentacion {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed var(--color-accent, #7d9cf2);
+  border-radius: 12px;
+}
+
+.fila {
+  display: flex;
+  gap: 8px;
+
+  mat-form-field {
+    min-width: 0;
+  }
+
+  .campo-nombre {
+    flex: 1.3;
+  }
+
+  .campo-cantidad {
+    flex: 1;
+  }
+}
+
+.acciones-form {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.agregar {
+  margin-top: 10px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  font-size: 0.85rem;
+  margin: 6px 0;
+}
+
+.hint {
+  margin: -6px 0 12px;
+  font-size: 0.78rem;
+  opacity: 0.7;
+}

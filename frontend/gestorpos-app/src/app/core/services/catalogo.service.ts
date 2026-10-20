@@ -6,11 +6,14 @@ import {
   ActualizarPreciosMasivoRequest,
   Categoria,
   CrearCategoriaRequest,
+  CrearPresentacionRequest,
   CrearProductoRequest,
   EditarCategoriaRequest,
+  EditarPresentacionRequest,
   EditarProductoRequest,
   ImportarProductosResultado,
   PaginaProductos,
+  Presentacion,
   Producto,
 } from '../models/catalog.models';
 
@@ -78,6 +81,18 @@ export class CatalogoService {
 
   ajustarStock(id: string, cantidad: number, motivo: string): Observable<Producto> {
     return this.http.post<Producto>(`${environment.apiUrl}/productos/${id}/ajustar-stock`, { cantidad, motivo });
+  }
+
+  crearPresentacion(productoId: string, request: CrearPresentacionRequest): Observable<Presentacion> {
+    return this.http.post<Presentacion>(`${environment.apiUrl}/productos/${productoId}/presentaciones`, request);
+  }
+
+  editarPresentacion(productoId: string, id: string, request: EditarPresentacionRequest): Observable<Presentacion> {
+    return this.http.put<Presentacion>(`${environment.apiUrl}/productos/${productoId}/presentaciones/${id}`, request);
+  }
+
+  desactivarPresentacion(productoId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/productos/${productoId}/presentaciones/${id}`);
   }
 
   actualizarPreciosMasivo(request: ActualizarPreciosMasivoRequest): Observable<{ productosActualizados: number }> {

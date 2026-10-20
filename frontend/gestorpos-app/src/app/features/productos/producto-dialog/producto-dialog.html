@@ -25,31 +25,59 @@
       </button>
     </mat-form-field>
 
-    <div class="fila">
-      <mat-form-field appearance="outline">
-        <mat-label>Precio de venta</mat-label>
-        <input matInput type="number" formControlName="precio" min="0" step="0.01" placeholder="0" />
-      </mat-form-field>
+    @if (tieneMedidas && !esEdicion) {
+      <p class="etiqueta-seccion">Se vende por</p>
+      <mat-button-toggle-group class="unidades" [value]="unidad()" (change)="elegirUnidad($event.value)" aria-label="Se vende por">
+        @for (u of unidades; track u.valor) {
+          <mat-button-toggle [value]="u.valor">{{ u.etiqueta }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+    } @else if (esEdicion && medida()) {
+      <p class="unidad-fija">Se vende por <strong>{{ unidad().toLowerCase() }}</strong>. No se puede cambiar después de crear el producto.</p>
+    }
 
-      <mat-form-field appearance="outline">
-        <mat-label>Costo</mat-label>
-        <input matInput type="number" formControlName="costo" min="0" step="0.01" placeholder="0" />
-      </mat-form-field>
-    </div>
+    <app-calculadora-precio
+      [costo]="form.controls.costo"
+      [precio]="form.controls.precio"
+      [porUnidad]="medida() ? 'por ' + simbolo() : ''"
+      [etiquetaCosto]="medida() ? 'Costo por ' + simbolo() : 'Costo'"
+      [etiquetaPrecio]="medida() ? 'Precio suelto por ' + simbolo() : 'Precio de venta'"
+    />
+
+    @if (atajosIgualQuePresentacion(); as atajos) {
+      @if (atajos.length > 0) {
+        <div class="atajos">
+          @for (a of atajos; track a.texto) {
+            <button type="button" class="atajo" (click)="usarPrecio(a.precioPorUnidad)">{{ a.texto }}</button>
+          }
+        </div>
+      }
+    }
 
     <div class="fila">
       @if (!esEdicion) {
         <mat-form-field appearance="outline">
-          <mat-label>Stock inicial</mat-label>
-          <input matInput type="number" formControlName="stockActual" min="0" placeholder="0" />
+          <mat-label>Stock inicial{{ medida() ? ' (' + simbolo() + ')' : '' }}</mat-label>
+          <input matInput type="number" formControlName="stockActual" min="0" [attr.step]="medida() ? 0.001 : 1" placeholder="0" />
         </mat-form-field>
       }
 
       <mat-form-field appearance="outline">
-        <mat-label>Stock mínimo</mat-label>
-        <input matInput type="number" formControlName="stockMinimo" min="0" placeholder="0" />
+        <mat-label>Stock mínimo{{ medida() ? ' (' + simbolo() + ')' : '' }}</mat-label>
+        <input matInput type="number" formControlName="stockMinimo" min="0" [attr.step]="medida() ? 0.001 : 1" placeholder="0" />
       </mat-form-field>
     </div>
+
+    @if (mostrarPresentaciones) {
+      <app-presentaciones-editor
+        [productoId]="data.producto?.id ?? null"
+        [unidad]="unidad()"
+        [costoBase]="costoActual()"
+        [puedeAgregar]="tieneMedidas"
+        [iniciales]="data.producto?.presentaciones ?? []"
+        (guardoCambios)="presentacionesGuardadas()"
+      />
+    }
 
     @if (error()) {
       <p class="error">{{ error() }}</p>
@@ -57,7 +85,7 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-button type="button" (click)="cerrar()">Cancelar</button>
     <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
       Guardar
     </button>

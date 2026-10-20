@@ -1,0 +1,72 @@
+<div class="presentaciones">
+  <p class="titulo">Presentaciones</p>
+  <p class="sub">
+    Cada una se vende con su propio precio. El stock siempre se descuenta de {{ unidad === 'Unidad' ? 'las unidades' : 'los ' + simbolo }} del producto.
+  </p>
+
+  @for (p of lista(); track $index) {
+    <div class="fila-presentacion">
+      <div class="datos">
+        <div class="nombre-precio">
+          <b>{{ p.nombre }}</b>
+          <span class="precio">{{ textoPrecio(p) }}</span>
+        </div>
+        <div class="detalle">
+          {{ textoCantidad(p) }}
+          @if (equivalencia(p); as eq) { · {{ eq }} }
+          @if (gananciaTexto(p); as g) { · {{ g }} }
+        </div>
+      </div>
+      <button type="button" mat-icon-button (click)="abrirEdicion($index)" aria-label="Editar presentación">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button type="button" mat-icon-button (click)="quitar($index)" aria-label="Quitar presentación">
+        <mat-icon>delete_outline</mat-icon>
+      </button>
+    </div>
+  } @empty {
+    <p class="vacio">Todavía no hay presentaciones. Podés vender solo {{ unidad === 'Unidad' ? 'por unidad' : 'suelto' }}.</p>
+  }
+
+  @if (formAbierto()) {
+    <form class="form-presentacion" [formGroup]="form" (ngSubmit)="guardar()">
+      <div class="fila">
+        <mat-form-field appearance="outline" class="campo-nombre">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre" placeholder="{{ unidad === 'Unidad' ? 'Caja x12' : 'Bolsa 15 ' + simbolo }}" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="campo-cantidad">
+          <mat-label>{{ etiquetaCantidad }}</mat-label>
+          <input matInput type="number" formControlName="cantidadBase" [attr.step]="unidad === 'Unidad' ? 1 : 0.001" min="0" />
+        </mat-form-field>
+      </div>
+      <p class="hint">{{ hintCantidad }}</p>
+
+      <app-calculadora-precio
+        [costo]="form.controls.costo"
+        [precio]="form.controls.precio"
+        etiquetaPrecio="Precio de la presentación"
+      />
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <div class="acciones-form">
+        <button type="button" mat-button (click)="cancelar()">Cancelar</button>
+        <button type="submit" mat-flat-button [disabled]="form.invalid || guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar presentación' }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    @if (puedeAgregar) {
+      <button type="button" mat-stroked-button class="agregar" (click)="abrirNueva()">
+        <mat-icon>add</mat-icon> Agregar presentación
+      </button>
+    }
+  }
+</div>

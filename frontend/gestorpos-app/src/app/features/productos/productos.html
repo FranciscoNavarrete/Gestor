@@ -78,12 +78,12 @@
               <span class="pill-inactivo">Inactivo</span>
             } @else {
               <span class="stock-pill" [class.pill-alerta]="producto.enStockMinimo">
-                {{ producto.stockActual }} u.
+                {{ cantidadTexto(producto) }}
               </span>
             }
           </div>
           <div class="detalle">
-            {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} } · <span class="precio">${{ producto.precio }}</span>
+            {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} } · <span class="precio">${{ producto.precio }}{{ precioPorUnidad(producto) }}</span>
           </div>
         </div>
 

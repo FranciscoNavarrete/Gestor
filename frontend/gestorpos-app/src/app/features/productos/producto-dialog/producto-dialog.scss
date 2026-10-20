@@ -15,3 +15,47 @@
   color: var(--mat-sys-error, #b3261e);
   font-size: 0.875rem;
 }
+
+.etiqueta-seccion {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.unidades {
+  width: 100%;
+  margin-bottom: 16px;
+
+  mat-button-toggle {
+    flex: 1;
+  }
+}
+
+.unidad-fija {
+  margin: 0 0 14px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -4px 0 14px;
+}
+
+.atajo {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.2));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-accent, #7d9cf2);
+    color: var(--color-accent, #7d9cf2);
+  }
+}

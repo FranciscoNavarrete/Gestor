@@ -2,12 +2,15 @@
 
 <form [formGroup]="form" (ngSubmit)="guardar()">
   <mat-dialog-content>
-    <p class="stock-actual">Stock actual: <strong>{{ producto.stockActual }}</strong></p>
+    <p class="stock-actual">Stock actual: <strong>{{ stockTexto }}</strong></p>
 
     <mat-form-field appearance="outline" class="full">
       <mat-label>Cantidad a sumar (o restar, con signo negativo)</mat-label>
-      <input matInput type="number" formControlName="cantidad" cdkFocusInitial />
-      <mat-hint>Ej: 10 para reponer, -2 para descontar por rotura o pérdida</mat-hint>
+      <input matInput type="number" formControlName="cantidad" [attr.step]="medida ? 0.001 : 1" cdkFocusInitial />
+      @if (medida) {
+        <span matTextSuffix>{{ simbolo }}</span>
+      }
+      <mat-hint>{{ medida ? 'Ej: 12,5 para reponer, -0,3 para descontar por rotura o pérdida' : 'Ej: 10 para reponer, -2 para descontar por rotura o pérdida' }}</mat-hint>
     </mat-form-field>
 
     <p class="motivo-label">Motivo</p>

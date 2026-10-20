@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Producto } from '../../../core/models/catalog.models';
 import { CatalogoService } from '../../../core/services/catalogo.service';
+import { formatearCantidad, esMedida, simboloUnidad } from '../../../core/utils/cantidad.util';
 import { extraerMensajeError } from '../../../core/utils/error.util';
 
 const MOTIVOS = ['Reposición', 'Merma', 'Corrección', 'Otro'] as const;
@@ -22,6 +23,9 @@ export class AjustarStockDialog {
   private readonly dialogRef = inject(MatDialogRef<AjustarStockDialog>);
   readonly producto = inject<Producto>(MAT_DIALOG_DATA);
 
+  readonly medida = esMedida(this.producto.unidad);
+  readonly simbolo = simboloUnidad(this.producto.unidad);
+  readonly stockTexto = formatearCantidad(this.producto.stockActual, this.producto.unidad);
   readonly motivos = MOTIVOS;
   readonly motivo = signal<string | null>(null);
   readonly guardando = signal(false);
