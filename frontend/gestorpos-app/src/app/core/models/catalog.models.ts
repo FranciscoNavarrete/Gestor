@@ -4,6 +4,20 @@ export interface Categoria {
   activo: boolean;
 }
 
+export interface Marca {
+  id: string;
+  nombre: string;
+  activo: boolean;
+}
+
+export interface CrearMarcaRequest {
+  nombre: string;
+}
+
+export interface EditarMarcaRequest {
+  nombre: string;
+}
+
 export interface CrearCategoriaRequest {
   nombre: string;
 }
@@ -38,6 +52,8 @@ export interface Producto {
   nombre: string;
   categoriaId: string | null;
   categoriaNombre: string | null;
+  marcaId: string | null;
+  marcaNombre: string | null;
   precio: number;
   costo: number;
   stockActual: number;
@@ -59,11 +75,13 @@ export interface CrearProductoRequest {
   /** Solo con la función "Medidas y presentaciones". Sin dato, el producto es por unidad. */
   unidad?: UnidadMedida;
   presentaciones?: CrearPresentacionRequest[];
+  marcaId?: string | null;
 }
 
 export interface EditarProductoRequest {
   nombre: string;
   categoriaId: string | null;
+  marcaId?: string | null;
   precio: number;
   costo: number;
   stockMinimo: number;

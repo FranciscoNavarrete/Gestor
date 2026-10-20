@@ -11,7 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Categoria, Producto } from '../../core/models/catalog.models';
+import { Categoria, Marca, Producto } from '../../core/models/catalog.models';
 import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -56,6 +56,7 @@ export class Productos implements OnInit, OnDestroy {
   readonly importando = signal(false);
   readonly productos = signal<Producto[]>([]);
   readonly categorias = signal<Categoria[]>([]);
+  readonly marcas = signal<Marca[]>([]);
   readonly soloBajoStock = signal(false);
   readonly verInactivos = signal(false);
   readonly busqueda = signal('');
@@ -69,6 +70,7 @@ export class Productos implements OnInit, OnDestroy {
     if (this.route.snapshot.queryParamMap.get('soloBajoStock') === 'true') this.soloBajoStock.set(true);
 
     this.catalogoService.listarCategorias().subscribe((categorias) => this.categorias.set(categorias));
+    this.catalogoService.listarMarcas().subscribe((marcas) => this.marcas.set(marcas));
     this.cargar();
   }
 
@@ -142,7 +144,7 @@ export class Productos implements OnInit, OnDestroy {
   }
 
   private abrirDialogo(producto: Producto | null): void {
-    const data: ProductoDialogData = { producto, categorias: this.categorias() };
+    const data: ProductoDialogData = { producto, categorias: this.categorias(), marcas: this.marcas() };
     this.dialog
       .open(ProductoDialog, { data, width: '480px', maxWidth: '95vw' })
       .afterClosed()

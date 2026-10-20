@@ -12,7 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Categoria } from '../../core/models/catalog.models';
+import { Categoria, Marca } from '../../core/models/catalog.models';
 import { Proveedor } from '../../core/models/compra.models';
 import { FEATURE_COMPRAS } from '../../core/models/compras-feature';
 import { MedioPagoDto, NegocioDto } from '../../core/models/configuracion.models';
@@ -27,15 +27,17 @@ import { SuscripcionService } from '../../core/services/suscripcion.service';
 import { extraerMensajeError } from '../../core/utils/error.util';
 import { comprimirImagen } from '../../core/utils/imagen.util';
 import { CategoriaDialog, CategoriaDialogData } from '../productos/categoria-dialog/categoria-dialog';
+import { MarcaDialog, MarcaDialogData } from '../productos/marca-dialog/marca-dialog';
 import { CambiarTarjetaDialog, CambiarTarjetaDialogData } from './cambiar-tarjeta-dialog/cambiar-tarjeta-dialog';
 import { MedioPagoDialog, MedioPagoDialogData } from './medio-pago-dialog/medio-pago-dialog';
 import { ProveedorDialog, ProveedorDialogData } from './proveedor-dialog/proveedor-dialog';
 import { MiSuscripcionVista } from './suscripcion/mi-suscripcion';
 
-type Vista = 'categorias' | 'proveedores' | 'medios-pago' | 'negocio' | 'suscripcion' | 'mi-cuenta';
+type Vista = 'categorias' | 'marcas' | 'proveedores' | 'medios-pago' | 'negocio' | 'suscripcion' | 'mi-cuenta';
 
 const TITULOS_VISTA: Record<Vista, string> = {
   categorias: 'Categorías',
+  marcas: 'Marcas',
   proveedores: 'Proveedores',
   'medios-pago': 'Métodos de pago',
   negocio: 'Negocio',
@@ -89,6 +91,9 @@ export class Configuracion implements OnInit, OnDestroy {
   readonly cargandoCategorias = signal(true);
   readonly categorias = signal<Categoria[]>([]);
 
+  readonly cargandoMarcas = signal(true);
+  readonly marcas = signal<Marca[]>([]);
+
   readonly cargandoProveedores = signal(true);
   readonly proveedores = signal<Proveedor[]>([]);
 
@@ -111,6 +116,7 @@ export class Configuracion implements OnInit, OnDestroy {
     // El menú de la cuenta entra directo a la pestaña Mi cuenta (?vista=mi-cuenta).
     if (this.route.snapshot.queryParamMap.get('vista') === 'mi-cuenta') this.vista.set('mi-cuenta');
     this.cargarCategorias();
+    this.cargarMarcas();
     if (this.tieneProveedores) this.cargarProveedores();
     this.cargarMediosPago();
     this.cargarNegocio();
@@ -211,6 +217,65 @@ export class Configuracion implements OnInit, OnDestroy {
       next: () => {
         this.cargarCategorias();
         this.snackBar.open('Categoría eliminada', 'Cerrar', { duration: 3000 });
+      },
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 5000 }),
+    });
+  }
+
+  // --- Marcas (mismo manejo que las categorías) ---
+
+  private cargarMarcas(): void {
+    this.cargandoMarcas.set(true);
+    this.catalogoService.listarMarcas().subscribe({
+      next: (marcas) => {
+        this.marcas.set(marcas);
+        this.cargandoMarcas.set(false);
+      },
+      error: () => this.cargandoMarcas.set(false),
+    });
+  }
+
+  nuevaMarca(): void {
+    this.abrirDialogoMarca(null);
+  }
+
+  editarMarca(marca: Marca): void {
+    this.abrirDialogoMarca(marca);
+  }
+
+  private abrirDialogoMarca(marca: Marca | null): void {
+    const data: MarcaDialogData = { marca };
+    this.dialog
+      .open(MarcaDialog, { data, width: '420px', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((resultado) => {
+        if (resultado) this.cargarMarcas();
+      });
+  }
+
+  desactivarMarca(marca: Marca): void {
+    if (!confirm(`¿Dar de baja la marca "${marca.nombre}"?`)) return;
+
+    this.catalogoService.desactivarMarca(marca.id).subscribe({
+      next: () => this.cargarMarcas(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  activarMarca(marca: Marca): void {
+    this.catalogoService.activarMarca(marca.id).subscribe({
+      next: () => this.cargarMarcas(),
+      error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 4000 }),
+    });
+  }
+
+  eliminarMarca(marca: Marca): void {
+    if (!confirm(`¿Eliminar la marca "${marca.nombre}"? Esta acción no se puede deshacer.`)) return;
+
+    this.catalogoService.eliminarMarca(marca.id).subscribe({
+      next: () => {
+        this.cargarMarcas();
+        this.snackBar.open('Marca eliminada', 'Cerrar', { duration: 3000 });
       },
       error: (err) => this.snackBar.open(extraerMensajeError(err), 'Cerrar', { duration: 5000 }),
     });

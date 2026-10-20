@@ -3,6 +3,10 @@
     <mat-icon>sell</mat-icon>
     <span class="etiqueta">Categorías</span>
   </mat-button-toggle>
+  <mat-button-toggle value="marcas" aria-label="Marcas">
+    <mat-icon>loyalty</mat-icon>
+    <span class="etiqueta">Marcas</span>
+  </mat-button-toggle>
   @if (tieneProveedores) {
     <mat-button-toggle value="proveedores" aria-label="Proveedores">
       <mat-icon>local_shipping</mat-icon>
@@ -72,6 +76,47 @@
               </button>
             }
             <button mat-icon-button (click)="eliminarCategoria(categoria)" aria-label="Eliminar">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </mat-card>
+      }
+    </div>
+  }
+} @else if (vista() === 'marcas') {
+  <button mat-flat-button color="primary" class="boton-nuevo" (click)="nuevaMarca()">
+    <mat-icon>add</mat-icon>
+    Nueva marca
+  </button>
+
+  @if (cargandoMarcas()) {
+    <div class="centrado">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (marcas().length === 0) {
+    <p class="vacio">No hay marcas todavía. Son opcionales: cargalas si querés ordenar tus productos por marca.</p>
+  } @else {
+    <div class="lista">
+      @for (marca of marcas(); track marca.id) {
+        <mat-card class="item-card" [class.inactivo]="!marca.activo">
+          <span class="nombre">{{ marca.nombre }}</span>
+          @if (!marca.activo) {
+            <span class="pill">Inactiva</span>
+          }
+          <div class="acciones">
+            <button mat-icon-button (click)="editarMarca(marca)" aria-label="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            @if (marca.activo) {
+              <button mat-icon-button (click)="desactivarMarca(marca)" aria-label="Desactivar">
+                <mat-icon>archive</mat-icon>
+              </button>
+            } @else {
+              <button mat-icon-button (click)="activarMarca(marca)" aria-label="Reactivar">
+                <mat-icon>restore</mat-icon>
+              </button>
+            }
+            <button mat-icon-button (click)="eliminarMarca(marca)" aria-label="Eliminar">
               <mat-icon>delete</mat-icon>
             </button>
           </div>

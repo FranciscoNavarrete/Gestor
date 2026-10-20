@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { startWith } from 'rxjs';
-import { Categoria, Producto, UnidadMedida } from '../../../core/models/catalog.models';
+import { Categoria, Marca, Producto, UnidadMedida } from '../../../core/models/catalog.models';
 import { FEATURE_MEDIDAS } from '../../../core/models/medidas-feature';
 import { AuthService } from '../../../core/services/auth.service';
 import { CatalogoService } from '../../../core/services/catalogo.service';
@@ -17,12 +17,14 @@ import { UNIDADES, esMedida, formatearPesos, simboloUnidad, tieneMasDeTresDecima
 import { extraerMensajeError } from '../../../core/utils/error.util';
 import { redondearImporte } from '../../../core/utils/precio.util';
 import { CategoriaDialog } from '../categoria-dialog/categoria-dialog';
+import { MarcaDialog } from '../marca-dialog/marca-dialog';
 import { CalculadoraPrecio } from '../calculadora-precio/calculadora-precio';
 import { PresentacionesEditor } from '../presentaciones-editor/presentaciones-editor';
 
 export interface ProductoDialogData {
   producto: Producto | null;
   categorias: Categoria[];
+  marcas: Marca[];
 }
 
 @Component({
@@ -61,6 +63,7 @@ export class ProductoDialog {
   readonly mostrarPresentaciones = this.tieneMedidas || (this.data.producto?.presentaciones.length ?? 0) > 0;
 
   readonly categorias = signal(this.data.categorias);
+  readonly marcas = signal(this.data.marcas);
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   private huboCambiosEnPresentaciones = false;
@@ -71,6 +74,7 @@ export class ProductoDialog {
     sku: [this.data.producto?.sku ?? '', [Validators.required]],
     nombre: [this.data.producto?.nombre ?? '', [Validators.required]],
     categoriaId: this.fb.control<string | null>(this.data.producto?.categoriaId ?? null),
+    marcaId: this.fb.control<string | null>(this.data.producto?.marcaId ?? null),
     precio: this.fb.control<number | null>(this.data.producto?.precio ?? null, [Validators.required, Validators.min(0)]),
     costo: this.fb.control<number | null>(this.data.producto?.costo ?? null, [Validators.required, Validators.min(0)]),
     stockActual: this.fb.control<number | null>(this.data.producto?.stockActual ?? null, [Validators.required, Validators.min(0)]),
@@ -119,6 +123,17 @@ export class ProductoDialog {
       });
   }
 
+  nuevaMarca(): void {
+    this.dialog
+      .open(MarcaDialog)
+      .afterClosed()
+      .subscribe((marca: Marca | undefined) => {
+        if (!marca) return;
+        this.marcas.set([...this.marcas(), marca]);
+        this.form.patchValue({ marcaId: marca.id });
+      });
+  }
+
   presentacionesGuardadas(): void {
     this.huboCambiosEnPresentaciones = true;
   }
@@ -139,6 +154,7 @@ export class ProductoDialog {
       ? this.catalogoService.editarProducto(this.data.producto!.id, {
           nombre: valores.nombre,
           categoriaId: valores.categoriaId,
+          marcaId: valores.marcaId,
           precio: valores.precio!,
           costo: valores.costo!,
           stockMinimo: valores.stockMinimo!,
@@ -147,6 +163,7 @@ export class ProductoDialog {
           sku: valores.sku,
           nombre: valores.nombre,
           categoriaId: valores.categoriaId,
+          marcaId: valores.marcaId,
           precio: valores.precio!,
           costo: valores.costo!,
           stockActual: valores.stockActual!,

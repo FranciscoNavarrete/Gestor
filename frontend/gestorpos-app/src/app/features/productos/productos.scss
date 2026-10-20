@@ -140,12 +140,29 @@
   }
 
   .detalle {
+    display: flex;
+    gap: 4px;
     font-size: 0.78rem;
     opacity: 0.65;
     margin-top: 1px;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+
+    /* Si no entra todo, se recorta la marca/SKU/categoría y el precio queda siempre a la vista. */
+    .texto {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sep,
+    .precio {
+      flex: none;
+    }
+  }
+
+  .marca {
+    font-weight: 600;
+    opacity: 0.95;
   }
 
   .precio {

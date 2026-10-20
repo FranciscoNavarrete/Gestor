@@ -83,7 +83,9 @@
             }
           </div>
           <div class="detalle">
-            {{ producto.sku }} @if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} } · <span class="precio">${{ producto.precio }}{{ precioPorUnidad(producto) }}</span>
+            <span class="texto">@if (producto.marcaNombre) { <span class="marca">{{ producto.marcaNombre }}</span> · }{{ producto.sku }}@if (producto.categoriaNombre) { · {{ producto.categoriaNombre }} }</span>
+            <span class="sep">·</span>
+            <span class="precio">${{ producto.precio }}{{ precioPorUnidad(producto) }}</span>
           </div>
         </div>
 

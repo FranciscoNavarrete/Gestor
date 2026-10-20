@@ -107,7 +107,8 @@ export class Venta implements OnInit {
         (p) =>
           p.nombre.toLowerCase().includes(termino) ||
           p.sku.toLowerCase().includes(termino) ||
-          (p.categoriaNombre?.toLowerCase().includes(termino) ?? false),
+          (p.categoriaNombre?.toLowerCase().includes(termino) ?? false) ||
+          (p.marcaNombre?.toLowerCase().includes(termino) ?? false),
       )
       .slice(0, 8);
   });

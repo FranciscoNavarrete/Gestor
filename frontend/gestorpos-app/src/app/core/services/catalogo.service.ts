@@ -6,12 +6,15 @@ import {
   ActualizarPreciosMasivoRequest,
   Categoria,
   CrearCategoriaRequest,
+  CrearMarcaRequest,
   CrearPresentacionRequest,
   CrearProductoRequest,
   EditarCategoriaRequest,
+  EditarMarcaRequest,
   EditarPresentacionRequest,
   EditarProductoRequest,
   ImportarProductosResultado,
+  Marca,
   PaginaProductos,
   Presentacion,
   Producto,
@@ -43,6 +46,30 @@ export class CatalogoService {
 
   activarCategoria(id: string): Observable<Categoria> {
     return this.http.post<Categoria>(`${environment.apiUrl}/categorias/${id}/activar`, {});
+  }
+
+  listarMarcas(): Observable<Marca[]> {
+    return this.http.get<Marca[]>(`${environment.apiUrl}/marcas`);
+  }
+
+  crearMarca(request: CrearMarcaRequest): Observable<Marca> {
+    return this.http.post<Marca>(`${environment.apiUrl}/marcas`, request);
+  }
+
+  editarMarca(id: string, request: EditarMarcaRequest): Observable<Marca> {
+    return this.http.put<Marca>(`${environment.apiUrl}/marcas/${id}`, request);
+  }
+
+  desactivarMarca(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/marcas/${id}`);
+  }
+
+  eliminarMarca(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/marcas/${id}/permanente`);
+  }
+
+  activarMarca(id: string): Observable<Marca> {
+    return this.http.post<Marca>(`${environment.apiUrl}/marcas/${id}/activar`, {});
   }
 
   listarProductos(soloBajoStock = false): Observable<Producto[]> {

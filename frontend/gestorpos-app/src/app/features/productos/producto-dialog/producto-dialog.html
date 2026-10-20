@@ -25,6 +25,19 @@
       </button>
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Marca (opcional)</mat-label>
+      <mat-select formControlName="marcaId">
+        <mat-option [value]="null">Sin marca</mat-option>
+        @for (marca of marcas(); track marca.id) {
+          <mat-option [value]="marca.id">{{ marca.nombre }}</mat-option>
+        }
+      </mat-select>
+      <button mat-icon-button matSuffix type="button" (click)="nuevaMarca()" aria-label="Nueva marca">
+        <mat-icon>add</mat-icon>
+      </button>
+    </mat-form-field>
+
     @if (tieneMedidas && !esEdicion) {
       <p class="etiqueta-seccion">Se vende por</p>
       <mat-button-toggle-group class="unidades" [value]="unidad()" (change)="elegirUnidad($event.value)" aria-label="Se vende por">
