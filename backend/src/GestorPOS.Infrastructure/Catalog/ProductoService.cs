@@ -38,9 +38,13 @@ public class ProductoService : IProductoService
 
         var productos = await query
             .OrderBy(p => p.Nombre)
-            .Select(p => ToDto(p, p.CategoriaId != null
-                ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
-                : null))
+            .Select(p => ToDto(p,
+                p.CategoriaId != null
+                    ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
+                    : null,
+                p.MarcaId != null
+                    ? _db.Marcas.Where(m => m.Id == p.MarcaId).Select(m => m.Nombre).FirstOrDefault()
+                    : null))
             .ToListAsync(ct);
 
         return await ConPresentacionesAsync(productos, ct);
@@ -64,7 +68,8 @@ public class ProductoService : IProductoService
             query = query.Where(p =>
                 p.Nombre.ToLower().Contains(termino) ||
                 p.Sku.ToLower().Contains(termino) ||
-                (p.CategoriaId != null && _db.Categorias.Any(c => c.Id == p.CategoriaId && c.Nombre.ToLower().Contains(termino))));
+                (p.CategoriaId != null && _db.Categorias.Any(c => c.Id == p.CategoriaId && c.Nombre.ToLower().Contains(termino))) ||
+                (p.MarcaId != null && _db.Marcas.Any(m => m.Id == p.MarcaId && m.Nombre.ToLower().Contains(termino))));
         }
 
         var totalItems = await query.CountAsync(ct);
@@ -74,9 +79,13 @@ public class ProductoService : IProductoService
             .OrderBy(p => p.Nombre)
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
-            .Select(p => ToDto(p, p.CategoriaId != null
-                ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
-                : null))
+            .Select(p => ToDto(p,
+                p.CategoriaId != null
+                    ? _db.Categorias.Where(c => c.Id == p.CategoriaId).Select(c => c.Nombre).FirstOrDefault()
+                    : null,
+                p.MarcaId != null
+                    ? _db.Marcas.Where(m => m.Id == p.MarcaId).Select(m => m.Nombre).FirstOrDefault()
+                    : null))
             .ToListAsync(ct);
 
         return new PaginaDto<ProductoDto>(
@@ -92,7 +101,11 @@ public class ProductoService : IProductoService
             ? null
             : await _db.Categorias.Where(c => c.Id == producto.CategoriaId).Select(c => c.Nombre).FirstOrDefaultAsync(ct);
 
-        var dto = ToDto(producto, categoriaNombre);
+        var marcaNombre = producto.MarcaId is null
+            ? null
+            : await _db.Marcas.Where(m => m.Id == producto.MarcaId).Select(m => m.Nombre).FirstOrDefaultAsync(ct);
+
+        var dto = ToDto(producto, categoriaNombre, marcaNombre);
         return (await ConPresentacionesAsync([dto], ct))[0];
     }
 
@@ -109,6 +122,8 @@ public class ProductoService : IProductoService
                 throw new AppException("La categoría indicada no existe.");
         }
 
+        await ValidarMarcaAsync(request.MarcaId, ct);
+
         var unidad = ParsearUnidad(request.Unidad);
         var presentaciones = request.Presentaciones ?? [];
         if ((unidad != UnidadMedida.Unidad || presentaciones.Count > 0) && !_tenantContext.TieneFeature(MedidasFeature.Clave))
@@ -116,7 +131,7 @@ public class ProductoService : IProductoService
 
         var producto = Producto.Crear(
             _tenantContext.TenantId, request.Sku, request.Nombre, request.CategoriaId,
-            request.Precio, request.Costo, request.StockActual, request.StockMinimo, unidad);
+            request.Precio, request.Costo, request.StockActual, request.StockMinimo, unidad, request.MarcaId);
 
         var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pedida in presentaciones)
@@ -145,7 +160,9 @@ public class ProductoService : IProductoService
                 throw new AppException("La categoría indicada no existe.");
         }
 
-        producto.Editar(request.Nombre, request.CategoriaId, request.Precio, request.Costo, request.StockMinimo);
+        await ValidarMarcaAsync(request.MarcaId, ct);
+
+        producto.Editar(request.Nombre, request.CategoriaId, request.Precio, request.Costo, request.StockMinimo, request.MarcaId);
         await _db.SaveChangesAsync(ct);
 
         return await ObtenerAsync(producto.Id, ct);
@@ -314,8 +331,15 @@ public class ProductoService : IProductoService
     private static PresentacionDto ToDto(ProductoPresentacion p) =>
         new(p.Id, p.ProductoId, p.Nombre, p.CantidadBase, p.Precio, p.Activo);
 
-    private static ProductoDto ToDto(Producto p, string? categoriaNombre) => new(
-        p.Id, p.Sku, p.Nombre, p.CategoriaId, categoriaNombre,
+    private async Task ValidarMarcaAsync(Guid? marcaId, CancellationToken ct)
+    {
+        if (marcaId is null) return;
+        if (!await _db.Marcas.AnyAsync(m => m.Id == marcaId, ct))
+            throw new AppException("La marca indicada no existe.");
+    }
+
+    private static ProductoDto ToDto(Producto p, string? categoriaNombre, string? marcaNombre) => new(
+        p.Id, p.Sku, p.Nombre, p.CategoriaId, categoriaNombre, p.MarcaId, marcaNombre,
         p.Precio, p.Costo, p.StockActual, p.StockMinimo, p.EnStockMinimo, p.Activo,
         p.Unidad.ToString(), Array.Empty<PresentacionDto>());
 }

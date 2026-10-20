@@ -18,3 +18,9 @@ Requiere `curl` y `jq`. El sufijo debe ser `base<N>` o `run<N>` para que el comp
 
 `migracion-medidas-y-presentaciones.sql` es el SQL que genera la migración `AgregaMedidasYPresentaciones`,
 para revisarlo antes de desplegar. Su `Down` solo es seguro si todavía no hay cantidades con decimales.
+
+## Marcas
+
+    backend/scripts/smoke/smoke-marcas.sh http://localhost:5090       # catálogo de marcas, marca en productos y búsqueda
+
+`migracion-marcas.sql` es el SQL de la migración `AgregaMarcas` (una columna `MarcaId` nullable y la tabla `Marcas`).

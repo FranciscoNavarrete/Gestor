@@ -15,6 +15,8 @@ public record ProductoDto(
     string Nombre,
     Guid? CategoriaId,
     string? CategoriaNombre,
+    Guid? MarcaId,
+    string? MarcaNombre,
     decimal Precio,
     decimal Costo,
     decimal StockActual,
@@ -35,14 +37,17 @@ public record CrearProductoRequest(
     decimal StockActual,
     decimal StockMinimo,
     string? Unidad = null,
-    IReadOnlyList<CrearPresentacionRequest>? Presentaciones = null);
+    IReadOnlyList<CrearPresentacionRequest>? Presentaciones = null,
+    Guid? MarcaId = null);
 
+/// <summary>MarcaId vacío saca la marca del producto (igual que CategoriaId).</summary>
 public record EditarProductoRequest(
     string Nombre,
     Guid? CategoriaId,
     decimal Precio,
     decimal Costo,
-    decimal StockMinimo);
+    decimal StockMinimo,
+    Guid? MarcaId = null);
 
 /// <summary>Sube o baja el precio de todos los productos activos (opcionalmente filtrados por categoría)
 /// un porcentaje dado. Ej: 10 = +10%, -5 = -5%.</summary>

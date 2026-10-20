@@ -450,6 +450,34 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
                     b.ToTable("LiquidacionItems", (string)null);
                 });
 
+            modelBuilder.Entity("GestorPOS.Domain.Entities.Marca", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Nombre")
+                        .IsUnique();
+
+                    b.ToTable("Marcas", (string)null);
+                });
+
             modelBuilder.Entity("GestorPOS.Domain.Entities.MedioPagoConfiguracion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -810,6 +838,9 @@ namespace GestorPOS.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("MarcaId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Nombre")
                         .IsRequired()

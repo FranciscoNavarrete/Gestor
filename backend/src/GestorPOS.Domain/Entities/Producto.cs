@@ -8,6 +8,7 @@ public class Producto : TenantEntity
     public string Sku { get; private set; } = string.Empty;
     public string Nombre { get; private set; } = string.Empty;
     public Guid? CategoriaId { get; private set; }
+    public Guid? MarcaId { get; private set; }
     public decimal Precio { get; private set; }
     public decimal Costo { get; private set; }
     public decimal StockActual { get; private set; }
@@ -23,7 +24,7 @@ public class Producto : TenantEntity
     public static Producto Crear(
         Guid tenantId, string sku, string nombre, Guid? categoriaId,
         decimal precio, decimal costo, decimal stockActual, decimal stockMinimo,
-        UnidadMedida unidad = UnidadMedida.Unidad)
+        UnidadMedida unidad = UnidadMedida.Unidad, Guid? marcaId = null)
     {
         if (string.IsNullOrWhiteSpace(sku))
             throw new ArgumentException("El SKU es obligatorio.", nameof(sku));
@@ -46,6 +47,7 @@ public class Producto : TenantEntity
             Sku = sku.Trim(),
             Nombre = nombre.Trim(),
             CategoriaId = categoriaId,
+            MarcaId = marcaId,
             Precio = precio,
             Costo = costo,
             StockActual = stockActual,
@@ -54,7 +56,7 @@ public class Producto : TenantEntity
         };
     }
 
-    public void Editar(string nombre, Guid? categoriaId, decimal precio, decimal costo, decimal stockMinimo)
+    public void Editar(string nombre, Guid? categoriaId, decimal precio, decimal costo, decimal stockMinimo, Guid? marcaId)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre es obligatorio.", nameof(nombre));
@@ -68,6 +70,7 @@ public class Producto : TenantEntity
 
         Nombre = nombre.Trim();
         CategoriaId = categoriaId;
+        MarcaId = marcaId;
         Precio = precio;
         Costo = costo;
         StockMinimo = stockMinimo;

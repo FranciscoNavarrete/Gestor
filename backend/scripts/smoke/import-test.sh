@@ -11,11 +11,11 @@ login() { local l; l=$(req POST /api/auth/login "{\"email\":\"$1\",\"password\":
 xlsx() { python3 - "$@" <<'PY'
 import sys, openpyxl
 out=sys.argv[1]; wb=openpyxl.Workbook(); ws=wb.active
-ws.append(["SKU","Nombre","Categoría","Precio","Costo","Stock inicial","Stock mínimo","Unidad"])
-ws.append([f"IMP1-{sys.argv[2]}","Alimento suelto","Alimentos",4200,2900,"12,5","2","kg"])
-ws.append([f"IMP2-{sys.argv[2]}","Gaseosa","Bebidas",1200,800,24,6,""])
-ws.append([f"IMP3-{sys.argv[2]}","Aceite","Almacen",1500,1000,"3.25",1,"L"])
-ws.append([f"IMP4-{sys.argv[2]}","Raro","Otros",1,1,1,0,"galon"])
+ws.append(["SKU","Nombre","Categoría","Precio","Costo","Stock inicial","Stock mínimo","Marca","Unidad"])
+ws.append([f"IMP1-{sys.argv[2]}","Alimento suelto","Alimentos",4200,2900,"12,5","2","Royal Canin","kg"])
+ws.append([f"IMP2-{sys.argv[2]}","Gaseosa","Bebidas",1200,800,24,6,"Coca-Cola",""])
+ws.append([f"IMP3-{sys.argv[2]}","Aceite","Almacen",1500,1000,"3.25",1,"",   "L"])
+ws.append([f"IMP4-{sys.argv[2]}","Raro","Otros",1,1,1,0,"Genérica","galon"])
 wb.save(out)
 PY
 }
@@ -26,7 +26,7 @@ echo "== Negocio con la función"
 T=$(mk "Import Pet $SUF" "imp${SUF}@test.local"); req PUT "/api/admin/tenants/$T/features/medidas" "" "$ADMIN" >/dev/null
 K=$(login "imp${SUF}@test.local")
 H8=$(curl -s "$BASE/api/productos/plantilla-excel" -H "Authorization: Bearer $K" -o /tmp/plantilla8.xlsx; python3 -c "import openpyxl;print(len([c for c in openpyxl.load_workbook('/tmp/plantilla8.xlsx').active[1] if c.value]))")
-check "la plantilla trae 8 columnas con la función" "$H8" "8"
+check "la plantilla trae 9 columnas con la función (Marca y Unidad)" "$H8" "9"
 R=$(subir "$K")
 check "importa 3 filas buenas" "$(echo "$R" | jq '.creados')" "3"
 check "1 fila con error (unidad inventada)" "$(echo "$R" | jq '.errores|length')" "1"
@@ -36,12 +36,17 @@ check "gaseosa sin unidad quedó por Unidad" "$(echo "$LST" | jq -r '[.[]|select
 check "aceite quedó por Litro con 3,25 L" "$(echo "$LST" | jq -r '[.[]|select(.sku|startswith("IMP3"))|"\(.unidad) \(.stockActual*1)"]|first')" "Litro 3.25"
 R2=$(subir "$K")
 check "reimportar actualiza (no cambia la unidad)" "$(echo "$R2" | jq '.actualizados')" "3"
+MK=$(req GET /api/marcas "" "$K" | jq -r '[.[].nombre]|sort|join(",")')
+check "las marcas del Excel se crearon solas" "$MK" "Coca-Cola,Royal Canin"
+LST2=$(req GET "/api/productos" "" "$K")
+check "el producto quedó con su marca" "$(echo "$LST2" | jq -r '[.[]|select(.sku|startswith("IMP1"))|.marcaNombre]|first')" "Royal Canin"
+check "la celda de marca vacía deja el producto sin marca" "$(echo "$LST2" | jq -r '[.[]|select(.sku|startswith("IMP3"))|.marcaId]|first')" "null"
 
 echo "== Negocio sin la función"
 T2=$(mk "Import Kio $SUF" "impk${SUF}@test.local"); K2=$(login "impk${SUF}@test.local")
 curl -s "$BASE/api/productos/plantilla-excel" -H "Authorization: Bearer $K2" -o /tmp/plantilla7.xlsx
 H7=$(python3 -c "import openpyxl;print(len([c for c in openpyxl.load_workbook('/tmp/plantilla7.xlsx').active[1] if c.value]))")
-check "la plantilla sigue con 7 columnas sin la función" "$H7" "7"
+check "la plantilla trae 8 columnas sin la función (suma solo Marca)" "$H7" "8"
 R3=$(subir "$K2")
 check "sin la función solo entran las filas por unidad" "$(echo "$R3" | jq '.creados')" "1"
 check "las filas por kg o L se rechazan con el aviso" "$(echo "$R3" | jq '[.errores[]|select(.mensaje|contains("no está activada"))]|length')" "2"

@@ -14,11 +14,13 @@ namespace GestorPOS.Infrastructure.Catalog;
 public class ProductoImportService : IProductoImportService
 {
     private static readonly string[] Encabezados =
-        ["SKU", "Nombre", "Categoría", "Precio", "Costo", "Stock inicial", "Stock mínimo"];
+        ["SKU", "Nombre", "Categoría", "Precio", "Costo", "Stock inicial", "Stock mínimo", "Marca"];
 
-    /// <summary>Con la función "Medidas y presentaciones" la planilla suma una octava columna, "Unidad".</summary>
+    /// <summary>La columna "Marca" (8ª) es opcional y la tienen todos los negocios; las planillas viejas de 7 columnas
+    /// siguen funcionando. Con la función "Medidas y presentaciones" la planilla suma una novena, "Unidad".</summary>
+    private const int ColumnaMarca = 8;
     private const string EncabezadoUnidad = "Unidad";
-    private const int ColumnaUnidad = 8;
+    private const int ColumnaUnidad = 9;
 
     private readonly AppDbContext _db;
     private readonly ITenantContext _tenantContext;
@@ -53,6 +55,7 @@ public class ProductoImportService : IProductoImportService
         hoja.Cell(2, 5).Value = 600;
         hoja.Cell(2, 6).Value = 10;
         hoja.Cell(2, 7).Value = 2;
+        hoja.Cell(2, ColumnaMarca).Value = "Marca ejemplo";
         if (conMedidas)
             hoja.Cell(2, ColumnaUnidad).Value = "u";
 
@@ -75,6 +78,8 @@ public class ProductoImportService : IProductoImportService
 
         var categoriasPorNombre = await _db.Categorias
             .ToDictionaryAsync(c => c.Nombre.Trim().ToLowerInvariant(), c => c, ct);
+        var marcasPorNombre = await _db.Marcas
+            .ToDictionaryAsync(m => m.Nombre.Trim().ToLowerInvariant(), m => m, ct);
         var productosPorSku = await _db.Productos
             .ToDictionaryAsync(p => p.Sku, p => p, ct);
 
@@ -92,6 +97,7 @@ public class ProductoImportService : IProductoImportService
                 var categoriaNombre = fila.Cell(3).GetString().Trim();
                 var precio = LeerDecimal(fila.Cell(4), "Precio");
                 var costo = LeerDecimal(fila.Cell(5), "Costo");
+                var marcaNombre = fila.Cell(ColumnaMarca).GetString().Trim();
                 var unidadPedida = LeerUnidad(fila.Cell(ColumnaUnidad));
 
                 if (string.IsNullOrWhiteSpace(sku))
@@ -121,14 +127,28 @@ public class ProductoImportService : IProductoImportService
                     }
                 }
 
+                // Como con las categorías, una marca nueva se crea sola; si la celda viene vacía el producto
+                // existente conserva la que ya tenía.
+                Marca? marca = null;
+                if (!string.IsNullOrWhiteSpace(marcaNombre))
+                {
+                    var claveMarca = marcaNombre.ToLowerInvariant();
+                    if (!marcasPorNombre.TryGetValue(claveMarca, out marca))
+                    {
+                        marca = Marca.Crear(tenantId, marcaNombre);
+                        _db.Marcas.Add(marca);
+                        marcasPorNombre[claveMarca] = marca;
+                    }
+                }
+
                 if (existente is not null)
                 {
-                    existente.Editar(nombre, categoria?.Id, precio, costo, stockMinimo);
+                    existente.Editar(nombre, categoria?.Id, precio, costo, stockMinimo, marca?.Id ?? existente.MarcaId);
                     actualizados++;
                 }
                 else
                 {
-                    var nuevo = Producto.Crear(tenantId, sku, nombre, categoria?.Id, precio, costo, stockInicial, stockMinimo, unidad);
+                    var nuevo = Producto.Crear(tenantId, sku, nombre, categoria?.Id, precio, costo, stockInicial, stockMinimo, unidad, marca?.Id);
                     _db.Productos.Add(nuevo);
                     productosPorSku[sku] = nuevo;
                     creados++;
